@@ -23,7 +23,13 @@ def service_list(request):
     category_slug = request.GET.get("category", "")
     current_category = None
     if q:
-        services = services.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(specialist__username__icontains=q))
+        services = services.filter(
+            Q(title__icontains=q)
+            | Q(description__icontains=q)
+            | Q(specialist__username__icontains=q)
+            | Q(specialist__first_name__icontains=q)
+            | Q(specialist__last_name__icontains=q)
+        )
     if category_slug:
         services = services.filter(category__slug=category_slug)
         current_category = Category.objects.filter(slug=category_slug).first()

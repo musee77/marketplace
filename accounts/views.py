@@ -89,7 +89,10 @@ def specialist_list(request):
             | models.Q(skills__icontains=query)
             | models.Q(location__icontains=query)
             | models.Q(user__username__icontains=query)
-        )
+            | models.Q(user__first_name__icontains=query)
+            | models.Q(user__last_name__icontains=query)
+            | models.Q(user__services__title__icontains=query)
+        ).distinct()
     page_obj = Paginator(specialists, 12).get_page(request.GET.get("page"))
     return render(request, "accounts/specialist_list.html", {
         "page_obj": page_obj,

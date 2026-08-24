@@ -9,7 +9,7 @@
     </div>
 
     <!-- Messages thread -->
-    <div class="chat-thread">
+    <div class="chat-thread conversation-thread">
       {% for msg in chat_messages %}
         {% if msg.is_approved %}
           <!-- Text messages -->
@@ -47,7 +47,7 @@
               <div style="margin-bottom:10px;">
                 <h4 style="margin:0 0 8px; color:var(--brass);">💼 {{ msg.offer_title }}</h4>
                 <p style="margin:8px 0; color:#555;">{{ msg.offer_description }}</p>
-                <div style="display:flex; gap:20px; margin:12px 0; font-size:0.95rem;">
+                <div class="offer-meta-grid" style="display:flex; gap:20px; margin:12px 0; font-size:0.95rem;">
                   {% if msg.offer_service %}<div><strong>Listing:</strong><br><a href="{{ msg.offer_service.get_absolute_url }}">{{ msg.offer_service.title }}</a></div>{% endif %}
                   <div>
                     <strong>Price:</strong><br>

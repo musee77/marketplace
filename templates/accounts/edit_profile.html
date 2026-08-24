@@ -27,7 +27,7 @@
         <div><strong>${{ user.client_profile.balance|default:0 }}</strong><span>Account balance</span></div>
       {% endif %}
     </div>
-    <div class="panel wide profile-tabs">
+    <div class="panel wide profile-tabs account-page-panel">
       <div class="account-page-actions">
         {% if edit_mode %}
           <a href="{% url 'accounts:edit_profile' %}" class="btn btn-outline">Cancel</a>
