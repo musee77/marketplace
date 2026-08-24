@@ -1,0 +1,70 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <span>Specialist Approvals</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  <h2>Specialists Pending Approval</h2>
+  <p style="color:var(--admin-text-muted); margin-bottom: 20px; font-size:0.9rem;">
+    Review the specialist profiles below. Approve them to allow listing their services and accepting jobs on the platform.
+  </p>
+
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--admin-card-border); text-align: left; color: var(--admin-text-muted);">
+          <th style="padding: 12px 8px;">Specialist</th>
+          <th style="padding: 12px 8px;">Headline</th>
+          <th style="padding: 12px 8px;">Skills</th>
+          <th style="padding: 12px 8px;">Hourly Rate</th>
+          <th style="padding: 12px 8px;">Location</th>
+          <th style="padding: 12px 8px; text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for sp in pending %}
+        <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.5);">
+          <td style="padding: 12px 8px; font-weight: 600;">
+            <a href="{% url 'custom_admin:user_detail' sp.user.pk %}" style="color: #fff; text-decoration: none;">
+              {{ sp.user.get_full_name|default:sp.user.username }}
+            </a>
+            <div style="font-size:0.75rem; color:var(--admin-text-muted); font-weight:normal;">@{{ sp.user.username }}</div>
+          </td>
+          <td style="padding: 12px 8px; color: #fff;">{{ sp.headline|default:"—" }}</td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            {{ sp.skills|default:"—" }}
+          </td>
+          <td style="padding: 12px 8px; font-family: monospace; color: #fff;">${{ sp.hourly_rate }}</td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ sp.location|default:"—" }}</td>
+          <td style="padding: 12px 8px; text-align: right;">
+            <a href="{% url 'custom_admin:specialist_approve' sp.pk %}" class="btn btn-success" style="font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; background: var(--admin-success); color: #fff; text-decoration: none; font-weight: bold; margin-right: 6px;">✓ Approve</a>
+            <a href="{% url 'custom_admin:specialist_reject' sp.pk %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; background: var(--admin-danger); color: #fff; text-decoration: none; font-weight: bold;">Reject</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="padding: 24px; text-align: center; color: var(--admin-text-muted);">No specialists currently pending approval.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:20px;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">&laquo; Prev</a>
+    {% endif %}
+    
+    <span style="padding: 4px 10px; color: var(--admin-text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">Next &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

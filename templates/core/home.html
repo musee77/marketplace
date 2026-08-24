@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Synovae Analytics — Hire Vetted Data Analytics Specialists{% endblock %}
+
+{% block seo %}
+<meta name="description" content="Hire vetted data analytics specialists for Power BI, data engineering, machine learning, statistics, and business intelligence projects on Synovae Analytics.">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:title" content="Synovae Analytics — Hire Vetted Data Analytics Specialists">
+<meta property="og:description" content="Hire vetted data analytics specialists for Power BI, data engineering, machine learning, statistics, and business intelligence projects on Synovae Analytics.">
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}/static/img/og-default.jpg">
+<meta property="og:site_name" content="Synovae Analytics">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="{{ request.build_absolute_uri }}">
+<meta name="twitter:title" content="Synovae Analytics — Hire Vetted Data Analytics Specialists">
+<meta name="twitter:description" content="Hire vetted data analytics specialists for Power BI, data engineering, machine learning, statistics, and business intelligence projects on Synovae Analytics.">
+<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}/static/img/og-default.jpg">
+{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Synovae Analytics",
+  "url": "{{ request.scheme }}://{{ request.get_host }}/",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "{{ request.scheme }}://{{ request.get_host }}{% url 'services:list' %}?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">Data Analytics platform</div>
+      <h1>Browse vetted data analysis services</h1>
+      <p class="sub">Data engineering. BI development. Machine learning. Statistics. Find trusted services in every category — each one manager-reviewed and seal-verified on Synovae Analytics.</p>
+      <form class="search-box" action="{% url 'services:list' %}" method="get">
+        <input type="text" name="q" placeholder="Search {% if keywords %}“{% for k in keywords|slice:":3" %}{{ k.keyword }}{% if not forloop.last %}”, “{% endif %}{% endfor %}”…{% else %}“Power BI dashboard”, “churn model”, “dbt pipeline”…{% endif %}">
+        <button type="submit" class="btn btn-brass">Search</button>
+      </form>
+      {% if keywords %}
+        <div class="popular-searches" style="margin-top: 10px; font-size: 0.85rem; color: rgba(255,255,255,0.7); text-align: left;">
+          <span style="color: rgba(255,255,255,0.5);">Popular:</span>
+          {% for k in keywords %}
+            <a href="{% url 'services:list' %}?q={{ k.keyword|urlencode }}" style="color: #fff; text-decoration: underline; margin-left: 6px; font-weight: 500;">{{ k.keyword }}</a>{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div style="margin-top:20px;display:flex;gap:12px;">
+        {% if user.is_authenticated %}
+          {% if user.is_specialist %}
+            <a href="{% url 'core:dashboard' %}" class="btn btn-outline" style="border-color:#fff;color:#fff;">View dashboard</a>
+          {% elif user.is_client %}
+            <a href="{% url 'orders:create_quick' %}" class="btn btn-outline" style="border-color:#fff;color:#fff;">Order now</a>
+          {% else %}
+            <a href="{% url 'core:dashboard' %}" class="btn btn-outline" style="border-color:#fff;color:#fff;">View dashboard</a>
+          {% endif %}
+        {% else %}
+          <a href="{% url 'accounts:signup' %}" class="btn btn-outline" style="border-color:#fff;color:#fff;">I am a client</a>
+        {% endif %}
+      </div>
+    </div>
+    <div class="ledger">
+      <div class="ledger-title">Recently listed</div>
+      {% for s in featured|slice:":5" %}
+        <div class="ledger-row">
+          <div>
+            <div class="name">{{ s.title|truncatechars:34 }}</div>
+            <div class="meta">{{ s.specialist.get_full_name|default:s.specialist.username }} · {{ s.category.name }}</div>
+          </div>
+          <div class="price mono">${{ s.price }}</div>
+        </div>
+      {% empty %}
+        <div class="ledger-row"><span class="meta">No listings yet.</span></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Browse by specialty</h2>
+      <a href="/services/">View all listings →</a>
+    </div>
+    <div class="chips">
+      <a class="chip active" href="/services/">All</a>
+      {% for c in categories %}
+        <a class="chip" href="/services/?category={{ c.slug|urlencode }}">{{ c.name }}</a>
+      {% endfor %}
+    </div>
+    <div class="featured-grid" style="margin-top: 24px;">
+      {% for s in listings %}
+        <a class="card" href="{{ s.get_absolute_url }}">
+          <div class="card-img">{% if s.cover_image %}<img src="{{ s.cover_image.url }}" alt="{{ s.title }}">{% else %}<div class="card-img-placeholder">No image</div>{% endif %}</div>
+          <div class="card-body">
+            <div class="seller-info"><div class="seller-avatar">{% if s.specialist.avatar %}<img src="{{ s.specialist.avatar.url }}" alt="{{ s.specialist.username }}">{% else %}<span>{{ s.specialist.username|slice:":1"|upper }}</span>{% endif %}</div><div class="seller-details"><span class="seller-name">{{ s.specialist.get_full_name|default:s.specialist.username }}</span>{% if s.specialist.specialist_profile.is_verified %}<span class="pro-badge">TOP RATED</span>{% endif %}</div></div>
+            <div class="card-title">{{ s.title }}</div>
+            <div class="rating-row"><span class="star-icon">★</span><span class="rating-score">{{ s.average_rating|default:"5.0" }}</span><span class="review-count">({{ s.review_count }})</span></div>
+            <div class="card-foot"><span class="category-name">{{ s.category.name|default:"General" }}</span><div class="price-block"><span class="starting-at">STARTING AT</span><span class="price"><span class="cur">$</span>{{ s.price }}</span></div></div>
+          </div>
+        </a>
+      {% empty %}<div class="empty">No listings yet.</div>{% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if not user.is_authenticated and recent_order_activity %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Recent order activity</h2></div>
+    <div class="ledger">
+      {% for order in recent_order_activity|slice:":5" %}
+        <div class="ledger-row">
+          <div>
+            <div class="name">A client ordered {{ order.service.title|truncatechars:42 }}</div>
+            <div class="meta">{{ order.service.category.name|default:"Data analytics" }} · {{ order.created_at|timesince }} ago</div>
+          </div>
+          <a href="{{ order.service.get_absolute_url }}" class="btn btn-outline btn-sm">View service</a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if user.is_authenticated and user.is_client %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Orders progress</h2><a href="{% url 'core:dashboard' %}">View all orders →</a></div>
+    {% if client_orders %}
+      <div class="table-responsive"><table>
+        <thead><tr><th>Order</th><th>Specialist</th><th>Status</th><th>Next step</th></tr></thead>
+        <tbody>
+          {% for order in client_orders %}
+          <tr>
+            <td data-label="Order"><a href="{{ order.get_absolute_url }}">#{{ order.pk }} · {{ order.display_title|truncatechars:32 }}</a></td>
+            <td data-label="Specialist">{{ order.specialist.get_full_name|default:order.specialist.username }}</td>
+            <td data-label="Status"><span class="status status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+            <td data-label="Next step">
+              {% if order.status == 'PENDING' %}Wait for specialist acceptance
+              {% elif order.status == 'ACCEPTED' %}Specialist will start work after payment
+              {% elif order.status == 'IN_PROGRESS' %}Specialist is working on your order
+              {% elif order.status == 'DELIVERED' %}Review the delivery or request changes
+              {% elif order.status == 'UNDER_REVISION' %}Specialist is applying your requested changes
+              {% elif order.status == 'COMPLETED' and order.is_reviewable %}Leave a review for the specialist
+              {% elif order.status == 'COMPLETED' %}Order completed and reviewed
+              {% else %}No further action required{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+    {% else %}<p class="empty">Your orders will appear here after you hire a specialist.</p>{% endif %}
+  </div>
+</section>
+{% elif not user.is_authenticated %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Order progress</h2><a href="{% url 'accounts:signup' %}" class="btn btn-brass">Get started</a></div>
+    <div class="grid order-process-grid">
+      <div class="panel"><strong>01 · Choose</strong><p>Select a vetted specialist and service.</p><span class="status status-COMPLETED">Start</span></div>
+      <div class="panel"><strong>02 · Order and pay</strong><p>Share requirements and pay securely.</p><span class="status status-PENDING">Pending</span></div>
+      <div class="panel"><strong>03 · Work in progress</strong><p>Message the specialist and track delivery.</p><span class="status status-IN_PROGRESS">In progress</span></div>
+      <div class="panel"><strong>04 · Review delivery</strong><p>Approve the files or request a revision.</p><span class="status status-COMPLETED">Complete</span></div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if user.is_authenticated %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>How ordering works</h2></div>
+    <div class="grid order-process-grid">
+      <div class="panel"><strong>01 · Choose</strong><p>Find a specialist and select a service that fits your needs.</p></div>
+      <div class="panel"><strong>02 · Order and pay</strong><p>Share your requirements, then pay securely by card or account balance.</p></div>
+      <div class="panel"><strong>03 · Collaborate</strong><p>Track progress and message the specialist while work is in progress.</p></div>
+      <div class="panel"><strong>04 · Review delivery</strong><p>Download files, request a revision if needed, then complete and review the order.</p></div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if not user.is_authenticated or user.is_client %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Featured listings</h2></div>
+    <div class="featured-grid">
+      {% for s in featured %}
+        <a class="card" href="{{ s.get_absolute_url }}">
+          <div class="card-img">{% if s.cover_image %}<img src="{{ s.cover_image.url }}" alt="{{ s.title }}">{% else %}<div class="card-img-placeholder">No image</div>{% endif %}</div>
+          <div class="card-body">
+            <div class="seller-info"><div class="seller-avatar">{% if s.specialist.avatar %}<img src="{{ s.specialist.avatar.url }}" alt="{{ s.specialist.username }}">{% else %}<span>{{ s.specialist.username|slice:":1"|upper }}</span>{% endif %}</div><div class="seller-details"><span class="seller-name">{{ s.specialist.get_full_name|default:s.specialist.username }}</span>{% if s.specialist.specialist_profile.is_verified %}<span class="pro-badge">TOP RATED</span>{% endif %}</div></div>
+            <div class="card-title">{{ s.title }}</div>
+            <div class="rating-row"><span class="star-icon">★</span><span class="rating-score">{{ s.average_rating|default:"5.0" }}</span><span class="review-count">({{ s.review_count }})</span></div>
+            <div class="card-foot"><span class="category-name">{{ s.category.name|default:"General" }}</span><div class="price-block"><span class="starting-at">STARTING AT</span><span class="price"><span class="cur">$</span>{{ s.price }}</span></div></div>
+          </div>
+        </a>
+      {% empty %}<div class="empty">No listings yet — check back soon.</div>{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Top reviews</h2></div>
+    <div class="reviews-grid">
+      {% for r in top_reviews|slice:":5" %}
+        <div class="review-card"><div class="review-stars">{% for i in "12345" %}<span class="star {% if forloop.counter <= r.rating %}filled{% else %}empty{% endif %}">★</span>{% endfor %}</div><p class="review-quote">"{{ r.comment|truncatechars:130 }}"</p><div class="review-footer"><span class="review-name">{{ r.reviewer.get_full_name|default:r.reviewer.username }}</span><span class="review-service">{{ r.service.title|default:"Service review"|truncatechars:32 }}</span><span class="review-date">{{ r.created_at|date:'M j' }}</span></div></div>
+      {% empty %}<div class="empty">No reviews yet.</div>{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>About us</h2></div>
+    <div class="panel wide">
+      <p>Our specialists provide practical data services that help businesses turn information into action. From data analysis, engineering, and visualization to machine learning and statistical consulting, clients can find the right expertise, share their requirements, and receive reliable results through one trusted platform.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}About Synovae Analytics | Data Analytics Specialists{% endblock %}
+
+{% block seo %}
+<meta name="description" content="Learn how Synovae Analytics connects businesses with trusted data analytics specialists for practical, measurable results.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:title" content="About Synovae Analytics | Data Analytics Specialists">
+<meta property="og:description" content="Synovae Analytics connects businesses with trusted data analytics specialists for practical, measurable results.">
+<meta property="og:site_name" content="Synovae Analytics">
+{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "About Synovae Analytics",
+  "url": "{{ request.build_absolute_uri }}",
+  "description": "Synovae Analytics connects businesses with trusted data analytics specialists for practical, measurable results.",
+  "isPartOf": {
+    "@type": "WebSite",
+    "name": "Synovae Analytics",
+    "url": "{{ request.scheme }}://{{ request.get_host }}/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Synovae Analytics",
+    "url": "{{ request.scheme }}://{{ request.get_host }}/"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="about-hero" aria-labelledby="about-title">
+  <div class="wrap about-hero-grid">
+    <div>
+      <div class="eyebrow">About Synovae Analytics</div>
+      <h1 id="about-title">Make data useful.</h1>
+      <p>Synovae connects ambitious businesses with trusted data specialists who turn messy information into decisions people can act on.</p>
+      <div class="about-actions">
+        <a href="{% url 'accounts:specialist_list' %}" class="btn btn-brass">Find an analyst</a>
+        <a href="{% url 'accounts:signup' %}" class="about-text-link">Join the network →</a>
+      </div>
+    </div>
+    <div class="about-hero-note">
+      <span class="about-note-mark">01</span>
+      <p>Good data work is not just technical. It is clear, considered, and connected to the question behind the numbers.</p>
+    </div>
+  </div>
+</section>
+
+<section class="about-proof" aria-label="Why use Synovae Analytics">
+  <div class="wrap about-proof-grid">
+    <div><strong>01</strong><span>Clear briefs</span><p>Start with the business question, not a pile of unexplained files.</p></div>
+    <div><strong>02</strong><span>Relevant expertise</span><p>Find specialists across analysis, engineering, BI, and modeling.</p></div>
+    <div><strong>03</strong><span>Practical outcomes</span><p>Get work that can move a decision, process, or team forward.</p></div>
+  </div>
+</section>
+
+<section class="section about-section" aria-labelledby="platform-title">
+  <div class="wrap about-content-grid">
+    <div>
+      <div class="eyebrow">The platform</div>
+      <h2 id="platform-title">Expertise without the guesswork.</h2>
+    </div>
+    <div>
+      <p class="about-intro">Our marketplace brings the full data journey into one focused place. Clients can compare experience and services; specialists can present their work clearly and build relationships around meaningful projects.</p>
+      <p>From a Power BI dashboard to a production data pipeline, a forecasting model, or a statistical review, the goal is the same: make complex work easier to find, understand, and trust.</p>
+    </div>
+  </div>
+</section>
+
+<section class="about-process" aria-labelledby="process-title">
+  <div class="wrap">
+    <div class="eyebrow" id="process-title">How Synovae works</div>
+    <div class="about-process-grid">
+      <div><span>01</span><h3>Describe the need</h3><p>Share the context, challenge, and outcome you are working toward.</p></div>
+      <div><span>02</span><h3>Choose the fit</h3><p>Review specialist profiles, skills, listings, and client feedback.</p></div>
+      <div><span>03</span><h3>Work with clarity</h3><p>Keep the work focused on useful results and dependable delivery.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section about-final" aria-labelledby="start-title">
+  <div class="wrap about-final-inner">
+    <div>
+      <div class="eyebrow">Start here</div>
+      <h2 id="start-title">There is a better question inside every dataset.</h2>
+    </div>
+    <a href="{% url 'services:list' %}" class="btn btn-brass">Browse services →</a>
+  </div>
+</section>
+{% endblock %}

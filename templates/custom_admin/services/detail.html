@@ -1,0 +1,45 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:service_list' %}">Services</a>
+&rsaquo; <span>{{ service.title }}</span>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:24px;">
+  <div class="dh-card" style="padding:24px; background:var(--admin-card-bg); border:1px solid var(--admin-card-border); border-radius:14px;">
+    <div style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start;">
+      <div>
+        <div style="color:var(--admin-text-muted); font-size:.8rem; text-transform:uppercase;">Service listing</div>
+        <h2>{{ service.title }}</h2>
+      </div>
+      {% if service.is_active %}<span style="color:var(--admin-success); font-weight:700;">Active</span>{% else %}<span style="color:var(--admin-danger); font-weight:700;">Inactive</span>{% endif %}
+    </div>
+    <table style="width:100%; border-collapse:collapse; margin-top:18px;">
+      <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Specialist</td><td style="padding:8px 0; text-align:right;">@{{ service.specialist.username }}</td></tr>
+      <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Category</td><td style="padding:8px 0; text-align:right;">{{ service.category.name|default:"Uncategorized" }}</td></tr>
+      <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Price</td><td style="padding:8px 0; text-align:right;">${{ service.price }}</td></tr>
+      <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Delivery</td><td style="padding:8px 0; text-align:right;">{{ service.delivery_days }} days</td></tr>
+      <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Rating</td><td style="padding:8px 0; text-align:right;">★ {{ service.average_rating }} ({{ service.review_count }} reviews)</td></tr>
+    </table>
+    <div style="margin-top:20px; padding-top:18px; border-top:1px solid var(--admin-card-border);">
+      <h4>Description</h4>
+      <p style="white-space:pre-wrap; color:var(--admin-text-muted);">{{ service.description }}</p>
+    </div>
+    <a href="{% url 'custom_admin:service_toggle_active' service.pk %}" class="btn btn-brass" style="display:inline-block; margin-top:12px; padding:8px 14px;">{% if service.is_active %}Deactivate listing{% else %}Activate listing{% endif %}</a>
+  </div>
+
+  <div class="dh-card" style="padding:24px; background:var(--admin-card-bg); border:1px solid var(--admin-card-border); border-radius:14px;">
+    <h3>Reviews ({{ service.review_count }})</h3>
+    {% for review in reviews %}
+      <article style="padding:14px 0; border-bottom:1px solid var(--admin-card-border);">
+        <strong>{{ review.reviewer.get_full_name|default:review.reviewer.username }}</strong>
+        <div style="color:var(--admin-accent);">★ {{ review.rating }}/5 <span style="color:var(--admin-text-muted);">{{ review.created_at|date:"M j, Y" }}</span></div>
+        <p style="margin:6px 0 0; color:var(--admin-text-muted);">{{ review.comment|default:"No comment." }}</p>
+      </article>
+    {% empty %}
+      <p style="color:var(--admin-text-muted);">No reviews for this listing yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

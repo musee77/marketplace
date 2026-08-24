@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap" style="max-width:680px;">
+    <div class="eyebrow">Order #{{ order.pk }}</div>
+    <h2>Deliver your work</h2>
+    <p style="color:var(--slate);margin-bottom:24px;">
+      Upload your completed deliverable files below. The client will be able to download
+      them immediately after you submit. The order will be marked <strong>Delivered</strong>
+      and the client will review and approve to release payment.
+    </p>
+
+    <div class="panel" style="margin-bottom:24px;">
+      <table style="border:none;">
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Order</td><td style="border:none;padding:4px 0;text-align:right;">{{ order.display_title }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Client</td><td style="border:none;padding:4px 0;text-align:right;">{{ order.client.get_full_name|default:order.client.username }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Status</td><td style="border:none;padding:4px 0;text-align:right;"><span class="status status-{{ order.status }}">{{ order.get_status_display }}</span></td></tr>
+      </table>
+    </div>
+
+    {% if form.errors %}
+      <div class="dh-alert dh-alert-error" style="margin-bottom:16px;">
+        {% for field, errors in form.errors.items %}
+          {% for error in errors %}<p style="margin:2px 0;">{{ error }}</p>{% endfor %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'orders:deliver' order.pk %}" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <div class="form-group" style="margin-bottom:18px;">
+        <label for="{{ form.files.id_for_label }}" style="font-weight:600;display:block;margin-bottom:6px;">
+          Delivery file(s) <span style="color:var(--brass);">*</span>
+        </label>
+        {{ form.files }}
+        <small style="color:var(--slate);display:block;margin-top:4px;">{{ form.files.help_text }}</small>
+        {% if form.files.errors %}
+          {% for error in form.files.errors %}
+            <small style="color:var(--danger);">{{ error }}</small>
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      <div class="form-group" style="margin-bottom:24px;">
+        <label for="{{ form.delivery_note.id_for_label }}" style="font-weight:600;display:block;margin-bottom:6px;">
+          Delivery note <span style="color:var(--slate);font-weight:400;">(optional)</span>
+        </label>
+        {{ form.delivery_note }}
+        <small style="color:var(--slate);display:block;margin-top:4px;">{{ form.delivery_note.help_text }}</small>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center;">
+        <button type="submit" class="btn btn-brass">
+          📦 Submit delivery
+        </button>
+        <a href="{{ order.get_absolute_url }}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

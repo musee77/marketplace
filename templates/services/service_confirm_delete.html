@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h2>Delete listing?</h2>
+    <div class="panel">
+      <p>This will permanently remove <strong>{{ service.title }}</strong>. Existing orders are kept for record-keeping.</p>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, delete it</button>
+        <a href="{{ service.get_absolute_url }}" class="btn btn-outline">Cancel</a>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

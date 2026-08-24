@@ -1,0 +1,44 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <span>Categories</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+    <h2>Service Categories</h2>
+    <a href="{% url 'custom_admin:category_create' %}" class="btn btn-brass" style="padding: 8px 16px; background: var(--admin-accent); color: #0f172a; font-weight: bold; border-radius: 6px; border: none; text-decoration: none; font-size: 0.9rem;">+ Create Category</a>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--admin-card-border); text-align: left; color: var(--admin-text-muted);">
+          <th style="padding: 12px 8px; width: 80px;">Icon</th>
+          <th style="padding: 12px 8px;">Category Name</th>
+          <th style="padding: 12px 8px;">Slug</th>
+          <th style="padding: 12px 8px; text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.5);">
+          <td style="padding: 12px 8px; font-size: 1.25rem;">{{ cat.icon|default:"📁" }}</td>
+          <td style="padding: 12px 8px; font-weight: 600; color: #fff;">{{ cat.name }}</td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted); font-family: monospace;">{{ cat.slug }}</td>
+          <td style="padding: 12px 8px; text-align: right; white-space: nowrap;">
+            <a href="{% url 'custom_admin:category_edit' cat.pk %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 4px 12px; border-radius: 4px; border: 1px solid var(--admin-card-border); color: #fff; text-decoration: none; margin-right: 4px;">Edit</a>
+            <a href="{% url 'custom_admin:category_delete' cat.pk %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 4px 12px; border-radius: 4px; background: var(--admin-danger); color: #fff; text-decoration: none;">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="4" style="padding: 24px; text-align: center; color: var(--admin-text-muted);">No categories defined yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

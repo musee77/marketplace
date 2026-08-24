@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{% if current_category %}{{ current_category.name }}{% elif query %}Search: {{ query }}{% else %}Analytics Insights{% endif %} | Synovae Analytics{% endblock %}
+
+{% block robots %}{% if query %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
+
+{% block seo %}
+<meta name="description" content="{% if current_category %}{{ current_category.name }} articles from the Synovae Analytics community.{% elif query %}Search results for {{ query }} in the Synovae Analytics journal.{% else %}Practical data analytics insights, guides, and ideas from the Synovae Analytics community.{% endif %}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:title" content="{% if current_category %}{{ current_category.name }}{% elif query %}Search: {{ query }}{% else %}Analytics Insights{% endif %} | Synovae Analytics">
+<meta property="og:description" content="Practical data analytics insights, guides, and ideas from the Synovae Analytics community.">
+<meta property="og:site_name" content="Synovae Analytics">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{% if current_category %}{{ current_category.name }}{% elif query %}Search: {{ query }}{% else %}Analytics Insights{% endif %} | Synovae Analytics">
+<meta name="twitter:description" content="Practical data analytics insights, guides, and ideas from the Synovae Analytics community.">
+{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Analytics Insights",
+  "url": "{{ request.build_absolute_uri }}",
+  "isPartOf": {"@type": "WebSite", "name": "Synovae Analytics"}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">The Synovae journal</div>
+        <h1>{% if current_category %}{{ current_category.name }}{% elif query %}Search results{% else %}Analytics insights{% endif %}</h1>
+      </div>
+      <p class="section-intro">Practical thinking for teams building better decisions with data.</p>
+    </div>
+    <div class="blog-tools">
+      <form method="get" class="blog-search-form" role="search">
+        <label class="sr-only" for="blog-search">Search insights</label>
+        <input id="blog-search" class="listing-search-input" type="search" name="q" value="{{ query }}" placeholder="Search insights...">
+        {% if category_slug %}<input type="hidden" name="category" value="{{ category_slug }}">{% endif %}
+        <button class="btn btn-primary btn-sm" type="submit">Search</button>
+      </form>
+      <div class="blog-category-list" aria-label="Filter by category">
+        <a class="chip {% if not category_slug %}active{% endif %}" href="{% url 'blog:list' %}{% if query %}?q={{ query|urlencode }}{% endif %}">All</a>
+        {% for category in categories %}
+          <a class="chip {% if category_slug == category.slug %}active{% endif %}" href="?category={{ category.slug }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}">{{ category.name }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    <p class="blog-result-count">{{ page_obj.paginator.count }} article{{ page_obj.paginator.count|pluralize }}</p>
+    <div class="grid listing-grid blog-post-list">
+      {% for post in page_obj %}
+        <a class="card blog-post-row" href="{{ post.get_absolute_url }}">
+          <div class="blog-post-image">
+            {% if post.cover_image %}<img src="{{ post.cover_image.url }}" alt="{{ post.title }}">{% else %}<div class="card-img-placeholder" aria-hidden="true">No image</div>{% endif %}
+          </div>
+          <div class="card-body">
+            <div class="blog-card-meta"><span class="eyebrow">{{ post.published_at|date:"M j, Y" }}</span>{% if post.category %}<span class="chip">{{ post.category.name }}</span>{% endif %}</div>
+            <div class="card-title">{{ post.title }}</div>
+            {% if post.author %}<p class="blog-card-author">By {{ post.author.get_full_name|default:post.author.username }}</p>{% endif %}
+            <p class="card-by">{{ post.excerpt }}</p>
+            <span class="btn btn-outline btn-sm">Read article</span>
+          </div>
+        </a>
+      {% empty %}
+        <p class="empty">No articles match those filters.</p>
+      {% endfor %}
+    </div>
+    {% if page_obj.has_other_pages %}
+      <nav class="listing-pagination" aria-label="Blog pagination">
+        {% if page_obj.has_previous %}<a class="btn btn-outline btn-sm" href="?page={{ page_obj.previous_page_number }}{% if category_slug %}&amp;category={{ category_slug }}{% endif %}{% if query %}&amp;q={{ query|urlencode }}{% endif %}">Previous</a>{% endif %}
+        {% if page_obj.has_next %}<a class="btn btn-outline btn-sm" href="?page={{ page_obj.next_page_number }}{% if category_slug %}&amp;category={{ category_slug }}{% endif %}{% if query %}&amp;q={{ query|urlencode }}{% endif %}">Next</a>{% endif %}
+      </nav>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

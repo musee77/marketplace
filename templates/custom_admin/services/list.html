@@ -1,0 +1,90 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <span>Services</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  
+  <div class="dh-changelist-topbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
+    <h2>Specialist Listings (Services)</h2>
+    
+    <!-- Search and Filter Form -->
+    <form method="get" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+      <input type="text" name="q" value="{{ q }}" placeholder="Search title, description..." class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff; min-width: 240px;">
+      
+      <select name="category" class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff;">
+        <option value="">All Categories</option>
+        {% for cat in categories %}
+          <option value="{{ cat.id }}" {% if category_id|add:"0" == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+      
+      <button type="submit" class="btn btn-brass" style="padding: 8px 16px; background: var(--admin-accent); color: #0f172a; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">Apply</button>
+      {% if q or category_id %}
+        <a href="{% url 'custom_admin:service_list' %}" class="btn btn-outline" style="padding: 8px 16px; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--admin-card-border); text-align: left; color: var(--admin-text-muted);">
+          <th style="padding: 12px 8px;">Service Listing</th>
+          <th style="padding: 12px 8px;">Category</th>
+          <th style="padding: 12px 8px;">Specialist</th>
+          <th style="padding: 12px 8px;">Price</th>
+          <th style="padding: 12px 8px;">Status</th>
+          <th style="padding: 12px 8px; text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in services %}
+        <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.5);">
+          <td style="padding: 12px 8px; font-weight: 600;">
+            <a href="{% url 'custom_admin:service_detail' s.pk %}" style="color: #fff; text-decoration: none;">{{ s.title }}</a>
+            <div style="font-size:0.75rem; color:var(--admin-text-muted); font-weight:normal;">/services/{{ s.slug }}/</div>
+          </td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ s.category.name|default:"Uncategorized" }}</td>
+          <td style="padding: 12px 8px; color: #fff;">@{{ s.specialist.username }}</td>
+          <td style="padding: 12px 8px; font-family: monospace; color: #fff;">${{ s.price }}</td>
+          <td style="padding: 12px 8px;">
+            {% if s.is_active %}
+              <span class="status status-completed" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Active</span>
+            {% else %}
+              <span class="status status-cancelled" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Inactive</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px 8px; text-align: right;">
+            <a href="{% url 'custom_admin:service_toggle_active' s.pk %}" class="btn {% if s.is_active %}btn-danger{% else %}btn-success{% endif %}" style="font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; background: {% if s.is_active %}var(--admin-danger){% else %}var(--admin-success){% endif %}; color: #fff; text-decoration: none; font-weight: bold;">
+              {% if s.is_active %}Deactivate{% else %}Activate{% endif %}
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="padding: 24px; text-align: center; color: var(--admin-text-muted);">No services found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:20px;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">&laquo; Prev</a>
+    {% endif %}
+    
+    <span style="padding: 4px 10px; color: var(--admin-text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if category_id %}&category={{ category_id }}{% endif %}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">Next &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

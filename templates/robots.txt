@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /orders/
+Disallow: /chat/
+Disallow: /accounts/profile/
+Disallow: /accounts/funds/
+Disallow: /accounts/manage/
+
+Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml

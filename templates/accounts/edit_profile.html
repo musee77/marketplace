@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="account-hero">
+      <div class="account-identity">
+        <div class="account-avatar">
+          {% if user.avatar %}<img src="{{ user.avatar.url }}" alt="{{ user.get_full_name|default:user.username }}">{% else %}{{ user.get_full_name|default:user.username|slice:":1"|upper }}{% endif %}
+        </div>
+        <div>
+          <div class="eyebrow">Your account</div>
+          <h1>{{ user.get_full_name|default:user.username }}</h1>
+          <p>{{ user.email }}</p>
+          <span class="account-role">{{ user.get_role_display }}</span>
+        </div>
+      </div>
+      {% if user.is_specialist and user.specialist_profile %}
+        <a href="{{ user.specialist_profile.get_absolute_url }}" class="account-secondary-link">View profile →</a>
+      {% endif %}
+    </div>
+    <div class="account-summary">
+      <div><strong>{{ total_orders }}</strong><span>{% if user.is_specialist %}Orders received{% else %}Orders placed{% endif %}</span></div>
+      {% if user.is_specialist %}
+        <div><strong>{{ ranking.average|default:"—" }}</strong><span>Average rating</span></div>
+        <div><strong>${{ user.specialist_profile.balance|default:0 }}</strong><span>Available balance</span></div>
+      {% else %}
+        <div><strong>${{ user.client_profile.balance|default:0 }}</strong><span>Account balance</span></div>
+      {% endif %}
+    </div>
+    <div class="panel wide profile-tabs">
+      <div class="account-page-actions">
+        {% if edit_mode %}
+          <a href="{% url 'accounts:edit_profile' %}" class="btn btn-outline">Cancel</a>
+        {% else %}
+          <a href="?edit=1" class="btn btn-brass">Edit account</a>
+        {% endif %}
+      </div>
+      <section id="panel-account" class="account-section">
+        <h3>Account</h3>
+        {% if edit_mode %}
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="form_action" value="account">
+            {{ user_form.as_p }}
+            {% if user.is_client and profile_form %}
+              <div class="divider"></div>
+              <h3>Client profile</h3>
+              {{ profile_form.as_p }}
+            {% endif %}
+            <button type="submit" name="submit_account" class="btn btn-primary">Save changes</button>
+          </form>
+        {% else %}
+          <dl class="account-readonly-list">
+            <div><dt>Name</dt><dd>{{ user.get_full_name|default:"Not provided" }}</dd></div>
+            <div><dt>Email</dt><dd>{{ user.email }}</dd></div>
+            <div><dt>Phone</dt><dd>{{ user.phone|default:"Not provided" }}</dd></div>
+            {% if user.is_client and profile_form %}
+              <div><dt>Company</dt><dd>{{ user.client_profile.company_name|default:"Not provided" }}</dd></div>
+              <div><dt>Location</dt><dd>{{ user.client_profile.location|default:"Not provided" }}</dd></div>
+            {% endif %}
+          </dl>
+        {% endif %}
+      </section>
+
+      <section id="panel-settings" class="account-section">
+        <h3>Security</h3>
+        {% if edit_mode %}
+          <p class="helptext">Change your password.</p>
+          <form method="post" action="{% url 'accounts:password_change' %}">
+            {% csrf_token %}
+            {{ password_form.as_p }}
+            <button type="submit" class="btn btn-primary">Update password</button>
+          </form>
+        {% else %}
+          <p class="account-readonly-value">Password is set. Use Edit account to change it.</p>
+        {% endif %}
+      </section>
+
+      {% if user.is_specialist %}
+      <section id="panel-financials" class="account-section">
+        <h3>Financials</h3>
+        {% if financial_form %}
+          {% if edit_mode %}
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="form_action" value="financials">
+              {{ financial_form.as_p }}
+              <button type="submit" name="submit_financials" class="btn btn-primary">Save financials</button>
+            </form>
+          {% else %}
+            <dl class="account-readonly-list">
+              <div><dt>Balance</dt><dd>${{ user.specialist_profile.balance }}</dd></div>
+              <div><dt>Payout method</dt><dd>{{ user.specialist_profile.get_payout_method_display|default:"Not configured" }}</dd></div>
+            </dl>
+          {% endif %}
+          {% if edit_mode %}<p class="helptext">Balance: <strong class="mono">${{ user.specialist_profile.balance }}</strong></p>{% endif %}
+        {% else %}
+          <p class="empty">No financial settings available for your account.</p>
+        {% endif %}
+      </section>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

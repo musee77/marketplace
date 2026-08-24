@@ -1,0 +1,24 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'custom_admin:blog_list' %}">Blog posts</a> &rsaquo; <span>{{ title }}</span>{% endblock %}
+
+{% block content %}
+<div class="dh-card blog-admin-editor" style="max-width:920px; background:var(--admin-card-bg); border:1px solid var(--admin-card-border); border-radius:14px;">
+  <h2>{{ title }}</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="dh-alert dh-alert-error">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="blog-admin-form-grid">
+      {% for field in form %}
+        <div class="blog-admin-field{% if field.name == 'content' or field.name == 'excerpt' or field.name == 'seo_description' %} blog-admin-field--wide{% endif %}">
+          <label for="{{ field.id_for_label }}" style="display:block; margin-bottom:6px; font-weight:600;">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}<small style="color:var(--admin-text-muted);">{{ field.help_text }}</small>{% endif %}
+          {% for error in field.errors %}<div style="color:var(--admin-danger); font-size:.85rem;">{{ error }}</div>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="blog-admin-actions"><button type="submit" class="btn btn-brass">Save post</button><a href="{% url 'custom_admin:blog_list' %}" class="btn btn-outline">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap" style="max-width: 800px;">
+    <h2 style="margin-bottom: 20px;">Pay for Order #{{ order.pk }}</h2>
+
+    <div style="background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 24px;">
+      <p style="margin: 0; font-size: 1.05rem;">
+        You are paying <strong class="mono" style="color: var(--ink); font-size: 1.15rem;">${{ order.price }}</strong> for
+        <strong>{{ order.display_title }}</strong> by {{ order.specialist.get_full_name|default:order.specialist.username }}.
+      </p>
+    </div>
+
+      <div class="panel" style="max-width: 100%;">
+        <form method="post">
+          {% csrf_token %}
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label for="payment_method" style="font-weight: 600; display: block; margin-bottom: 8px;">Select Payment Method</label>
+            <select name="payment_method" id="payment_method" class="form-control" style="width: 100%; max-width: 400px; padding: 8px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--paper); color: var(--ink);">
+              {% for value, label in payment_methods %}
+                <option value="{{ value }}" {% if order.payment_method == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <p style="margin-bottom:12px; color: var(--slate);">Click pay to process your payment using the selected method.</p>
+          <button type="submit" class="btn btn-brass" style="width:100%;">Pay ${{ order.price }}</button>
+          <a href="{% url 'orders:detail' order.pk %}" class="btn btn-outline" style="display:block;text-align:center;width:100%;margin-top:8px;">Cancel</a>
+        </form>
+      </div>
+  </div>
+</section>
+{% endblock %}

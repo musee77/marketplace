@@ -1,0 +1,24 @@
+<fieldset class="dh-form-section {{ fieldset.classes }}">
+  {% if fieldset.name %}<h2>{{ fieldset.name }}</h2>{% endif %}
+  {% if fieldset.description %}<div class="dh-form-help">{{ fieldset.description|safe }}</div>{% endif %}
+  {% for line in fieldset %}
+    <div class="dh-form-row{% if not line.has_visible_field %} dh-form-row--hidden{% endif %}">
+      {% for field in line %}
+        <div class="dh-form-field{% if field.errors %} dh-form-field--error{% endif %}">
+          {% if field.is_checkbox %}
+            <div class="dh-checkbox-field">{{ field.field }}{{ field.label_tag }}</div>
+          {% else %}
+            {{ field.label_tag }}
+            {% if field.is_readonly %}
+              <div class="dh-readonly-value">{{ field.contents }}</div>
+            {% else %}
+              {{ field.field }}
+            {% endif %}
+          {% endif %}
+          {% if field.errors %}<div class="dh-field-errors">{{ field.errors }}</div>{% endif %}
+          {% if field.help_text %}<div class="dh-form-help">{{ field.help_text|safe }}</div>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+</fieldset>

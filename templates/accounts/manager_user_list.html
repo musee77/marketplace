@@ -1,0 +1,122 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Manage Users | Synovae Analytics Admin{% endblock %}
+
+{% block content %}
+<div class="dh-card">
+  <div class="dh-card-title" style="margin-bottom: 1.5rem;">
+    <span style="font-size: 1.35rem; font-weight: 700; color: #ffffff;">👥 Manage Platform Users</span>
+  </div>
+
+  <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.75rem;">
+    <a class="btn-dh {% if not role_filter %}btn-dh-primary{% else %}btn-dh-outline{% endif %}" href="?">All Users</a>
+    {% for value, label in roles %}
+      <a class="btn-dh {% if role_filter == value %}btn-dh-primary{% else %}btn-dh-outline{% endif %}" href="?role={{ value }}">{{ label }}s</a>
+    {% endfor %}
+  </div>
+
+  {% if users %}
+    <div class="dh-table-responsive">
+      <table class="dh-model-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Email</th>
+            <th>Onboarding Status</th>
+            <th>Verification</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+            <tr>
+              <td>
+                <strong style="color: #ffffff;">{{ u.get_full_name|default:u.username }}</strong>
+                <div style="font-size: 0.8rem; color: var(--admin-text-muted);">@{{ u.username }}</div>
+              </td>
+              <td>
+                <span class="badge badge-info">{{ u.get_role_display }}</span>
+              </td>
+              <td>{{ u.email }}</td>
+              <td>
+                {% if u.role == "SPECIALIST" %}
+                  {% if u.specialist_profile.is_approved %}
+                    <span class="badge badge-success">Approved</span>
+                  {% else %}
+                    <span class="badge badge-pending">Pending Approval</span>
+                  {% endif %}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>
+                {% if u.role == "SPECIALIST" %}
+                  {% if u.specialist_profile.is_verified %}
+                    <span class="badge badge-success">Verified</span>
+                  {% else %}
+                    <span class="badge badge-pending">Unverified</span>
+                  {% endif %}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>
+                {% if u.is_suspended %}
+                  <span class="badge badge-danger">Suspended</span>
+                {% else %}
+                  <span class="badge badge-success">Active</span>
+                {% endif %}
+              </td>
+              <td style="color: var(--admin-text-muted); font-size: 0.85rem;">{{ u.date_created|date:"M j, Y" }}</td>
+              <td style="text-align: right;">
+                <div style="display: inline-flex; gap: 0.4rem; justify-content: flex-end;">
+                  <form method="post" action="{% url 'accounts:manager_toggle_suspend' u.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="dh-action-link" style="border: none; cursor: pointer; font-family: inherit; background: rgba(239, 68, 68, 0.1); color: var(--admin-danger);">
+                      {% if u.is_suspended %}Reinstate{% else %}Suspend{% endif %}
+                    </button>
+                  </form>
+                  {% if u.role == "SPECIALIST" %}
+                    <form method="post" action="{% url 'accounts:manager_toggle_approve' u.specialist_profile.pk %}" style="display: inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="dh-action-link dh-action-add" style="border: none; cursor: pointer; font-family: inherit;">
+                        {% if u.specialist_profile.is_approved %}Unapprove{% else %}Approve{% endif %}
+                      </button>
+                    </form>
+                    <form method="post" action="{% url 'accounts:manager_toggle_verify' u.specialist_profile.pk %}" style="display: inline;">
+                      {% csrf_token %}
+                      <button type="submit" class="dh-action-link dh-action-change" style="border: none; cursor: pointer; font-family: inherit;">
+                        {% if u.specialist_profile.is_verified %}Unverify{% else %}Verify{% endif %}
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; align-items: center;">
+      {% if page_obj.has_previous %}
+        <a class="btn-dh btn-dh-outline" href="?page={{ page_obj.previous_page_number }}{% if role_filter %}&role={{ role_filter }}{% endif %}">← Previous</a>
+      {% else %}
+        <button class="btn-dh btn-dh-outline" disabled style="opacity: 0.4; cursor: not-allowed;">← Previous</button>
+      {% endif %}
+
+      <span style="font-size: 0.85rem; color: var(--admin-text-muted); padding: 0 4px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+      {% if page_obj.has_next %}
+        <a class="btn-dh btn-dh-outline" href="?page={{ page_obj.next_page_number }}{% if role_filter %}&role={{ role_filter }}{% endif %}">Next →</a>
+      {% else %}
+        <button class="btn-dh btn-dh-outline" disabled style="opacity: 0.4; cursor: not-allowed;">Next →</button>
+      {% endif %}
+    </div>
+  {% else %}
+    <p style="color: var(--admin-text-muted); font-size: 0.95rem; text-align: center; padding: 2rem 0;">No users found matching the filter.</p>
+  {% endif %}
+</div>
+{% endblock %}

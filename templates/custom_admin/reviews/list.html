@@ -1,0 +1,70 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <span>Reviews</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  <h2>Marketplace Reviews</h2>
+  <p style="color:var(--admin-text-muted); margin-bottom: 20px; font-size:0.9rem;">
+    View and moderate feedback left by clients for specialists. Deleting a review will permanently remove it from the specialist's profile page and recalculate their average rating.
+  </p>
+
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--admin-card-border); text-align: left; color: var(--admin-text-muted);">
+          <th style="padding: 12px 8px; width: 120px;">Client (Reviewer)</th>
+          <th style="padding: 12px 8px; width: 150px;">Specialist (Reviewee)</th>
+          <th style="padding: 12px 8px; width: 80px;">Rating</th>
+          <th style="padding: 12px 8px;">Comment</th>
+          <th style="padding: 12px 8px; width: 120px;">Date</th>
+          <th style="padding: 12px 8px; text-align: right; width: 100px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reviews %}
+        <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.5);">
+          <td style="padding: 12px 8px; font-weight: 600; color: #fff;">
+            @{{ r.reviewer.username }}
+          </td>
+          <td style="padding: 12px 8px; color: #fff;">
+            @{{ r.reviewee.username }}
+          </td>
+          <td style="padding: 12px 8px; font-weight: bold; color: var(--admin-accent);">
+            {{ r.rating }} / 5
+          </td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted); word-break: break-all;">
+            {{ r.comment }}
+          </td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ r.created_at|date:"M j, Y" }}</td>
+          <td style="padding: 12px 8px; text-align: right;">
+            <a href="{% url 'custom_admin:review_delete' r.pk %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; background: var(--admin-danger); color: #fff; text-decoration: none; font-weight: bold;">Delete</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="padding: 24px; text-align: center; color: var(--admin-text-muted);">No reviews written yet.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:20px;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">&laquo; Prev</a>
+    {% endif %}
+    
+    <span style="padding: 4px 10px; color: var(--admin-text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">Next &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

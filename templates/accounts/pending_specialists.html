@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Pending Specialist Approvals | Synovae Analytics Admin{% endblock %}
+
+{% block content %}
+<div class="dh-card">
+  <div class="dh-card-title" style="margin-bottom: 1.5rem;">
+    <span style="font-size: 1.35rem; font-weight: 700; color: #ffffff;">✅ Pending Specialist Approvals</span>
+    <span class="badge {% if pending %}badge-pending{% else %}badge-success{% endif %}">
+      {{ pending|length }} pending review
+    </span>
+  </div>
+
+  <p style="color: var(--admin-text-muted); font-size: 0.925rem; margin-bottom: 1.75rem;">
+    Verify credentials and headline titles of onboarding Specialists before approving them to operate on the marketplace.
+  </p>
+
+  {% if pending %}
+    <div class="dh-table-responsive">
+      <table class="dh-model-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Headline</th>
+            <th>Skills</th>
+            <th>Hourly Rate</th>
+            <th>Joined</th>
+            <th style="text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sp in pending %}
+            <tr>
+              <td>
+                <strong style="color: #ffffff;">{{ sp.user.get_full_name|default:sp.user.username }}</strong>
+                <div style="font-size: 0.8rem; color: var(--admin-text-muted);">@{{ sp.user.username }}</div>
+              </td>
+              <td>{{ sp.headline|default:"—" }}</td>
+              <td style="white-space: normal; max-width: 250px;">{{ sp.skills|default:"—" }}</td>
+              <td style="font-weight: 600; color: var(--admin-accent);">${{ sp.hourly_rate }}</td>
+              <td style="color: var(--admin-text-muted); font-size: 0.85rem;">{{ sp.created_at|date:"M j, Y" }}</td>
+              <td style="text-align: right;">
+                <form method="post" action="{% url 'accounts:manager_toggle_approve' sp.pk %}" style="display: inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="dh-action-link dh-action-add" style="border: none; cursor: pointer; font-family: inherit;">Approve</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top: 1.5rem; display: flex; gap: 0.5rem; align-items: center;">
+      {% if page_obj.has_previous %}
+        <a class="btn-dh btn-dh-outline" href="?page={{ page_obj.previous_page_number }}">← Previous</a>
+      {% else %}
+        <button class="btn-dh btn-dh-outline" disabled style="opacity: 0.4; cursor: not-allowed;">← Previous</button>
+      {% endif %}
+
+      <span style="font-size: 0.85rem; color: var(--admin-text-muted); padding: 0 4px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+      {% if page_obj.has_next %}
+        <a class="btn-dh btn-dh-outline" href="?page={{ page_obj.next_page_number }}">Next →</a>
+      {% else %}
+        <button class="btn-dh btn-dh-outline" disabled style="opacity: 0.4; cursor: not-allowed;">Next →</button>
+      {% endif %}
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 3rem 1.5rem; color: var(--admin-text-muted);">
+      <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎉</div>
+      <p style="font-size: 1.05rem; font-weight: 500; color: #ffffff; margin: 0 0 0.5rem 0;">All caught up!</p>
+      <p style="margin: 0; font-size: 0.9rem;">No specialists currently awaiting platform approval.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <span>Users</span>
+{% endblock %}
+
+{% block content %}
+<div id="dh-changelist-wrap" class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  
+  <div class="dh-changelist-topbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
+    <h2>Manage Users</h2>
+    
+    <!-- Search and Filters Form -->
+    <form method="get" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+      <input type="text" name="q" value="{{ q }}" placeholder="Search username, email..." class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff; min-width: 240px;">
+      
+      <select name="role" class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff;">
+        <option value="">All Roles</option>
+        {% for val, name in roles %}
+          <option value="{{ val }}" {% if role_filter == val %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="status" class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff;">
+        <option value="">All Statuses</option>
+        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+        <option value="suspended" {% if status_filter == 'suspended' %}selected{% endif %}>Suspended</option>
+      </select>
+      
+      <button type="submit" class="btn btn-brass" style="padding: 8px 16px; background: var(--admin-accent); color: #0f172a; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">Apply</button>
+      {% if q or role_filter or status_filter %}
+        <a href="{% url 'custom_admin:user_list' %}" class="btn btn-outline" style="padding: 8px 16px; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <!-- Users Table -->
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--admin-card-border); text-align: left; color: var(--admin-text-muted);">
+          <th style="padding: 12px 8px;">User</th>
+          <th style="padding: 12px 8px;">Email</th>
+          <th style="padding: 12px 8px;">Role</th>
+          <th style="padding: 12px 8px;">Status</th>
+          <th style="padding: 12px 8px;">Verification</th>
+          <th style="padding: 12px 8px; text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.5);">
+          <td style="padding: 12px 8px; font-weight: 600;">
+            <a href="{% url 'custom_admin:user_detail' u.pk %}" style="color: #fff; text-decoration: none;">
+              {{ u.get_full_name|default:u.username }}
+            </a>
+            <div style="font-size: 0.75rem; color: var(--admin-text-muted); font-weight: normal;">@{{ u.username }}</div>
+          </td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ u.email }}</td>
+          <td style="padding: 12px 8px;">
+            <span style="font-size: 0.8rem; font-weight: bold; text-transform: uppercase;">{{ u.get_role_display }}</span>
+          </td>
+          <td style="padding: 12px 8px;">
+            {% if u.is_suspended %}
+              <span class="status status-cancelled" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Suspended</span>
+            {% else %}
+              <span class="status status-completed" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Active</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px 8px;">
+            {% if u.is_specialist %}
+              {% if u.specialist_profile.is_verified %}
+                <span style="color: #10b981; font-weight: bold;">Verified ✓</span>
+              {% else %}
+                <span style="color: var(--admin-warning); font-weight: bold;">Unverified</span>
+              {% endif %}
+            {% else %}
+              <span style="color: var(--admin-text-muted);">—</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px 8px; text-align: right; white-space: nowrap;">
+            <a href="{% url 'custom_admin:user_detail' u.pk %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--admin-card-border); color: #fff; text-decoration: none; margin-right: 4px;">Edit / Balance</a>
+            
+            <a href="{% url 'custom_admin:user_toggle_suspend' u.pk %}" class="btn {% if u.is_suspended %}btn-success{% else %}btn-danger{% endif %}" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 4px; background: {% if u.is_suspended %}var(--admin-success){% else %}var(--admin-danger){% endif %}; color: #fff; text-decoration: none; margin-right: 4px;">
+              {% if u.is_suspended %}Activate{% else %}Suspend{% endif %}
+            </a>
+
+            {% if u.is_specialist %}
+              <a href="{% url 'custom_admin:user_toggle_verify' u.pk %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--admin-card-border); color: #fff; text-decoration: none; margin-right: 4px;">
+                {% if u.specialist_profile.is_verified %}Unverify{% else %}Verify{% endif %}
+              </a>
+            {% endif %}
+
+            {% if user.is_superuser %}
+              <a href="{% url 'custom_admin:user_promote' u.pk %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--admin-accent); color: var(--admin-accent); text-decoration: none;">
+                {% if u.role == 'MANAGER' %}Demote{% else %}Promote Manager{% endif %}
+              </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="padding: 24px; text-align: center; color: var(--admin-text-muted);">No users found matching your search.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:20px;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">&laquo; Prev</a>
+    {% endif %}
+    
+    <span style="padding: 4px 10px; color: var(--admin-text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">Next &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

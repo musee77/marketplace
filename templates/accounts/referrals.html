@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Referral Program — Synovae Analytics{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <h2>Referral Program</h2>
+        <p style="color:var(--slate); margin-top:4px;">Invite colleagues and clients to earn rewards and enjoy reduced platform fees.</p>
+      </div>
+      <a href="{% url 'core:dashboard' %}" class="btn btn-outline">← Back to Dashboard</a>
+    </div>
+
+    <!-- Referral Stats Row -->
+    <div class="stats-row" style="margin-top:16px;">
+      <div class="stat">
+        <div class="num">{{ total_referrals }}</div>
+        <div class="lbl">Friends referred</div>
+      </div>
+      <div class="stat">
+        <div class="num">{{ total_orders }}</div>
+        <div class="lbl">Referral orders paid</div>
+      </div>
+      <div class="stat">
+        <div class="num">${{ total_earnings|floatformat:2 }}</div>
+        <div class="lbl">Total referral rewards earned</div>
+      </div>
+      <div class="stat">
+        <div class="num" style="color:var(--good);">10%</div>
+        <div class="lbl">First order discount for referrals</div>
+      </div>
+    </div>
+
+    <!-- Share Link & Code Card -->
+    <div class="panel" style="margin-top:24px; padding:28px; background:linear-gradient(135deg, rgba(193,148,63,0.08) 0%, rgba(15,23,42,0.02) 100%); border:1px solid rgba(193,148,63,0.35);">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:24px; align-items:center;">
+        <div>
+          <h3 style="margin:0 0 8px; color:var(--ink);">Your Personal Referral Link</h3>
+          <p style="color:var(--slate); font-size:0.95rem; margin-bottom:14px;">
+            Share this link with anyone. When they sign up, they automatically get a <strong>10% discount</strong> (pay only 90%) on their <strong>first order</strong>, and you earn <strong>5% cash bonus</strong> of the amount paid for their first order!
+          </p>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input type="text" id="refLinkInput" value="{{ referral_link }}" readonly class="mono" style="flex:1; min-width:220px; padding:10px 14px; border:1px solid var(--line); border-radius:var(--radius); font-size:0.9rem; background:#fff;">
+            <button type="button" class="btn btn-brass" onclick="copyRefLink()" id="copyBtn">📋 Copy link</button>
+          </div>
+        </div>
+
+        <div style="border-left:1px solid var(--line); padding-left:24px;">
+          <div style="margin-bottom:12px;">
+            <span style="font-size:0.85rem; color:var(--slate); text-transform:uppercase; font-weight:600; letter-spacing:0.5px;">Your Referral Code</span>
+            <div style="font-size:1.6rem; font-weight:800; font-family:monospace; color:var(--brass); margin-top:2px;">{{ referral_code }}</div>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;">
+            <a href="https://api.whatsapp.com/send?text=Join%20me%20on%20Synovae%20Analytics!%20Sign%20up%20using%20my%20link%20to%20get%20reduced%20fees%20on%20data%20services:%20{{ referral_link|urlencode }}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+              💬 Share on WhatsApp
+            </a>
+            <a href="https://twitter.com/intent/tweet?text=Hire%20top%20data%20specialists%20or%20find%20work%20on%20Synovae%20Analytics.%20Sign%20up%20with%20my%20link%20for%20reduced%20fees:&url={{ referral_link|urlencode }}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex; align-items:center; gap:6px;">
+              🐦 Share on X
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- How it works card -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:16px; margin-top:28px;">
+      <div class="panel" style="padding:20px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">🎁</div>
+        <h4 style="margin:0 0 6px;">1. Share Your Link</h4>
+        <p style="color:var(--slate); font-size:0.9rem; margin:0;">Send your invite link or code to clients, analysts, and fellow specialists.</p>
+      </div>
+      <div class="panel" style="padding:20px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">📉</div>
+        <h4 style="margin:0 0 6px;">2. They Pay Less</h4>
+        <p style="color:var(--slate); font-size:0.9rem; margin:0;">Your referrals pay only 90% of the price on their first order, saving 10% on their initial purchase.</p>
+      </div>
+      <div class="panel" style="padding:20px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">💰</div>
+        <h4 style="margin:0 0 6px;">3. You Get Paid</h4>
+        <p style="color:var(--slate); font-size:0.9rem; margin:0;">When your referral pays for their first order, 5% of the amount paid is automatically credited to your balance.</p>
+      </div>
+    </div>
+
+    <!-- Referred Users Section -->
+    <div class="section-head" style="margin-top:36px;">
+      <h3>Referred Members ({{ total_referrals }})</h3>
+    </div>
+    {% if referred_users %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Role</th>
+            <th>Email</th>
+            <th>Date Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in referred_users %}
+          <tr>
+            <td><strong>{{ r.get_full_name|default:r.username }}</strong></td>
+            <td><span class="badge" style="background:var(--paper); color:var(--ink); border:1px solid var(--line);">{{ r.get_role_display }}</span></td>
+            <td style="color:var(--slate);">{{ r.email }}</td>
+            <td class="mono" style="font-size:0.85rem; color:var(--slate);">{{ r.date_created|date:"M j, Y" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="pagination-nav" aria-label="Referred members pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline pagination-btn">← Back</a>
+      {% else %}
+        <span class="btn btn-outline pagination-btn disabled">← Back</span>
+      {% endif %}
+
+      <span class="pagination-info mono">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline pagination-btn">Next →</a>
+      {% else %}
+        <span class="btn btn-outline pagination-btn disabled">Next →</span>
+      {% endif %}
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="empty-state" style="padding:32px 16px;">
+      <p style="color:var(--slate);">You haven't referred anyone yet. Share your referral link above to get started!</p>
+    </div>
+    {% endif %}
+
+    <!-- Referral Orders History -->
+    {% if referral_orders %}
+    <div class="section-head" style="margin-top:36px;">
+      <h3>Referral Orders & Rewards</h3>
+    </div>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Client</th>
+            <th>Service</th>
+            <th>Order Price</th>
+            <th>Fee Applied</th>
+            <th>Your Reward (5%)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for ord in referral_orders %}
+          <tr>
+            <td class="mono">#{{ ord.pk }}</td>
+            <td>{{ ord.client.get_full_name|default:ord.client.username }}</td>
+            <td>{{ ord.display_title|truncatechars:32 }}</td>
+            <td class="mono">${{ ord.price }}</td>
+            <td><span class="badge" style="background:rgba(16,185,129,0.15); color:var(--good); font-weight:600;">{{ ord.fee_percentage_display }}</span></td>
+            <td class="mono" style="color:var(--good); font-weight:700;">+${{ ord.referral_bonus }}</td>
+            <td>
+              {% if ord.is_paid %}
+                <span class="status status-COMPLETED">Paid</span>
+              {% else %}
+                <span class="status status-PENDING">Unpaid</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<script>
+function copyRefLink() {
+  const input = document.getElementById('refLinkInput');
+  input.select();
+  input.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(input.value).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const oldText = btn.innerText;
+    btn.innerText = '✓ Copied!';
+    btn.style.background = 'var(--good)';
+    btn.style.color = '#fff';
+    setTimeout(() => {
+      btn.innerText = oldText;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 2500);
+  });
+}
+</script>
+{% endblock %}

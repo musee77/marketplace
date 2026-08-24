@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap page-grid">
+    <aside class="filters">
+      <h3>Filters</h3>
+      <div class="filter-group">
+        <h4>Status</h4>
+        <nav class="filter-list" aria-label="Order status filters">
+          <a class="filter-item {% if not status %}active{% endif %}" href="?">All <span class="filter-count">({{ total_count }})</span></a>
+          {% for value, label, count in statuses %}
+            <a class="filter-item {% if status == value %}active{% endif %}" href="?status={{ value }}">{{ label }} <span class="filter-count">({{ count }})</span></a>
+          {% endfor %}
+        </nav>
+      </div>
+    </aside>
+
+    <div class="orders">
+      <div class="section-head">
+        <h2>{% if user.is_specialist %}Orders received{% elif user.is_client %}My orders{% else %}All orders{% endif %}</h2>
+        {% if user.is_client %}
+          <a href="{% url 'orders:create_quick' %}" class="btn btn-brass">New order</a>
+        {% endif %}
+      </div>
+      <table>
+      <thead><tr><th>#</th><th>Service</th><th>Client</th><th>Specialist</th><th>Price</th><th>Status</th><th>Placed</th></tr></thead>
+      <tbody>
+        {% for o in orders %}
+        <tr onclick="window.location='{% url 'orders:detail' o.pk %}'" style="cursor:pointer;">
+          <td class="mono">#{{ o.pk }}</td>
+          <td>{{ o.display_title|truncatechars:36 }}</td>
+          <td>{{ o.client.get_full_name|default:o.client.username }}</td>
+          <td>{{ o.specialist.get_full_name|default:o.specialist.username }}</td>
+          <td class="mono">${{ o.price }}</td>
+          <td><span class="status status-{{ o.status }}">{{ o.get_status_display }}</span></td>
+          <td class="mono" style="font-size:.8rem;color:var(--slate);">{{ o.created_at|date:"M j" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="empty">No orders here yet.</td></tr>
+        {% endfor %}
+      </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+ 
+{% endblock %}

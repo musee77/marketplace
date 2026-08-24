@@ -1,0 +1,43 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block bodyclass %}dh-login-body{% endblock %}
+
+{% block content %}
+<div class="dh-login-card">
+  <div class="dh-login-logo">
+    <svg viewBox="0 0 24 24" fill="none" style="width: 42px; height: 42px; margin: 0 auto 0.5rem;"><circle cx="12" cy="12" r="10" stroke="#c1943f" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#c1943f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1 style="margin-top:0; color: #ffffff;">Synovae Analytics</h1>
+    <span style="font-size: 0.65rem; background: var(--admin-accent); color: #0f172a; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;">ADMIN</span>
+  </div>
+
+  <p style="color: var(--admin-text-muted); text-align: center; margin-top: -1.25rem; margin-bottom: 2rem; font-size: 0.875rem;">Sign in to access the administrator dashboard.</p>
+
+  {% if form.errors and not form.non_field_errors %}
+    <div class="dh-login-error">Please correct the errors below.</div>
+  {% endif %}
+
+  {% if form.non_field_errors %}
+    <div class="dh-login-error">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+  {% endif %}
+
+  <form action="{{ app_path }}" method="post" id="login-form">
+    {% csrf_token %}
+    
+    <div class="dh-form-group">
+      <label for="id_username">Email address</label>
+      {{ form.username }}
+    </div>
+    
+    <div class="dh-form-group" style="margin-bottom: 2rem;">
+      <label for="id_password">Password</label>
+      {{ form.password }}
+      <input type="hidden" name="next" value="{{ next }}">
+    </div>
+    
+    <button type="submit" class="dh-btn-login">Sign in</button>
+  </form>
+</div>
+{% endblock %}

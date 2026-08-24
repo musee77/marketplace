@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="wrap" style="display:flex;justify-content:center;">
+    <div class="panel" style="width:100%;max-width:480px;">
+      <h2 style="margin-bottom:4px;">Create your account</h2>
+
+      {% if user.is_authenticated %}
+        <p class="helptext">You are already logged in. <a href="{% url 'accounts:logout' %}">Log out</a> first to create a new account.</p>
+      {% else %}
+
+        {% if referrer %}
+          <div style="background:rgba(193,148,63,0.12);border:1px solid var(--brass);border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;">
+            <div style="font-weight:700;color:var(--ink);font-size:0.95rem;">🎉 Invited by {{ referrer.get_full_name|default:referrer.username }}!</div>
+            <div style="font-size:0.85rem;color:var(--slate);margin-top:2px;">You qualify for a <strong>10% discount</strong> on your first order.</div>
+          </div>
+        {% endif %}
+
+        <p class="helptext" style="margin-bottom:20px;">Sign up as a client to hire data specialists, or as a specialist to list your services.</p>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          {# ── Non-field errors ── #}
+          {% if form.non_field_errors %}
+            <ul class="errorlist" style="margin-bottom:16px;">
+              {% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+
+          {# ── Email ── #}
+          <div style="margin-bottom:16px;">
+            <label for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <ul class="errorlist">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+
+          {# ── Role cards ── #}
+          <div style="margin-bottom:16px;">
+            <label>I want to…</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;">
+              {% for choice_val, choice_lbl in form.role.field.choices %}
+                <label for="id_role_{{ forloop.counter0 }}"
+                       style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+                              border:1px solid var(--line);border-radius:var(--radius);
+                              cursor:pointer;font-weight:500;font-size:.88rem;
+                              background:var(--paper);transition:border-color .15s,background .15s;">
+                  <input type="radio"
+                         name="{{ form.role.html_name }}"
+                         id="id_role_{{ forloop.counter0 }}"
+                         value="{{ choice_val }}"
+                         {% if form.role.value == choice_val %}checked
+                         {% elif not form.role.value and forloop.first %}checked{% endif %}
+                         style="accent-color:var(--brass);width:16px;height:16px;flex-shrink:0;">
+                  {{ choice_lbl }}
+                </label>
+              {% endfor %}
+            </div>
+            {% if form.role.errors %}
+              <ul class="errorlist" style="margin-top:6px;">{% for e in form.role.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+          </div>
+
+          {# ── Referral code ── #}
+          <div style="margin-bottom:16px;">
+            <label for="{{ form.referral_code.id_for_label }}">{{ form.referral_code.label }}</label>
+            <input type="text"
+                   id="{{ form.referral_code.id_for_label }}"
+                   name="{{ form.referral_code.html_name }}"
+                   maxlength="20"
+                   placeholder="e.g. REF123456"
+                   value="{{ form.referral_code.value|default:'' }}"
+                   autocomplete="off"
+                   style="font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;">
+            {% if form.referral_code.errors %}
+              <ul class="errorlist">{% for e in form.referral_code.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+            {% if ref_code %}
+              <p class="helptext" style="color:var(--good);">✓ Referral code applied automatically.</p>
+            {% else %}
+              <p class="helptext">Have a referral code? Enter it here for reduced platform fees.</p>
+            {% endif %}
+          </div>
+
+          {# ── Password with show/hide ── #}
+          <div style="margin-bottom:24px;">
+            <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+            <div style="position:relative;">
+              {{ form.password }}
+              <button type="button"
+                      id="pw-toggle"
+                      tabindex="-1"
+                      onclick="togglePw()"
+                      style="position:absolute;right:10px;top:50%;transform:translateY(-50%);
+                             background:none;border:none;cursor:pointer;padding:4px;
+                             color:var(--slate);font-size:.78rem;
+                             font-family:'IBM Plex Mono',monospace;letter-spacing:.06em;">
+                SHOW
+              </button>
+            </div>
+            {% if form.password.errors %}
+              <ul class="errorlist">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+            <p class="helptext">Minimum 8 characters.</p>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%;padding:13px;">
+            Create account
+          </button>
+        </form>
+
+        <div class="divider"></div>
+        <p class="helptext" style="text-align:center;">Already have an account? <a href="{% url 'accounts:login' %}">Log in</a></p>
+
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<script>
+/* Show / hide password */
+function togglePw() {
+  var inp = document.getElementById('{{ form.password.id_for_label }}');
+  var btn = document.getElementById('pw-toggle');
+  if (!inp) return;
+  var hidden = inp.type === 'password';
+  inp.type = hidden ? 'text' : 'password';
+  btn.textContent = hidden ? 'HIDE' : 'SHOW';
+}
+
+/* Highlight the selected role card */
+document.addEventListener('DOMContentLoaded', function () {
+  var radios = document.querySelectorAll('input[name="{{ form.role.html_name }}"]');
+  function highlight() {
+    radios.forEach(function (r) {
+      var card = r.closest('label');
+      card.style.borderColor = r.checked ? 'var(--brass)' : 'var(--line)';
+      card.style.background  = r.checked ? 'rgba(193,148,63,0.07)' : 'var(--paper)';
+    });
+  }
+  radios.forEach(function (r) { r.addEventListener('change', highlight); });
+  highlight();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Reviews for {{ profile.user.get_full_name|default:profile.user.username }} | Synovae Analytics{% endblock %}
+
+{% block seo %}
+  <meta name="description" content="Read {{ review_count }} client reviews for {{ profile.user.get_full_name|default:profile.user.username }}, a data analytics specialist on Synovae Analytics.">
+  <link rel="canonical" href="{{ request.build_absolute_uri }}">
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <a href="{{ profile.get_absolute_url }}" class="back-link">← Back to profile</a>
+    <div class="section-head" style="margin-top:18px;align-items:flex-end;">
+      <div>
+        <div class="eyebrow">Client feedback</div>
+        <h1>{{ profile.user.get_full_name|default:profile.user.username }} reviews</h1>
+        <p style="color:var(--slate);margin-bottom:0;">{{ review_count }} review{{ review_count|pluralize }} across {{ listing_count }} active listing{{ listing_count|pluralize }}.</p>
+      </div>
+      <div class="profile-review-summary">
+        <strong>★ {{ average_rating|default:"—" }}</strong>
+        <span>Average rating</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="listing-reviews">
+      {% for r in reviews %}
+        <div class="listing-review-card">
+          <div class="listing-review-header">
+            <span class="listing-reviewer-name">{{ r.reviewer.get_full_name|default:r.reviewer.username }}</span>
+            <span class="listing-review-date">{{ r.created_at|date:"M j, Y" }}</span>
+          </div>
+          <div class="listing-review-stars">{% for i in "12345" %}<span class="star {% if forloop.counter <= r.rating %}filled{% else %}empty{% endif %}">★</span>{% endfor %} {{ r.rating }}/5</div>
+          <p class="listing-review-comment">{{ r.comment }}</p>
+          {% if r.service %}<small class="review-service">For: {{ r.service.title }}</small>{% endif %}
+        </div>
+      {% empty %}
+        <p class="empty">No reviews yet.</p>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <div class="pagination-nav" style="margin-top:24px;">
+        {% if page_obj.has_previous %}
+          <a class="btn btn-outline pagination-btn btn-sm" href="?page={{ page_obj.previous_page_number }}">← Previous</a>
+        {% else %}
+          <span class="btn btn-outline pagination-btn btn-sm disabled">← Previous</span>
+        {% endif %}
+        <span class="pagination-info mono">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+          <a class="btn btn-outline pagination-btn btn-sm" href="?page={{ page_obj.next_page_number }}">Next →</a>
+        {% else %}
+          <span class="btn btn-outline pagination-btn btn-sm disabled">Next →</span>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

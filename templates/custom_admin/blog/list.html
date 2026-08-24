@@ -1,0 +1,33 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}&rsaquo; <span>Blog posts</span>{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="padding:24px; background:var(--admin-card-bg); border:1px solid var(--admin-card-border); border-radius:14px;">
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+    <div><h2 style="margin:0;">Blog posts</h2><p style="color:var(--admin-text-muted); margin:6px 0 0;">Create, publish, and maintain search-ready articles.</p></div>
+    <a href="{% url 'custom_admin:blog_create' %}" class="btn btn-brass" style="padding:9px 16px; text-decoration:none;">+ New post</a>
+  </div>
+  <form method="get" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
+    <input type="search" name="q" value="{{ q }}" placeholder="Search title or content..." class="form-control" style="padding:9px 12px; min-width:240px; flex:1;">
+    <select name="status" class="form-control" style="padding:9px 12px;">
+      <option value="">All statuses</option>
+      {% for value, label in statuses %}<option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <select name="category" class="form-control" style="padding:9px 12px;">
+      <option value="">All categories</option>
+      {% for category in categories %}<option value="{{ category.id }}" {% if category_id|add:'0' == category.id %}selected{% endif %}>{{ category.name }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn btn-brass" style="padding:9px 16px;">Filter</button>
+    {% if q or status_filter or category_id %}<a href="{% url 'custom_admin:blog_list' %}" class="btn btn-outline" style="padding:9px 16px; text-decoration:none;">Clear</a>{% endif %}
+  </form>
+  <div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; font-size:.9rem;">
+    <thead><tr style="border-bottom:2px solid var(--admin-card-border); text-align:left; color:var(--admin-text-muted);"><th style="padding:12px 8px;">Post</th><th style="padding:12px 8px;">Category</th><th style="padding:12px 8px;">Status</th><th style="padding:12px 8px;">Updated</th><th style="padding:12px 8px; text-align:right;">Actions</th></tr></thead>
+    <tbody>
+      {% for post in posts %}<tr style="border-bottom:1px solid rgba(51,65,85,.5);"><td style="padding:12px 8px;"><strong>{{ post.title }}</strong><div style="font-size:.75rem; color:var(--admin-text-muted);">/blog/{{ post.slug }}/</div></td><td style="padding:12px 8px; color:var(--admin-text-muted);">{{ post.category.name|default:'Uncategorized' }}</td><td style="padding:12px 8px;"><span style="color:{% if post.status == 'PUBLISHED' %}var(--admin-success){% else %}var(--admin-text-muted){% endif %};">{{ post.get_status_display }}</span></td><td style="padding:12px 8px; color:var(--admin-text-muted);">{{ post.updated_at|date:'M j, Y' }}</td><td style="padding:12px 8px; text-align:right; white-space:nowrap;"><a href="{% url 'custom_admin:blog_edit' post.pk %}" class="btn btn-outline" style="padding:6px 10px; text-decoration:none;">Edit</a> <a href="{% url 'custom_admin:blog_delete' post.pk %}" class="btn btn-danger" style="padding:6px 10px; text-decoration:none;">Delete</a></td></tr>
+      {% empty %}<tr><td colspan="5" style="padding:24px; text-align:center; color:var(--admin-text-muted);">No blog posts found.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+  {% if page_obj.has_other_pages %}<div style="display:flex; justify-content:center; gap:8px; margin-top:20px;">{% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&status={{ status_filter }}&category={{ category_id }}" class="btn btn-outline" style="padding:5px 12px; text-decoration:none;">Prev</a>{% endif %}<span style="padding:5px 12px; color:var(--admin-text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&q={{ q }}&status={{ status_filter }}&category={{ category_id }}" class="btn btn-outline" style="padding:5px 12px; text-decoration:none;">Next</a>{% endif %}</div>{% endif %}
+</div>
+{% endblock %}

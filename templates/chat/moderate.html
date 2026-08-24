@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Moderate Chat Messages | Synovae Analytics Admin{% endblock %}
+
+{% block content %}
+<div class="dh-card">
+  <div class="dh-card-title" style="margin-bottom: 1.5rem;">
+    <span style="font-size: 1.35rem; font-weight: 700; color: #ffffff;">💬 Moderate Chat Messages</span>
+    <span class="badge {% if pending_messages %}badge-pending{% else %}badge-success{% endif %}">
+      {{ pending_messages|length }} pending review
+    </span>
+  </div>
+
+  <p style="color: var(--admin-text-muted); font-size: 0.925rem; margin-bottom: 1.75rem;">
+    Review and approve messages sent by Specialists to Clients. Client and Manager messages bypass moderation automatically.
+  </p>
+
+  {% if pending_messages %}
+    <div class="dh-table-responsive">
+      <table class="dh-model-table">
+        <thead>
+          <tr>
+            <th>From (Specialist)</th>
+            <th>To (Client)</th>
+            <th>Message Body</th>
+            <th>Sent</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for msg in pending_messages %}
+            <tr>
+              <td><strong>{{ msg.sender.get_full_name|default:msg.sender.username }}</strong></td>
+              <td>
+                <strong>
+                  {% for p in msg.conversation.participants.all %}
+                    {% if p != msg.sender %}{{ p.get_full_name|default:p.username }}{% endif %}
+                  {% endfor %}
+                </strong>
+              </td>
+              <td style="white-space: normal; min-width: 320px;">{{ msg.body }}</td>
+              <td style="color: var(--admin-text-muted); font-size: 0.85rem;">{{ msg.created_at|timesince }} ago</td>
+              <td style="text-align: right;">
+                <div style="display: inline-flex; gap: 0.5rem; justify-content: flex-end;">
+                  <form method="post" action="{% url 'chat:approve' msg.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="dh-action-link dh-action-add" style="border: none; cursor: pointer; font-family: inherit;">Approve</button>
+                  </form>
+                  <form method="post" action="{% url 'chat:reject' msg.pk %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="dh-action-link" style="border: none; cursor: pointer; font-family: inherit; background: rgba(239, 68, 68, 0.1); color: var(--admin-danger);">Reject</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 3rem 1.5rem; color: var(--admin-text-muted);">
+      <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎉</div>
+      <p style="font-size: 1.05rem; font-weight: 500; color: #ffffff; margin: 0 0 0.5rem 0;">All caught up!</p>
+      <p style="margin: 0; font-size: 0.9rem;">No specialist messages currently awaiting moderation review.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

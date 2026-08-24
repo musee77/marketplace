@@ -1,0 +1,95 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <span>Orders</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  
+  <div class="dh-changelist-topbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
+    <h2>Marketplace Orders</h2>
+    
+    <!-- Search and Filter Form -->
+    <form method="get" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+      <input type="text" name="q" value="{{ q }}" placeholder="Search ID, client, specialist..." class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff; min-width: 240px;">
+      
+      <select name="status" class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff;">
+        <option value="">All Statuses</option>
+        {% for val, name in statuses %}
+          <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ name }}</option>
+        {% endfor %}
+      </select>
+      
+      <button type="submit" class="btn btn-brass" style="padding: 8px 16px; background: var(--admin-accent); color: #0f172a; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">Apply</button>
+      {% if q or status_filter %}
+        <a href="{% url 'custom_admin:order_list' %}" class="btn btn-outline" style="padding: 8px 16px; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--admin-card-border); text-align: left; color: var(--admin-text-muted);">
+          <th style="padding: 12px 8px;">Order ID</th>
+          <th style="padding: 12px 8px;">Client</th>
+          <th style="padding: 12px 8px;">Specialist</th>
+          <th style="padding: 12px 8px;">Price</th>
+          <th style="padding: 12px 8px;">Payment</th>
+          <th style="padding: 12px 8px;">Status</th>
+          <th style="padding: 12px 8px;">Placed</th>
+          <th style="padding: 12px 8px; text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.5);">
+          <td style="padding: 12px 8px; font-weight: bold;">
+            <a href="{% url 'custom_admin:order_detail' order.pk %}" style="color: var(--admin-accent); text-decoration: none;">
+              #{{ order.pk }}
+            </a>
+          </td>
+          <td style="padding: 12px 8px; color: #fff;">{{ order.client.username }}</td>
+          <td style="padding: 12px 8px; color: #fff;">{{ order.specialist.username }}</td>
+          <td style="padding: 12px 8px; font-family: monospace; color: #fff;">${{ order.price }}</td>
+          <td style="padding: 12px 8px;">
+            {% if order.is_paid %}
+              <span style="color: var(--admin-success); font-weight: bold;">✓ Paid</span>
+            {% else %}
+              <span style="color: var(--admin-text-muted);">Unpaid ({{ order.get_payment_method_display }})</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px 8px;">
+            <span class="status status-{{ order.status }}" style="font-size:0.8rem; padding: 2px 8px;">{{ order.get_status_display }}</span>
+          </td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ order.created_at|date:"M j, Y" }}</td>
+          <td style="padding: 12px 8px; text-align: right;">
+            <a href="{% url 'custom_admin:order_detail' order.pk %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff; text-decoration: none; font-weight: bold;">View Details</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" style="padding: 24px; text-align: center; color: var(--admin-text-muted);">No orders found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:20px;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">&laquo; Prev</a>
+    {% endif %}
+    
+    <span style="padding: 4px 10px; color: var(--admin-text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">Next &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

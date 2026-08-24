@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Admin sign in — Synovae Analytics{% endblock %}
+{% block content %}
+<div class="wrap" style="display:flex;justify-content:center;padding-top:2rem;padding-bottom:3rem;">
+  <div class="panel" style="width:100%;max-width:420px;">
+    <h2 style="margin-bottom:4px;">Admin sign in</h2>
+    <p class="helptext" style="margin-bottom:20px;">Sign in with an admin or manager account to access the dashboard.</p>
+
+    {% if messages %}
+      <div style="margin-bottom:16px;">
+        {% for msg in messages %}
+          <p class="errorlist" style="color:var(--bad);">{{ msg }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      
+      <div style="margin-bottom:16px;">
+        <label for="id_email">Email address</label>
+        <input id="id_email" name="email" type="email" required placeholder="admin@example.com" autocomplete="email">
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <label for="id_password">Password</label>
+        <input id="id_password" name="password" type="password" required autocomplete="current-password" placeholder="Password">
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center;">
+        <button class="btn btn-primary" type="submit" style="flex:1;padding:12px;">Sign in</button>
+        <a href="{% url 'accounts:login' %}" class="btn btn-outline" style="padding:12px;text-align:center;">User login</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

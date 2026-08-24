@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}{{ service.title }} | Synovae Analytics{% endblock %}
+
+{% block seo %}
+<meta name="description" content="{{ service.description|truncatechars:155 }}">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="product">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:title" content="{{ service.title }} | Synovae Analytics">
+<meta property="og:description" content="{{ service.description|truncatechars:155 }}">
+<meta property="og:image" content="{% if service.cover_image %}{{ request.scheme }}://{{ request.get_host }}{{ service.cover_image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}/static/img/og-default.jpg{% endif %}">
+<meta property="og:site_name" content="Synovae Analytics">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="{{ request.build_absolute_uri }}">
+<meta name="twitter:title" content="{{ service.title }} | Synovae Analytics">
+<meta name="twitter:description" content="{{ service.description|truncatechars:155 }}">
+<meta name="twitter:image" content="{% if service.cover_image %}{{ request.scheme }}://{{ request.get_host }}{{ service.cover_image.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}/static/img/og-default.jpg{% endif %}">
+{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Service",
+  "name": "{{ service.title|escapejs }}",
+  "description": "{{ service.description|truncatechars:200|escapejs }}",
+  "category": "{{ service.category.name|default:'General'|escapejs }}",
+  "provider": {
+    "@type": "LocalBusiness",
+    "name": "{{ service.specialist.get_full_name|default:service.specialist.username|escapejs }}",
+    "image": "{% if service.specialist.avatar %}{{ request.scheme }}://{{ request.get_host }}{{ service.specialist.avatar.url }}{% endif %}"
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "USD",
+    "price": "{{ service.price }}",
+    "url": "{{ request.build_absolute_uri }}"
+  }
+  {% if service.review_count > 0 %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ service.average_rating }}",
+    "reviewCount": "{{ service.review_count }}"
+  }
+  {% endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap two-col">
+    <div>
+      <div class="eyebrow">{{ service.category.name|default:"General" }}</div>
+      <h1 style="font-size:2rem;">{{ service.title }}</h1>
+      <div class="rating-row" aria-label="Average rating {{ service.average_rating }} from {{ service.review_count }} reviews">
+        <span class="star-icon">★</span>
+        <span class="rating-score">{{ service.average_rating|default:"—" }}</span>
+        <span class="review-count">({{ service.review_count }} review{{ service.review_count|pluralize }})</span>
+      </div>
+
+      {% if service.cover_image %}
+        <div style="margin: 16px 0 24px; border-radius: var(--radius); overflow: hidden; max-height: 320px; background: #0f1822; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; padding: 12px;">
+          <img src="{{ service.cover_image.url }}" alt="{{ service.title }}" style="max-width:100%; max-height:290px; width:auto; height:auto; object-fit:contain; display:block;">
+        </div>
+      {% endif %}
+
+      <p style="color:var(--slate);white-space:pre-line;">{{ service.description }}</p>
+
+      <div class="divider"></div>
+      <h3>Reviews ({{ service.review_count }})</h3>
+      <div class="listing-reviews">
+        {% for r in reviews %}
+          <div class="listing-review-card">
+            <div class="listing-review-header">
+              <div class="review-avatar">
+                {% if r.reviewer.avatar %}
+                  <img src="{{ r.reviewer.avatar.url }}" alt="{{ r.reviewer.get_full_name|default:r.reviewer.username }}">
+                {% else %}
+                  <span>{{ r.reviewer.get_full_name|default:r.reviewer.username|slice:":1"|upper }}</span>
+                {% endif %}
+              </div>
+              <div class="listing-review-meta">
+                <span class="listing-reviewer-name">{{ r.reviewer.get_full_name|default:r.reviewer.username }}</span>
+                <div class="listing-review-stars">
+                  {% for i in "12345" %}
+                    <span class="{% if forloop.counter <= r.rating %}star filled{% else %}star empty{% endif %}">★</span>
+                  {% endfor %}
+                  <span class="listing-review-rating">{{ r.rating }}.0</span>
+                </div>
+              </div>
+              <span class="listing-review-date">{{ r.created_at|date:"M j, Y" }}</span>
+            </div>
+            <p class="listing-review-comment">{{ r.comment }}</p>
+          </div>
+        {% empty %}
+          <p class="empty">No reviews yet — be the first to work with this specialist!</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="panel">
+      {% if service.specialist.specialist_profile.is_verified %}
+        <span class="seal-badge"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Verified specialist</span>
+      {% endif %}
+      <div class="price" style="font-size:1.8rem;margin-top:10px;"><span class="cur">$</span>{{ service.price }}</div>
+      <div class="helptext">Delivery in {{ service.delivery_days }} day{{ service.delivery_days|pluralize }}</div>
+
+      <div class="divider"></div>
+      <a href="{% url 'accounts:specialist_public' service.specialist.specialist_profile.id %}" style="font-weight:600;">{{ service.specialist.get_full_name|default:service.specialist.username }}</a>
+      <div class="card-by">{{ service.specialist.specialist_profile.headline }}</div>
+      <div class="card-by">★ {{ service.average_rating|default:"—" }} average rating</div>
+
+      <div class="divider"></div>
+      <div class="divider"></div>
+      {% if user.is_authenticated and user.is_client %}
+        {% if order_form %}
+          <form method="post" action="{% url 'orders:create' service.slug %}">
+            {% csrf_token %}
+            {{ order_form.as_p }}
+            <button type="submit" class="btn btn-primary" style="width:100%;text-align:center;">Hire for ${{ service.price }}</button>
+          </form>
+        {% else %}
+          <a href="{% url 'orders:create' service.slug %}" class="btn btn-primary" style="width:100%;text-align:center;">Hire for ${{ service.price }}</a>
+        {% endif %}
+      {% elif not user.is_authenticated %}
+        <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="btn btn-primary" style="width:100%;text-align:center;">Log in to hire</a>
+      {% elif user == service.specialist %}
+        <a href="{% url 'services:edit' service.slug %}" class="btn btn-outline" style="width:100%;text-align:center;">Edit listing</a>
+      {% else %}
+        <p class="helptext">Only client accounts can place orders.</p>
+      {% endif %}
+
+      {% if user.is_authenticated and user != service.specialist %}
+        <div class="divider"></div>
+        <a href="{% url 'chat:start' service.specialist.pk %}" class="btn btn-outline" style="width:100%;text-align:center;">Message specialist</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

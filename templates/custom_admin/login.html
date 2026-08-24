@@ -1,0 +1,32 @@
+{% extends "custom_admin/base.html" %}
+{% load static %}
+
+{% block bodyclass %}dh-login-body{% endblock %}
+
+{% block content %}
+<div class="dh-login-card" style="margin: 80px auto; max-width: 440px;">
+  <div class="dh-login-logo">
+    <svg viewBox="0 0 24 24" fill="none" style="width: 42px; height: 42px; margin: 0 auto 0.5rem;"><circle cx="12" cy="12" r="10" stroke="#c1943f" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#c1943f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1 style="margin-top:0; color: #ffffff;">Synovae Analytics</h1>
+    <span style="font-size: 0.65rem; background: var(--admin-accent); color: #0f172a; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;">ADMIN</span>
+  </div>
+
+  <p style="color: var(--admin-text-muted); text-align: center; margin-top: -1.25rem; margin-bottom: 2rem; font-size: 0.875rem;">Sign in to access the custom administrator dashboard.</p>
+
+  <form action="{% url 'custom_admin:login' %}" method="post" id="login-form">
+    {% csrf_token %}
+    
+    <div class="dh-form-group">
+      <label for="id_email">Email address</label>
+      <input type="email" name="email" id="id_email" required class="form-control" placeholder="admin@example.com" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #ffffff;">
+    </div>
+    
+    <div class="dh-form-group" style="margin-bottom: 2rem; margin-top: 15px;">
+      <label for="id_password">Password</label>
+      <input type="password" name="password" id="id_password" required class="form-control" placeholder="••••••••" style="width: 100%; box-sizing: border-box; padding: 10px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #ffffff;">
+    </div>
+    
+    <button type="submit" class="dh-btn-login" style="width: 100%; padding: 12px; border-radius: 6px; border: none; background: var(--admin-accent); color: #0f172a; font-weight: bold; cursor: pointer;">Sign in</button>
+  </form>
+</div>
+{% endblock %}

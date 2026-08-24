@@ -1,0 +1,175 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ title }} | Synovae Analytics Admin{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+  {% block extrastyle %}{% endblock %}
+</head>
+<body class="{% block bodyclass %}{% endblock %}">
+  {% if user.is_authenticated %}
+  <!-- Mobile Header Bar (< 992px) -->
+  <div class="dh-mobile-topbar">
+    <button type="button" id="dh-mobile-toggle" aria-label="Toggle navigation menu">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="{% url 'custom_admin:dashboard' %}" class="dh-mobile-brand">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#c1943f" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#c1943f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Synovae Analytics Admin
+    </a>
+  </div>
+
+  <!-- Mobile Overlay Backdrop -->
+  <div id="dh-sidebar-overlay"></div>
+  {% endif %}
+
+  <div id="dh-admin-layout">
+    {% if user.is_authenticated %}
+    <!-- Custom Left Vertical Sidebar -->
+    <aside id="dh-sidebar">
+      <div class="dh-sidebar-header">
+        <a href="{% url 'custom_admin:dashboard' %}" class="dh-sidebar-brand">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#c1943f" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#c1943f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Synovae Analytics <small>ADMIN</small></span>
+        </a>
+      </div>
+
+      <div class="dh-sidebar-nav-wrap">
+        <!-- Main Navigation Section -->
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">MAIN</div>
+          <a href="{% url 'custom_admin:dashboard' %}" class="dh-sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <span class="dh-nav-icon">📊</span> Dashboard
+          </a>
+        </div>
+
+        <!-- Marketplace Section -->
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">MARKETPLACE</div>
+          <a href="{% url 'custom_admin:user_list' %}" class="dh-sidebar-link {% if 'user' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="dh-nav-icon">👥</span> Users
+          </a>
+          <a href="{% url 'custom_admin:service_list' %}" class="dh-sidebar-link {% if 'service' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="dh-nav-icon">💼</span> Services
+          </a>
+          <a href="{% url 'custom_admin:order_list' %}" class="dh-sidebar-link {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="dh-nav-icon">🛒</span> Orders
+          </a>
+          <a href="{% url 'custom_admin:category_list' %}" class="dh-sidebar-link {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="dh-nav-icon">📁</span> Categories
+          </a>
+        </div>
+
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">CONTENT</div>
+          <a href="{% url 'custom_admin:blog_list' %}" class="dh-sidebar-link {% if 'blog' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="dh-nav-icon">📝</span> Blog posts
+          </a>
+        </div>
+
+        <!-- Moderation Section -->
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">MODERATION &amp; APPROVALS</div>
+          <a href="custom_admin:specialist_approval_list" class="dh-sidebar-link {% if 'specialist' in request.resolver_match.url_name %}active{% endif %}" onclick="location.href='{% url 'custom_admin:specialist_approval_list' %}'; return false;">
+            <span class="dh-nav-icon">🎓</span> Specialist Approvals
+          </a>
+          <a href="custom_admin:chat_moderation_list" class="dh-sidebar-link {% if 'chat' in request.resolver_match.url_name or 'moderation' in request.resolver_match.url_name %}active{% endif %}" onclick="location.href='{% url 'custom_admin:chat_moderation_list' %}'; return false;">
+            <span class="dh-nav-icon">💬</span> Chat Moderation
+          </a>
+          <a href="custom_admin:review_list" class="dh-sidebar-link {% if 'review' in request.resolver_match.url_name %}active{% endif %}" onclick="location.href='{% url 'custom_admin:review_list' %}'; return false;">
+            <span class="dh-nav-icon">⭐</span> Reviews
+          </a>
+        </div>
+
+        <!-- System Section -->
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">SYSTEM</div>
+          <a href="{% url 'core:home' %}" target="_blank" class="dh-sidebar-link">
+            <span class="dh-nav-icon">🌐</span> View Public Site
+          </a>
+        </div>
+      </div>
+
+      <!-- User Profile Badge Footer -->
+      <div class="dh-sidebar-footer">
+        <div class="dh-sidebar-user">
+          <div class="dh-user-avatar">{{ user.username|slice:":1"|upper }}</div>
+          <div class="dh-user-info">
+            <span class="dh-user-title">{{ user.username }}</span>
+            <span class="dh-user-role">{% if user.is_superuser %}Superuser{% else %}Staff Manager{% endif %}</span>
+          </div>
+        </div>
+        <form action="{% url 'custom_admin:logout' %}" method="post" style="margin: 0; padding: 0; width: 100%;">
+          {% csrf_token %}
+          <button type="submit" class="dh-sidebar-logout" title="Log Out" style="width: 100%; border: none; background: none; text-align: left; cursor: pointer;">🚪 Logout</button>
+        </form>
+      </div>
+    </aside>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <div id="dh-main-wrapper">
+      {% if user.is_authenticated %}
+      <!-- Sub-header & Breadcrumbs Bar -->
+      <header class="dh-top-subbar">
+        <div class="dh-breadcrumbs">
+          <a href="{% url 'custom_admin:dashboard' %}">Admin Dashboard</a>
+          {% block breadcrumbs %}{% endblock %}
+        </div>
+        <div class="dh-subbar-tools">
+          <a href="{% url 'core:home' %}" target="_blank" class="dh-btn-sub">🌐 View Site</a>
+        </div>
+      </header>
+      {% endif %}
+
+      <!-- System Messages Banner -->
+      {% if messages %}
+        <div class="dh-messages-wrap" style="padding: 16px 24px 0;">
+          {% for message in messages %}
+            <div class="dh-alert dh-alert-{{ message.tags }}" style="margin-bottom: 8px;">
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Main Content Body -->
+      <main id="dh-content" style="padding: 24px;">
+        {% block content %}{% endblock %}
+      </main>
+
+      <!-- Footer -->
+      <footer id="dh-footer">
+        <div class="dh-footer-content">
+          <span>Synovae Analytics Marketplace Custom Admin Panel (Built from Scratch)</span>
+          {% if user.is_authenticated %}
+            <span>Logged in as <strong>{{ user.username }}</strong></span>
+          {% endif %}
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggleBtn = document.getElementById('dh-mobile-toggle');
+      const sidebar = document.getElementById('dh-sidebar');
+      const overlay = document.getElementById('dh-sidebar-overlay');
+
+      function toggleSidebar() {
+        sidebar.classList.toggle('dh-sidebar-active');
+        overlay.classList.toggle('dh-overlay-active');
+      }
+
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleSidebar);
+      }
+      if (overlay) {
+        overlay.addEventListener('click', toggleSidebar);
+      }
+    });
+  </script>
+</body>
+</html>

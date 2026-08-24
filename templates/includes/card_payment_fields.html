@@ -1,0 +1,200 @@
+<!-- Reusable card payment fields and UI (brand picker, mockup, inputs, JS) -->
+<div class="brand-picker">
+  <button type="button" class="brand-btn active" id="pick-visa" onclick="selectBrand('visa')">
+    <span class="brand-logo brand-visa">VISA</span>
+    <span class="brand-label">Visa</span>
+  </button>
+  <button type="button" class="brand-btn" id="pick-mc" onclick="selectBrand('mc')">
+    <span class="brand-logo brand-mc">
+      <span class="mc-left"></span><span class="mc-right"></span>
+    </span>
+    <span class="brand-label">Mastercard</span>
+  </button>
+</div>
+
+<div class="checkout-grid" style="margin-bottom:12px;">
+  <div class="card-visual-wrapper">
+    <div class="pay-card" id="pay-card">
+      <div class="card-top">
+        <div class="card-chip"></div>
+        <div class="card-logo" id="card-logo-display">VISA</div>
+      </div>
+      <div class="card-number-display" id="card-num-display">•••• •••• •••• ••••</div>
+      <div class="card-bottom">
+        <div style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          <span class="card-label">CARDHOLDER</span>
+          <div id="card-name-display">YOUR NAME</div>
+        </div>
+        <div>
+          <span class="card-label">EXPIRES</span>
+          <div id="card-exp-display">MM/YY</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="payment-form-panel">
+    <p style="font-weight:600;margin-bottom:16px;font-size:1.05rem;color:var(--ink-soft);" id="form-title">Card Details</p>
+
+    <p style="margin-bottom:12px;">
+      <label for="cardholder_name">Cardholder Name</label>
+      <input type="text" id="cardholder_name" name="cardholder_name" value="{{ form.cardholder_name.value|default:'' }}"
+             placeholder="e.g. Jane Doe" autocomplete="cc-name">
+    </p>
+
+    <p style="margin-bottom:12px;">
+      <label for="card_number">Card Number</label>
+      <input type="text" id="card_number" name="card_number" value="{{ form.card_number.value|default:'' }}"
+             placeholder="4xxx xxxx xxxx xxxx" maxlength="19" autocomplete="cc-number">
+      <span class="helptext" id="card-hint">Visa card starts with 4</span>
+    </p>
+
+    <div class="form-row" style="margin-bottom:16px;">
+      <div style="flex:1.3;">
+        <label>Expiry Date</label>
+        <div class="expiry-inputs">
+          <select name="expiry_month" id="expiry_month" style="padding:8px;width:auto;flex:1;">
+            <option value="">MM</option>
+            <option value="01">01</option><option value="02">02</option><option value="03">03</option>
+            <option value="04">04</option><option value="05">05</option><option value="06">06</option>
+            <option value="07">07</option><option value="08">08</option><option value="09">09</option>
+            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+          </select>
+          <select name="expiry_year" id="expiry_year" style="padding:8px;width:auto;flex:1.2;">
+            <option value="">YYYY</option>
+            <option value="2026">2026</option><option value="2027">2027</option><option value="2028">2028</option>
+            <option value="2029">2029</option><option value="2030">2030</option><option value="2031">2031</option>
+            <option value="2032">2032</option><option value="2033">2033</option><option value="2034">2034</option>
+            <option value="2035">2035</option>
+          </select>
+        </div>
+      </div>
+      <div style="flex:0 0 80px;">
+        <label for="cvv">CVV</label>
+        <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="4" autocomplete="cc-csc" style="text-align:center;">
+      </div>
+    </div>
+
+    {% if payment_sandbox %}
+    <p class="sandbox-form-note">&#9888; Sandbox mode &mdash; enter any valid-format card number. No real charge will occur.</p>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+/* Minimal necessary styles (copied from order_pay) */
+.brand-picker { display:flex; gap:14px; margin-bottom:22px; }
+.brand-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px; border:2px solid var(--line); border-radius:10px; background:var(--paper); cursor:pointer; }
+.brand-btn.active { border-color: var(--brass); box-shadow: 0 0 0 3px rgba(193,148,63,.18); }
+.brand-logo.brand-visa { font-family: 'Fraunces', serif; font-size:1.5rem; font-weight:700; color:#1a1f71; }
+.brand-logo.brand-mc { position:relative; display:flex; align-items:center; height:34px; width:56px; }
+.mc-left { position:absolute; left:0; width:34px; height:34px; border-radius:50%; background:#eb001b; }
+.mc-right { position:absolute; right:0; width:34px; height:34px; border-radius:50%; background:#f79e1b; }
+.checkout-grid { display:grid; grid-template-columns: 1fr 1.1fr; gap:28px; align-items:start; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:18px; }
+.card-visual-wrapper { display:flex; justify-content:center; align-items:center; }
+.pay-card { width:290px; height:180px; background:linear-gradient(135deg, #1c2b3e 0%, #0f1822 100%); border-radius:10px; padding:20px; color:#fff; }
+.card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+.card-chip { width:36px; height:26px; background: linear-gradient(135deg, #ebd492, #ab8035); border-radius:4px; }
+.card-number-display { font-size:1.15rem; letter-spacing:1.5px; margin-bottom:20px; text-align:center; }
+.card-bottom { display:flex; justify-content:space-between; align-items:flex-end; }
+.card-label { font-size:.52rem; color:#8c97aa; text-transform:uppercase; display:block; margin-bottom:2px; }
+</style>
+
+<script>
+let activeBrand = 'visa';
+function selectBrand(brand) {
+  activeBrand = brand;
+  const visaBtn = document.getElementById('pick-visa');
+  const mcBtn   = document.getElementById('pick-mc');
+  const card    = document.getElementById('pay-card');
+  const logo    = document.getElementById('card-logo-display');
+  const numIn   = document.getElementById('card_number');
+  const hint    = document.getElementById('card-hint');
+  const title   = document.getElementById('form-title');
+
+  if (brand === 'visa') {
+    visaBtn.classList.add('active');
+    mcBtn.classList.remove('active');
+    card.classList.remove('mc-active');
+    logo.className = 'card-logo';
+    logo.innerHTML = 'VISA';
+    numIn.placeholder = '4xxx xxxx xxxx xxxx';
+    hint.textContent  = 'Visa card starts with 4';
+    title.textContent = 'Visa Card Details';
+  } else {
+    mcBtn.classList.add('active');
+    visaBtn.classList.remove('active');
+    card.classList.add('mc-active');
+    logo.className = 'card-logo mc-circles';
+    logo.innerHTML = '<span class="mc-c1"></span><span class="mc-c2"></span>';
+    numIn.placeholder = '5xxx xxxx xxxx xxxx';
+    hint.textContent  = 'Mastercard starts with 51–55 or 2221–2720';
+    title.textContent = 'Mastercard Details';
+  }
+  numIn.dispatchEvent(new Event('input'));
+}
+
+function validateCard() {
+  const raw = document.getElementById('card_number').value.replace(/\s+/g, '');
+  if (activeBrand === 'visa') {
+    if (!raw.startsWith('4') || raw.length !== 16) {
+      alert('Please enter a valid 16-digit Visa card number (starts with 4).');
+      return false;
+    }
+  } else {
+    const p2 = parseInt(raw.slice(0, 2));
+    const p4 = parseInt(raw.slice(0, 4));
+    const isMC = (p2 >= 51 && p2 <= 55) || (p4 >= 2221 && p4 <= 2720);
+    if (!isMC || raw.length !== 16) {
+      alert('Please enter a valid 16-digit Mastercard number (starts with 51–55 or 2221–2720).');
+      return false;
+    }
+  }
+  return true;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const cardNumInput      = document.getElementById('card_number');
+  const cardNameInput     = document.getElementById('cardholder_name');
+  const expiryMonthSelect = document.getElementById('expiry_month');
+  const expiryYearSelect  = document.getElementById('expiry_year');
+  const cardNumDisplay    = document.getElementById('card-num-display');
+  const cardNameDisplay   = document.getElementById('card-name-display');
+  const cardExpDisplay    = document.getElementById('card-exp-display');
+
+  if (!cardNumInput) return; // include safely if form omits card fields
+
+  cardNumInput.addEventListener('input', function (e) {
+    let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+    let formatted = '';
+    for (let i = 0; i < value.length; i++) {
+      if (i > 0 && i % 4 === 0) formatted += ' ';
+      formatted += value[i];
+    }
+    e.target.value = formatted;
+
+    let displayVal = formatted;
+    const remaining = 16 - value.length;
+    for (let i = 0; i < remaining; i++) {
+      if ((value.length + i) > 0 && (value.length + i) % 4 === 0) displayVal += ' ';
+      displayVal += '•';
+    }
+    cardNumDisplay.textContent = displayVal;
+  });
+
+  cardNameInput.addEventListener('input', function (e) {
+    cardNameDisplay.textContent = e.target.value.trim() === '' ? 'YOUR NAME' : e.target.value.toUpperCase();
+  });
+
+  function updateExpiry() {
+    const month = expiryMonthSelect.value || 'MM';
+    const year  = expiryYearSelect.value  ? expiryYearSelect.value.slice(-2) : 'YY';
+    cardExpDisplay.textContent = month + '/' + year;
+  }
+  expiryMonthSelect.addEventListener('change', updateExpiry);
+  expiryYearSelect.addEventListener('change',  updateExpiry);
+
+  if (cardNameInput.value) cardNameDisplay.textContent = cardNameInput.value.toUpperCase();
+  if (cardNumInput.value)  cardNumInput.dispatchEvent(new Event('input'));
+});
+</script>

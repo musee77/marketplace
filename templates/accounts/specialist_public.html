@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {{ profile.user.get_full_name|default:profile.user.username }} — Data Analytics Specialist | Synovae Analytics
+{% endblock %}
+
+{% block seo %}
+  <meta name="description" content="{{ profile.headline|default:'Data analytics specialist on Synovae Analytics' }} — {{ profile.bio|default:''|truncatechars:100 }}">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="profile">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:title" content="{{ profile.user.get_full_name|default:profile.user.username }} — Data Analytics Specialist | Synovae Analytics">
+  <meta property="og:description" content="{{ profile.headline|default:'Data analytics specialist on Synovae Analytics' }} — {{ profile.bio|default:''|truncatechars:100 }}">
+  <meta property="og:image" content="{% if profile.user.avatar %}{{ request.scheme }}://{{ request.get_host }}{{ profile.user.avatar.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}/static/img/og-default.jpg{% endif %}">
+  <meta property="og:site_name" content="Synovae Analytics">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:url" content="{{ request.build_absolute_uri }}">
+  <meta name="twitter:title" content="{{ profile.user.get_full_name|default:profile.user.username }} — Data Analytics Specialist">
+  <meta name="twitter:description" content="{{ profile.headline|default:'Data analytics specialist on Synovae Analytics' }} — {{ profile.bio|default:''|truncatechars:100 }}">
+  <meta name="twitter:image" content="{% if profile.user.avatar %}{{ request.scheme }}://{{ request.get_host }}{{ profile.user.avatar.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}/static/img/og-default.jpg{% endif %}">
+{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "{{ profile.user.get_full_name|default:profile.user.username|escapejs }}",
+  "jobTitle": "{{ profile.headline|default:'Data Analytics Specialist'|escapejs }}",
+  "description": "{{ profile.bio|default:''|truncatechars:200|escapejs }}",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "{{ profile.location|default:''|escapejs }}"
+  },
+  "knowsAbout": [
+    {% for skill in skills_list %}
+    "{{ skill|escapejs }}"{% if not forloop.last %},{% endif %}
+    {% endfor %}
+  ]
+  {% if review_count > 0 %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ average_rating }}",
+    "bestRating": "5",
+    "worstRating": "1",
+    "reviewCount": "{{ review_count }}"
+  }
+  {% endif %}
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap two-col">
+    <div>
+      <div class="eyebrow">{{ profile.location }}</div>
+      <h1 style="font-size:2rem;">{{ profile.user.get_full_name|default:profile.user.username }}</h1>
+      <p style="color:var(--slate);">{{ profile.headline }}</p>
+      {% if request.user.is_authenticated and request.user.pk == profile.user.pk %}
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 16px;">
+          {% if edit_mode %}
+            <a href="{{ profile.get_absolute_url }}" class="btn btn-outline">Cancel editing</a>
+          {% else %}
+            <a href="?edit=1" class="btn btn-outline">Edit profile</a>
+          {% endif %}
+          <a href="{% url 'services:create' %}" class="btn btn-brass">Add listing</a>
+        </div>
+      {% endif %}
+      {% if profile.is_verified %}
+        <span class="seal-badge"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Verified specialist</span>
+      {% else %}
+        <span class="seal-badge unverified">Not yet verified</span>
+      {% endif %}
+
+      <div class="profile-summary-stats">
+        <div class="profile-summary-stat">
+          <strong>{{ average_rating|default:"—" }}</strong>
+          <span>Average rating</span>
+        </div>
+        <div class="profile-summary-stat">
+          <strong>{{ review_count }}</strong>
+          <span>Reviews</span>
+        </div>
+        <div class="profile-summary-stat">
+          <strong>{{ listing_count }}</strong>
+          <span>Active listings</span>
+        </div>
+      </div>
+
+      {% if edit_mode and request.user.pk == profile.user.pk %}
+        <div class="divider"></div>
+        <h3>Edit specialist profile</h3>
+        <form method="post" class="specialist-profile-form">
+          {% csrf_token %}
+          {{ form.as_p }}
+          <button type="submit" class="btn btn-brass">Save profile</button>
+        </form>
+      {% else %}
+        <div class="divider"></div>
+        <h3>About</h3>
+        <p style="white-space:pre-line;color:var(--slate);">{{ profile.bio|default:"No bio yet." }}</p>
+
+        <h3>Skills</h3>
+        <div class="chips">
+          {% for skill in skills_list %}
+            <span class="chip">{{ skill }}</span>
+          {% empty %}
+            <span class="helptext">No skills listed.</span>
+          {% endfor %}
+        </div>
+
+        <div class="divider"></div>
+        <h3>Specialist details</h3>
+        <dl class="specialist-details">
+        <div>
+          <dt>Professional headline</dt>
+          <dd>{{ profile.headline|default:"Data analytics specialist" }}</dd>
+        </div>
+        <div>
+          <dt>Experience</dt>
+          <dd>{{ profile.years_experience }} year{{ profile.years_experience|pluralize }}</dd>
+        </div>
+        <div>
+          <dt>Availability</dt>
+          <dd>{% if profile.is_available %}Available for work{% else %}Currently unavailable{% endif %}</dd>
+        </div>
+        <div>
+          <dt>Hourly rate</dt>
+          <dd>${{ profile.hourly_rate }} / hour</dd>
+        </div>
+        {% if profile.location %}
+          <div>
+            <dt>Location</dt>
+            <dd>{{ profile.location }}</dd>
+          </div>
+        {% endif %}
+        {% if profile.portfolio_url %}
+          <div>
+            <dt>Portfolio</dt>
+            <dd><a href="{{ profile.portfolio_url }}" target="_blank" rel="noopener noreferrer">View portfolio ↗</a></dd>
+          </div>
+        {% endif %}
+        </dl>
+      {% endif %}
+
+      <div class="divider"></div>
+      <div id="reviews" class="section-head">
+        <h3>Reviews ({{ review_count }})</h3>
+        {% if review_count %}<a href="{% url 'accounts:specialist_reviews' profile.pk %}" class="btn btn-outline btn-sm">View all reviews</a>{% endif %}
+      </div>
+      <div class="listing-reviews">
+        {% for r in reviews %}
+          <div class="listing-review-card">
+            <div class="listing-review-header">
+              <span class="listing-reviewer-name">{{ r.reviewer.get_full_name|default:r.reviewer.username }}</span>
+              <span class="listing-review-date">{{ r.created_at|date:"M j, Y" }}</span>
+            </div>
+            <div class="listing-review-stars">{% for i in "12345" %}<span class="star {% if forloop.counter <= r.rating %}filled{% else %}empty{% endif %}">★</span>{% endfor %} {{ r.rating }}/5</div>
+            <p class="listing-review-comment">{{ r.comment }}</p>
+          </div>
+        {% empty %}<p class="empty">No reviews yet.</p>{% endfor %}
+      </div>
+
+      <div class="divider"></div>
+      <h3>Listings</h3>
+      <div class="grid" style="grid-template-columns:repeat(2,1fr);">
+        {% for s in services %}
+          <a class="card" href="{{ s.get_absolute_url }}">
+            <div class="card-img">
+              {% if s.cover_image %}
+                <img src="{{ s.cover_image.url }}" alt="{{ s.title }}">
+              {% else %}
+                <div class="card-img-placeholder">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                </div>
+              {% endif %}
+            </div>
+            <div class="card-body">
+              <div class="card-title">{{ s.title }}</div>
+
+              <div class="rating-row">
+                <span class="star-icon">★</span>
+                <span class="rating-score">{{ s.average_rating|default:"5.0" }}</span>
+                <span class="review-count">({{ s.review_count }})</span>
+              </div>
+
+              <div class="card-foot">
+                <span class="category-name">{{ s.category.name|default:"General" }}</span>
+                <div class="price-block">
+                  <span class="starting-at">STARTING AT</span>
+                  <span class="price"><span class="cur">$</span>{{ s.price }}</span>
+                </div>
+              </div>
+            </div>
+          </a>
+        {% empty %}
+          <p class="empty">No active listings.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="stat" style="border:none;padding:0;">
+        <div class="num">${{ profile.hourly_rate }}<span style="font-size:1rem;">/hr</span></div>
+        <div class="lbl">Rate</div>
+      </div>
+      <div class="divider"></div>
+      <p><strong>{{ profile.years_experience }}</strong> years experience</p>
+      <p><strong>★ {{ profile.average_rating|default:"—" }}</strong> ({{ profile.review_count }} reviews)</p>
+      {% if profile.portfolio_url %}<p><a href="{{ profile.portfolio_url }}" target="_blank">Portfolio ↗</a></p>{% endif %}
+      {% if user.is_authenticated and user != profile.user and not user.is_specialist %}
+        <div class="divider"></div>
+        <a href="{% url 'chat:start' profile.user.pk %}" class="btn btn-brass" style="width:100%;text-align:center;">Send message</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

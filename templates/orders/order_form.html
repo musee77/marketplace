@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h2>Hire {{ service.specialist.get_full_name|default:service.specialist.username }}</h2>
+    <div class="panel">
+      <p><strong>{{ service.title }}</strong> — <span class="price mono">${{ service.price }}</span> · {{ service.delivery_days }} day delivery</p>
+      <div class="divider"></div>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Place order — ${{ service.price }}</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

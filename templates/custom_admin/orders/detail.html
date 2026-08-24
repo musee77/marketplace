@@ -1,0 +1,87 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:order_list' %}">Orders</a>
+&rsaquo; <span>Order #{{ order.pk }}</span>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:24px;">
+  
+  <!-- Info Column -->
+  <div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+    <h3>Order details</h3>
+    <table style="width:100%; border:none; color:#fff;">
+      <tr style="border-bottom:1px solid var(--admin-card-border);"><td style="padding:8px 0; color:var(--admin-text-muted);">Client</td><td style="padding:8px 0; text-align:right;">{{ order.client.username }}</td></tr>
+      <tr style="border-bottom:1px solid var(--admin-card-border);"><td style="padding:8px 0; color:var(--admin-text-muted);">Specialist</td><td style="padding:8px 0; text-align:right;">{{ order.specialist.username }}</td></tr>
+      <tr style="border-bottom:1px solid var(--admin-card-border);"><td style="padding:8px 0; color:var(--admin-text-muted);">Price</td><td style="padding:8px 0; text-align:right;" class="mono">${{ order.price }}</td></tr>
+      <tr style="border-bottom:1px solid var(--admin-card-border);"><td style="padding:8px 0; color:var(--admin-text-muted);">Platform Fee (Rate)</td><td style="padding:8px 0; text-align:right;">${{ order.platform_fee }} ({{ order.fee_percentage_display }})</td></tr>
+      <tr style="border-bottom:1px solid var(--admin-card-border);"><td style="padding:8px 0; color:var(--admin-text-muted);">Specialist Earnings</td><td style="padding:8px 0; text-align:right; color:var(--admin-success); font-weight:bold;">${{ order.specialist_earnings }}</td></tr>
+      <tr style="border-bottom:1px solid var(--admin-card-border);"><td style="padding:8px 0; color:var(--admin-text-muted);">Due Date</td><td style="padding:8px 0; text-align:right;">{{ order.due_date|default:"—" }}</td></tr>
+      <tr style="border-bottom:1px solid var(--admin-card-border);"><td style="padding:8px 0; color:var(--admin-text-muted);">Payment Method</td><td style="padding:8px 0; text-align:right;">{{ order.get_payment_method_display }}</td></tr>
+      <tr style="border-bottom:1px solid var(--admin-card-border);"><td style="padding:8px 0; color:var(--admin-text-muted);">Payment Status</td><td style="padding:8px 0; text-align:right;">
+        {% if order.is_paid %}<span style="color:var(--admin-success); font-weight:bold;">✓ Paid</span>{% else %}<span style="color:var(--admin-text-muted);">Unpaid</span>{% endif %}
+      </td></tr>
+      {% if order.is_paid and order.paid_at %}
+      <tr style="border-bottom:1px solid var(--admin-card-border);"><td style="padding:8px 0; color:var(--admin-text-muted);">Paid At</td><td style="padding:8px 0; text-align:right;">{{ order.paid_at|date:"M j, Y H:i" }}</td></tr>
+      {% endif %}
+    </table>
+    
+    <div style="margin-top:20px;">
+      <h4 style="margin-bottom:6px;">Requirements:</h4>
+      <p style="white-space:pre-wrap; color:var(--admin-text-muted); background:#0f172a; padding:12px; border-radius:6px; font-size:0.875rem;">{{ order.requirements|default:"No requirements provided." }}</p>
+    </div>
+  </div>
+
+  <!-- Status / File upload Column -->
+  <div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+    <h3>Order Control &amp; Documents</h3>
+
+    <!-- Status Change Panel -->
+    <div style="padding:16px; background:#0f172a; border-radius:10px; border:1px solid var(--admin-card-border); margin-bottom:20px;">
+      <span style="font-size:0.85rem; color:var(--admin-text-muted);">Current Status:</span>
+      <div style="margin-top:4px;"><span class="status status-{{ order.status }}" style="font-size:0.95rem; padding: 4px 10px;">{{ order.get_status_display }}</span></div>
+      
+      <form method="post" style="margin-top:15px; display:flex; gap:10px;">
+        {% csrf_token %}
+        <select name="status" class="form-control" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--admin-card-border); background:#1e293b; color:#fff;">
+          {% for val, name in statuses %}
+            <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-brass" style="padding:8px 16px; background:var(--admin-accent); color:#0f172a; font-weight:bold; border-radius:6px; border:none; cursor:pointer;">Update Status</button>
+      </form>
+    </div>
+
+    <!-- Order Documents -->
+    <h4>Files Shared ({{ documents|length }})</h4>
+    {% if documents %}
+      <div style="display:grid; gap:8px;">
+        {% for doc in documents %}
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-radius:8px; background:#0f172a; border:1px solid var(--admin-card-border);">
+            <div>
+              <div style="font-size:0.9rem; font-weight:600; color:#fff;">📄 {{ doc.title }}</div>
+              <small style="color:var(--admin-text-muted);">Uploaded by @{{ doc.uploaded_by.username }}</small>
+            </div>
+            <a href="{% url 'orders:document_download' doc.pk %}" class="btn btn-outline" style="font-size:0.8rem; padding:4px 10px; border:1px solid var(--admin-card-border); border-radius:4px; text-decoration:none; color:#fff;" download>Download</a>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: var(--admin-text-muted); font-size:0.875rem;">No files uploaded to this order yet.</p>
+    {% endif %}
+
+    <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--admin-card-border);">
+      <h4>Deliver order as manager</h4>
+      <p style="color:var(--admin-text-muted); font-size:0.875rem;">Upload the completed file and mark this order as delivered for the client.</p>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="form_action" value="deliver_order">
+        {{ document_form.as_p }}
+        <button type="submit" class="btn btn-brass" style="padding:8px 16px; border:0; cursor:pointer;">Upload and deliver</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:user_list' %}">Users</a>
+&rsaquo; <span>{{ target_user.username }}</span>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:24px;">
+  
+  <!-- User Profile details card -->
+  <div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+    <h3>Edit Profile Details</h3>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="form_action" value="update_user">
+      
+      <div style="display:grid; gap:16px;">
+        <div>
+          <label style="font-weight:600; display:block; margin-bottom:4px;">Username</label>
+          <input type="text" value="{{ target_user.username }}" disabled class="form-control" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--admin-card-border); background:#0f172a; color:#888;">
+        </div>
+        
+        <div>
+          <label for="{{ user_form.email.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Email</label>
+          {{ user_form.email }}
+          {% if user_form.email.errors %}<small style="color:var(--admin-danger);">{{ user_form.email.errors }}</small>{% endif %}
+        </div>
+
+        <div>
+          <label for="{{ user_form.first_name.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">First Name</label>
+          {{ user_form.first_name }}
+        </div>
+
+        <div>
+          <label for="{{ user_form.last_name.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Last Name</label>
+          {{ user_form.last_name }}
+        </div>
+
+        <div>
+          <label for="{{ user_form.phone.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Phone</label>
+          {{ user_form.phone }}
+        </div>
+
+        <div>
+          <label for="{{ user_form.role.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Role</label>
+          {{ user_form.role }}
+        </div>
+
+        <div style="display:flex; align-items:center; gap:8px;">
+          {{ user_form.is_suspended }}
+          <label for="{{ user_form.is_suspended.id_for_label }}" style="font-weight:600; cursor:pointer;">Account Suspended</label>
+        </div>
+
+        <div style="margin-top:10px;">
+          <button type="submit" class="btn btn-brass" style="width:100%; padding:10px; background:var(--admin-accent); color:#0f172a; font-weight:bold; border-radius:6px; border:none; cursor:pointer;">Save Profile Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Financial/Balance Management card -->
+  <div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+    <h3>Manage Profile Balance</h3>
+    
+    {% if client_profile or specialist_profile %}
+      <div style="padding:16px; background:#0f172a; border-radius:10px; border:1px solid var(--admin-card-border); margin-bottom:20px;">
+        <span style="font-size:0.85rem; color:var(--admin-text-muted);">Current balance:</span>
+        <h2 style="margin:4px 0 0; color:var(--admin-success); font-family:monospace;">
+          {% if target_user.is_client %}
+            ${{ client_profile.balance }} (Client Wallet)
+          {% elif target_user.is_specialist %}
+            ${{ specialist_profile.balance }} (Specialist Balance)
+          {% endif %}
+        </h2>
+      </div>
+
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="form_action" value="update_balance">
+
+        <div style="display:grid; gap:16px;">
+          <div>
+            <label for="{{ balance_form.action.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Action</label>
+            {{ balance_form.action }}
+          </div>
+
+          <div>
+            <label for="{{ balance_form.amount.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Amount (USD)</label>
+            {{ balance_form.amount }}
+            {% if balance_form.amount.errors %}<small style="color:var(--admin-danger);">{{ balance_form.amount.errors }}</small>{% endif %}
+          </div>
+
+          <div style="margin-top:10px;">
+            <button type="submit" class="btn btn-brass" style="width:100%; padding:10px; background:var(--admin-accent); color:#0f172a; font-weight:bold; border-radius:6px; border:none; cursor:pointer;">Apply Balance Change</button>
+          </div>
+        </div>
+      </form>
+    {% else %}
+      <p style="color: var(--admin-text-muted); font-size:0.9rem;">
+        This user's role is set to <strong>{{ target_user.get_role_display }}</strong>.
+        Financial balance is only available for active Clients or Specialists. 
+        Promote this user to Client or Specialist to credit/debit their funds.
+      </p>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

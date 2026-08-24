@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h2>Review: {{ order.display_title }}</h2>
+    <div class="panel">
+      <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Submit review</button>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

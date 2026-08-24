@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Synovae Analytics — Data Analytics Specialists{% endblock %}</title>
+  
+  {% block seo %}
+  <meta name="description" content="A marketplace for hiring vetted data analytics specialists — trusted by clients, specialists, and managers across analytics, BI, and modeling.">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.build_absolute_uri }}">
+  <meta property="og:title" content="Synovae Analytics — Data Analytics Specialists">
+  <meta property="og:description" content="A marketplace for hiring vetted data analytics specialists — trusted by clients, specialists, and managers across analytics, BI, and modeling.">
+  <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}/static/img/og-default.jpg">
+  <meta property="og:site_name" content="Synovae Analytics">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="{{ request.build_absolute_uri }}">
+  <meta name="twitter:title" content="Synovae Analytics — Data Analytics Specialists">
+  <meta name="twitter:description" content="A marketplace for hiring vetted data analytics specialists — trusted by clients, specialists, and managers across analytics, BI, and modeling.">
+  <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}/static/img/og-default.jpg">
+  {% endblock %}
+
+  <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+  <meta name="theme-color" content="#142136">
+  <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  {% include "includes/navbar.html" %}
+
+  <div class="wrap">
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <div class="wrap footer-grid">
+      <div class="footer-branding">
+        <div class="footer-title">Synovae Analytics</div>
+        <p class="footer-copy">A marketplace for hiring vetted data analytics specialists — trusted by clients, specialists, and managers across analytics, BI, and modeling.</p>
+      </div>
+      <div class="footer-actions">
+        <a href="{% url 'accounts:signup' %}" class="btn btn-primary">Become a specialist</a>
+        <a href="{% url 'accounts:specialist_list' %}" class="btn btn-outline">Browse analysts</a>
+      </div>
+    </div>
+  </footer>
+  {% if not user.is_specialist %}
+  <div class="floating-updates" aria-label="Quick links">
+    {% if promotional_activity %}
+        {% for member in promotional_activity %}
+          <a href="{% url 'services:list' %}" class="floating-update floating-update--activity activity-toast{% if not forloop.first %} activity-toast--hidden{% endif %}" aria-label="{{ member.first_name|default:member.username }} recently joined Synovae Analytics">
+            <span class="floating-update__icon" aria-hidden="true">&#x2728;</span>
+            <span class="activity-toast__copy"><strong>{{ member.first_name|default:member.username }}</strong> joined Synovae Analytics<br><small>{{ member.date_created|timesince }} ago</small></span>
+          </a>
+        {% endfor %}
+    {% elif user.is_authenticated %}
+      <a href="{% url 'notifications:list' %}" class="floating-update floating-update--activity" aria-label="Activity notifications{% if unread_notifications_count %}, {{ unread_notifications_count }} unread{% endif %}">
+        <span class="floating-update__icon" aria-hidden="true">&#x1F514;</span>
+        <span class="floating-update__label">Activity</span>
+        {% if unread_notifications_count %}<span class="floating-update__badge">{{ unread_notifications_count }}</span>{% endif %}
+      </a>
+    {% else %}
+      <a href="{% url 'accounts:signup' %}" class="floating-update floating-update--activity activity-toast" aria-label="Join Synovae Analytics">
+        <span class="floating-update__icon" aria-hidden="true">&#x2728;</span>
+        <span class="activity-toast__copy"><strong>Synovae Analytics</strong> is open for new members<br><small>Join us today</small></span>
+      </a>
+    {% endif %}
+      <div class="system-chat">
+        <section class="system-chat__panel" id="system-chat-panel" data-system-chat-panel aria-label="Synovae system assistant" hidden>
+          <div class="system-chat__header">
+            <div><strong>Synovae assistant</strong><small>System help</small></div>
+            <button type="button" class="system-chat__close" data-system-chat-close aria-label="Close assistant">&times;</button>
+          </div>
+          <div class="system-chat__messages" data-system-chat-messages>
+            {% if user.is_authenticated %}
+              <p class="system-chat__message system-chat__message--bot">Hi {{ user.first_name|default:user.username }}. Ask me about offers, payments, orders, or finding a specialist.</p>
+            {% else %}
+              <p class="system-chat__message system-chat__message--bot">Please log in to start a conversation with the Synovae assistant.</p>
+            {% endif %}
+          </div>
+          {% if user.is_authenticated %}
+            <form class="system-chat__form" data-system-chat-form action="{% url 'chat:system_chat' %}" method="post">
+              {% csrf_token %}
+              <label class="sr-only" for="system-chat-input">Ask the Synovae assistant</label>
+              <input id="system-chat-input" name="question" type="text" maxlength="240" placeholder="Ask about the marketplace..." autocomplete="off" required>
+              <button type="submit" aria-label="Send question">Send</button>
+            </form>
+          {% else %}
+            <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="system-chat__login">Log in to chat</a>
+          {% endif %}
+        </section>
+        <button type="button" class="floating-update floating-update--chat system-chat__toggle" data-system-chat-toggle aria-expanded="false" aria-controls="system-chat-panel" aria-label="Open Synovae system assistant">
+          <span class="floating-update__icon" aria-hidden="true">&#x1F4AC;</span>
+          <span class="floating-update__label">Talk to us</span>
+          {% if unread_messages_count %}<span class="floating-update__badge">{{ unread_messages_count }}</span>{% endif %}
+        </button>
+  </div>
+  {% endif %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const dropdownToggle = document.querySelector('.dropdown-toggle');
+      const dropdown = document.querySelector('.dropdown');
+      
+      if (dropdownToggle && dropdown) {
+        dropdownToggle.addEventListener('click', function(e) {
+          if (window.innerWidth <= 1024) {
+            e.preventDefault();
+            dropdown.classList.toggle('open');
+          }
+        });
+      }
+
+      const activityToasts = document.querySelectorAll('.activity-toast');
+      if (activityToasts.length > 1) {
+        let activeToast = 0;
+        window.setInterval(function() {
+          activityToasts[activeToast].classList.add('activity-toast--hidden');
+          activeToast = (activeToast + 1) % activityToasts.length;
+          activityToasts[activeToast].classList.remove('activity-toast--hidden');
+        }, 7000);
+      }
+
+      const systemChat = document.querySelector('.system-chat');
+      if (systemChat) {
+        const panel = systemChat.querySelector('[data-system-chat-panel]');
+        const toggle = systemChat.querySelector('[data-system-chat-toggle]');
+        const close = systemChat.querySelector('[data-system-chat-close]');
+        const form = systemChat.querySelector('[data-system-chat-form]');
+        const input = systemChat.querySelector('#system-chat-input');
+        const messages = systemChat.querySelector('[data-system-chat-messages]');
+
+        function addMessage(text, type) {
+          const message = document.createElement('p');
+          message.className = 'system-chat__message system-chat__message--' + type;
+          message.textContent = text;
+          messages.appendChild(message);
+          messages.scrollTop = messages.scrollHeight;
+        }
+
+        function renderHistory(history) {
+          messages.innerHTML = '';
+          history.forEach(function(item) { addMessage(item.body, item.role); });
+        }
+
+        let historyLoaded = false;
+        function loadHistory() {
+          if (historyLoaded || !form) return;
+          fetch('{% url "chat:system_chat" %}', {headers: {'Accept': 'application/json'}})
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+              if (data.messages && data.messages.length) renderHistory(data.messages);
+              historyLoaded = true;
+            })
+            .catch(function() {
+              historyLoaded = true;
+            });
+        }
+
+        toggle.addEventListener('click', function() {
+          const shouldOpen = panel.hasAttribute('hidden');
+          if (shouldOpen) {
+            panel.removeAttribute('hidden');
+            loadHistory();
+            if (input) input.focus();
+          } else {
+            panel.setAttribute('hidden', 'hidden');
+          }
+          toggle.setAttribute('aria-expanded', String(shouldOpen));
+        });
+        close.addEventListener('click', function() {
+          panel.setAttribute('hidden', 'hidden');
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.focus();
+        });
+        if (form) form.addEventListener('submit', function(event) {
+          event.preventDefault();
+          const question = input.value.trim();
+          if (!question) return;
+          input.value = '';
+          const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+          fetch(form.action, {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrfToken, 'Accept': 'application/json'},
+            body: new URLSearchParams({question: question})
+          }).then(function(response) { return response.json(); })
+            .then(function(data) {
+              if (data.error) {
+                addMessage(data.error, 'assistant');
+                return;
+              }
+              if (data.messages) renderHistory(data.messages);
+            });
+        });
+      }
+    });
+  </script>
+</body>
+</html>

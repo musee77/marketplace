@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Offer: {{ offer.title }} — Synovae Analytics{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap" style="max-width:700px;">
+    <div class="section-head">
+      <h2>{{ offer.title }}</h2>
+      {% if is_specialist %}
+        <a href="{% url 'orders:offer_list_sent' %}" class="btn btn-outline btn-sm">← My Offers</a>
+      {% else %}
+        <a href="{% url 'orders:offer_list' %}" class="btn btn-outline btn-sm">← Offers</a>
+      {% endif %}
+    </div>
+
+    <div class="card" style="padding: 30px; margin-bottom: 20px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+        <div>
+          <h4 style="color: var(--ink-soft); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">From</h4>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--brass); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+              {{ offer.specialist.first_name|first|default:"?" }}
+            </div>
+            <div>
+              <p style="margin: 0; font-weight: 600;">{{ offer.specialist.get_full_name|default:offer.specialist.username }}</p>
+              <p style="margin: 0; font-size: 0.85rem; color: var(--ink-soft);">Specialist</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 style="color: var(--ink-soft); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">Status</h4>
+          <span class="badge" style="background: {% if offer.status == 'PENDING' %}var(--brass){% elif offer.status == 'ACCEPTED' %}var(--green){% else %}var(--red){% endif %}; font-size: 1rem; padding: 8px 12px;">
+            {{ offer.get_status_display }}
+          </span>
+        </div>
+      </div>
+
+      <hr style="margin: 20px 0;">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+        <div>
+          <h4 style="color: var(--ink-soft); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">Price</h4>
+          <p style="margin: 0; font-size: 2rem; font-weight: bold;">💰 ${{ offer.price }}</p>
+        </div>
+
+        <div>
+          <h4 style="color: var(--ink-soft); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 8px;">Delivery Time</h4>
+          <p style="margin: 0; font-size: 1.5rem; font-weight: bold;">⏱️ {{ offer.delivery_days }} day{{ offer.delivery_days|pluralize }}</p>
+        </div>
+      </div>
+
+      <hr style="margin: 20px 0;">
+
+      <div>
+        <h4 style="color: var(--ink-soft); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 12px;">Description</h4>
+        <p style="line-height: 1.6; white-space: pre-wrap;">{{ offer.description }}</p>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line);">
+        {% if can_accept %}
+          <form method="post" action="{% url 'orders:offer_accept' offer.pk %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-brass">✓ Accept Offer</button>
+          </form>
+          <form method="post" action="{% url 'orders:offer_decline' offer.pk %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline" onclick="return confirm('Are you sure?');">✗ Decline</button>
+          </form>
+        {% elif offer.status == 'ACCEPTED' and offer.order %}
+          <a href="{% url 'orders:detail' offer.order.pk %}" class="btn btn-brass">→ View Order</a>
+        {% endif %}
+        
+        {% if is_specialist %}
+          <a href="{% url 'chat:start' offer.client.pk %}" class="btn btn-outline">💬 Message Client</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

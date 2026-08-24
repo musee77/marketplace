@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap two-col">
+    <div>
+      <div class="eyebrow">Order #{{ order.pk }}</div>
+      <h2>Accept or reject order</h2>
+      <p style="color:var(--slate);max-width:42rem;">Review the request below, then choose whether to accept it or reject it.</p>
+
+      <div class="divider"></div>
+      <h3>{{ order.display_title }}</h3>
+      <p style="white-space:pre-line;color:var(--slate);">{{ order.requirements|default:"No requirements provided." }}</p>
+    </div>
+
+    <div class="panel">
+      <table style="border:none;">
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Client</td><td style="border:none;padding:4px 0;text-align:right;">{{ order.client.get_full_name|default:order.client.username }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Price</td><td style="border:none;padding:4px 0;text-align:right;" class="mono">${{ order.price }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Payment</td><td style="border:none;padding:4px 0;text-align:right;">{{ order.get_payment_method_display }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Placed</td><td style="border:none;padding:4px 0;text-align:right;">{{ order.created_at|date:"M j, Y" }}</td></tr>
+      </table>
+
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <form method="post" action="{% url 'orders:transition' order.pk 'ACCEPTED' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-brass" style="width:100%;">Accept order</button>
+        </form>
+        <form method="post" action="{% url 'orders:transition' order.pk 'DECLINED' %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline" style="width:100%;">Reject order</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

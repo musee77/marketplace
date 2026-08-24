@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Send Offer — Synovae Analytics{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap" style="max-width:600px;">
+    <div class="section-head">
+      <h2>{{ title }}</h2>
+      <a href="{% url 'chat:inbox' %}" class="btn btn-outline btn-sm">← Back</a>
+    </div>
+
+    <div class="form-card">
+      <p style="margin-bottom: 20px; color: var(--ink-soft);">
+        Create a custom offer for <strong>{{ client.get_full_name|default:client.username }}</strong>. 
+        Your offer will be sent immediately and will appear in their inbox.
+      </p>
+
+      <form method="post" class="form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+          <label for="{{ form.service.id_for_label }}">Choose your listing</label>
+          {{ form.service }}
+          <small class="helptext">Select the specialist service this offer is for.</small>
+          {% if form.service.errors %}<span class="error">{{ form.service.errors.0 }}</span>{% endif %}
+        </div>
+
+        <div class="form-group">
+          {{ form.title }}
+          {% if form.title.errors %}
+            <span class="error">{{ form.title.errors.0 }}</span>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          {{ form.description }}
+          {% if form.description.errors %}
+            <span class="error">{{ form.description.errors.0 }}</span>
+          {% endif %}
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="form-group">
+            {{ form.price }}
+            {% if form.price.errors %}
+              <span class="error">{{ form.price.errors.0 }}</span>
+            {% endif %}
+          </div>
+
+          <div class="form-group">
+            {{ form.delivery_days }}
+            {% if form.delivery_days.errors %}
+              <span class="error">{{ form.delivery_days.errors.0 }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" class="btn btn-brass">Send Offer</button>
+          <a href="{% url 'chat:inbox' %}" class="btn btn-outline">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

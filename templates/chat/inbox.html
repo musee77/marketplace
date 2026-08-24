@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Inbox — Synovae Analytics{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Inbox</h2>
+    </div>
+
+    <div class="section-head" style="margin-top:8px;">
+      <h3>Start new chat</h3>
+    </div>
+    {% if user.is_specialist %}
+      <form method="get" onsubmit="event.preventDefault(); if (this.user_id.value) { window.location = '/chat/start/' + this.user_id.value + '/'; }" class="chat-form inbox-quick-start">
+        <div class="chat-input-wrap">
+          <label class="inbox-select-label">
+            <span class="helptext" style="font-weight:600; color:var(--ink-soft); margin-bottom:4px; display:block;">Select client</span>
+            <select name="user_id" id="specialist_client_select" required class="inbox-select">
+              <option value="">Choose a client...</option>
+              {% for contact in quick_contacts %}
+                <option value="{{ contact.pk }}">{% if contact.get_full_name %}{{ contact.get_full_name }}{% else %}{{ contact.username }}{% endif %}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <div class="chat-actions">
+          <button type="submit" class="btn btn-brass">Message client</button>
+        </div>
+        {% if not quick_contacts %}<span class="helptext inbox-empty-help">No clients available right now.</span>{% endif %}
+      </form>
+    {% elif user.is_client %}
+      <form method="get" onsubmit="event.preventDefault(); if (this.user_id.value) { window.location = '/chat/start/' + this.user_id.value + '/'; }" class="chat-form inbox-quick-start">
+        <div class="chat-input-wrap">
+          <label class="inbox-select-label">
+            <span class="helptext" style="font-weight:600; color:var(--ink-soft); margin-bottom:4px; display:block;">Select specialist</span>
+            <select name="user_id" required class="inbox-select">
+              <option value="">Choose a specialist...</option>
+              {% for contact in quick_contacts %}
+                <option value="{{ contact.pk }}">{% if contact.get_full_name %}{{ contact.get_full_name }}{% else %}{{ contact.username }}{% endif %}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+        <div class="chat-actions">
+          <button type="submit" class="btn btn-brass">Message specialist</button>
+        </div>
+        {% if not quick_contacts %}<span class="helptext inbox-empty-help">No specialists available right now.</span>{% endif %}
+      </form>
+    {% endif %}
+
+    {% if pending_offers %}
+    <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid var(--line);">
+      <div class="section-head" style="margin-bottom: 15px;">
+        <h3>Offers received</h3>
+        <a href="{% url 'orders:offer_list' %}" class="link">View all →</a>
+      </div>
+      <div class="inbox-list">
+        {% for offer in pending_offers %}
+        <a href="{% url 'orders:offer_detail' offer.pk %}" class="inbox-item">
+          <div class="inbox-avatar">{{ offer.specialist.first_name|first|default:"?" }}</div>
+          <div class="inbox-body">
+            <div class="inbox-top">
+              <strong>{{ offer.title }}</strong>
+              <span class="inbox-time">{{ offer.created_at|timesince }} ago</span>
+            </div>
+            <p class="inbox-preview" style="color: var(--ink-soft);">
+              From: <strong>{{ offer.specialist.get_full_name|default:offer.specialist.username }}</strong><br>
+              💰 ${{ offer.price }} · ⏱️ {{ offer.delivery_days }}d delivery
+            </p>
+          </div>
+          <span class="badge" style="background: var(--brass);">Pending</span>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if conversations %}
+    <div class="inbox-list">
+      {% for item in conversations %}
+      <a href="{% url 'chat:conversation' item.conversation.pk %}" class="inbox-item">
+        <div class="inbox-avatar">{{ item.other.first_name|first|default:"?" }}</div>
+        <div class="inbox-body">
+          <div class="inbox-top">
+            <strong>{{ item.other.get_full_name|default:item.other.username }}</strong>
+            {% if item.last %}
+            <span class="inbox-time">{{ item.last.created_at|timesince }} ago</span>
+            {% endif %}
+          </div>
+          {% if item.last %}
+          <p class="inbox-preview">
+            {% if not item.last.is_approved and item.last.sender != request.user %}
+              <em class="msg-pending">Message awaiting approval</em>
+            {% else %}
+              {{ item.last.body|truncatechars:80 }}
+            {% endif %}
+          </p>
+          {% else %}
+          <p class="inbox-preview"><em>No messages yet</em></p>
+          {% endif %}
+        </div>
+        {% if item.unread %}
+        <span class="badge" title="Unread messages">{{ item.unread }}</span>
+        {% endif %}
+        {% if item.pending %}
+        <span class="badge" style="background: var(--brass);" title="Pending admin approval">{{ item.pending }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="pagination-nav">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline pagination-btn">← Previous</a>
+      {% else %}
+        <span class="btn btn-outline pagination-btn disabled">← Previous</span>
+      {% endif %}
+
+      <span class="pagination-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline pagination-btn">Next →</a>
+      {% else %}
+        <span class="btn btn-outline pagination-btn disabled">Next →</span>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="empty-state">
+      <p>No conversations yet.</p>
+      <p>Use the buttons above to message a client or specialist.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

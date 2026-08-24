@@ -1,0 +1,55 @@
+  <nav class="nav">
+    <div class="wrap">
+      <a href="{% url 'core:home' %}" class="brand">
+        <svg class="seal" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#c1943f" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#c1943f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Synovae Analytics
+      </a>
+      <input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-hidden="true">
+      <label for="nav-toggle" class="nav-toggle" aria-label="Toggle navigation">
+        <span></span>
+      </label>
+      <ul class="nav-links">
+        {% if user.is_authenticated %}
+          <li><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+          <li><a href="{% url 'accounts:referrals' %}">Referrals</a></li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle">Browse <span class="caret">&#9662;</span></a>
+            <ul class="dropdown-menu">
+              <li><a href="{% url 'accounts:specialist_list' %}">Browse analysts</a></li>
+              <li><a href="{% url 'services:list' %}">Browse services</a></li>
+            </ul>
+          </li>
+          {% with total_unread=unread_messages_count|add:unread_notifications_count %}
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle">Updates {% if total_unread > 0 %}<span class="badge">{{ total_unread }}</span>{% endif %}<span class="caret">&#9662;</span></a>
+            <ul class="dropdown-menu">
+              <li><a href="{% url 'chat:inbox' %}">&#x2709;&#xFE0F; Messages {% if unread_messages_count > 0 %}<span class="badge">{{ unread_messages_count }}</span>{% endif %}</a></li>
+              <li><a href="{% url 'notifications:list' %}">&#x1F514; Notifications {% if unread_notifications_count > 0 %}<span class="badge">{{ unread_notifications_count }}</span>{% endif %}</a></li>
+            </ul>
+          </li>
+          {% endwith %}
+          {% if user.is_specialist %}<li><a href="{% url 'services:mine' %}">My services</a></li>{% endif %}
+          {% if user.is_manager %}
+            <li><a href="{% url 'accounts:manager_user_list' %}">Manage users</a></li>
+            <li><a href="{% url 'accounts:pending_specialists' %}">Approvals</a></li>
+            <li><a href="{% url 'chat:moderate' %}">Moderate</a></li>
+          {% endif %}
+          <li class="dropdown profile-dropdown">
+            <button type="button" class="dropdown-toggle profile-toggle" aria-expanded="false">{{ user.username }} <span class="caret">&#9662;</span></button>
+            <ul class="dropdown-menu">
+              <li><span class="profile-role">{{ user.get_role_display }}</span></li>
+              <li><a href="{% url 'accounts:edit_profile' %}">Account</a></li>
+              {% if user.is_specialist and user.specialist_profile %}<li><a href="{{ user.specialist_profile.get_absolute_url }}">View profile</a></li>{% endif %}
+              <li class="profile-logout"><form action="{% url 'accounts:logout' %}" method="post">{% csrf_token %}<button type="submit">Log out</button></form></li>
+            </ul>
+          </li>
+        {% else %}
+          <li><a href="{% url 'services:list' %}">Browse services</a></li>
+          <li><a href="{% url 'core:about' %}">About us</a></li>
+          <li><a href="{% url 'blog:list' %}">Analytics insights</a></li>
+          <li><a href="{% url 'accounts:login' %}">Log in</a></li>
+          <li><a href="{% url 'accounts:signup' %}" class="btn-nav">Sign up</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </nav>

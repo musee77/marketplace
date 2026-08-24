@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>My listings</h2>
+      <a href="{% url 'services:create' %}" class="btn btn-brass">+ New listing</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="my-services-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Status</th>
+            <th>Rating</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in services %}
+          <tr>
+            <td data-label="Title"><a href="{{ s.get_absolute_url }}">{{ s.title }}</a></td>
+            <td data-label="Category">{{ s.category.name|default:"—" }}</td>
+            <td data-label="Price" class="mono">${{ s.price }}</td>
+            <td data-label="Status">
+              {% if s.is_active %}
+                <span class="status status-COMPLETED">Active</span>
+              {% else %}
+                <span class="status status-CANCELLED">Inactive</span>
+              {% endif %}
+            </td>
+            <td data-label="Rating">★ {{ s.average_rating|default:"—" }} ({{ s.review_count }})</td>
+            <td data-label="Actions"><a href="{% url 'services:edit' s.slug %}" class="btn btn-outline btn-sm">Edit</a></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="empty">You haven't listed any services yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <nav class="listing-pagination" aria-label="Pagination">
+      {% if page_obj.has_previous %}
+        <a class="btn btn-outline btn-sm" href="?page={{ page_obj.previous_page_number }}">← Previous</a>
+      {% else %}
+        <button class="btn btn-outline btn-sm" disabled>← Previous</button>
+      {% endif %}
+
+      <span class="listing-page-info mono">
+        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+      </span>
+
+      {% if page_obj.has_next %}
+        <a class="btn btn-outline btn-sm" href="?page={{ page_obj.next_page_number }}">Next →</a>
+      {% else %}
+        <button class="btn btn-outline btn-sm" disabled>Next →</button>
+      {% endif %}
+    </nav>
+
+    <div class="divider"></div>
+    <div class="section-head">
+      <h3>Reviews received</h3>
+      <span class="helptext">{{ reviews_page.paginator.count }} total</span>
+    </div>
+    <div class="listing-reviews">
+      {% for review in reviews_page %}
+        <article class="listing-review-card">
+          <div class="listing-review-header">
+            <span class="listing-reviewer-name">{{ review.reviewer.get_full_name|default:review.reviewer.username }}</span>
+            <span class="listing-review-date">{{ review.created_at|date:"M j, Y" }}</span>
+          </div>
+          <div class="listing-review-stars">
+            {% for i in "12345" %}<span class="star {% if forloop.counter <= review.rating %}filled{% else %}empty{% endif %}">★</span>{% endfor %}
+            <span class="listing-review-rating">{{ review.rating }}/5</span>
+          </div>
+          {% if review.service %}<p class="helptext">{{ review.service.title }}</p>{% endif %}
+          <p class="listing-review-comment">{{ review.comment|default:"No written comment." }}</p>
+        </article>
+      {% empty %}
+        <p class="empty">No reviews received yet.</p>
+      {% endfor %}
+    </div>
+
+    {% if reviews_page.has_other_pages %}
+      <nav class="listing-pagination" aria-label="Reviews pagination">
+        {% if reviews_page.has_previous %}
+          <a class="btn btn-outline btn-sm" href="?page={{ page_obj.number }}&reviews_page={{ reviews_page.previous_page_number }}">← Previous reviews</a>
+        {% endif %}
+        <span class="listing-page-info mono">Page {{ reviews_page.number }} of {{ reviews_page.paginator.num_pages }}</span>
+        {% if reviews_page.has_next %}
+          <a class="btn btn-outline btn-sm" href="?page={{ page_obj.number }}&reviews_page={{ reviews_page.next_page_number }}">Next reviews →</a>
+        {% endif %}
+      </nav>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
+

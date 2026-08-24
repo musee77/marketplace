@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Data Analytics Specialists | Synovae Analytics{% endblock %}
+
+{% block seo %}
+<meta name="description" content="Browse approved data analytics specialists by expertise, location, and professional experience on Synovae Analytics.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:title" content="Browse Data Analytics Specialists | Synovae Analytics">
+<meta property="og:description" content="Find approved data analytics specialists for analysis, engineering, dashboards, machine learning, and business intelligence projects.">
+<meta property="og:site_name" content="Synovae Analytics">
+<link rel="canonical" href="{{ request.build_absolute_uri }}">
+{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Browse Data Analytics Specialists",
+  "url": "{{ request.build_absolute_uri }}",
+  "description": "Browse approved data analytics specialists on Synovae Analytics."
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head listing-head">
+      <div>
+        <div class="eyebrow">People and expertise</div>
+        <h1>Browse analysts</h1>
+      </div>
+      <form method="get" class="listing-search-form">
+        <input type="search" name="q" value="{{ q }}" placeholder="Search analysts..." class="listing-search-input">
+        <button class="btn btn-outline btn-sm" type="submit">Search</button>
+      </form>
+    </div>
+
+    <div class="grid listing-grid">
+      {% for profile in page_obj %}
+        <a class="card specialist-directory-card" href="{{ profile.get_absolute_url }}">
+          <div class="card-body">
+            <div class="seller-info">
+              <div class="seller-avatar">
+                {% if profile.user.avatar %}
+                  <img src="{{ profile.user.avatar.url }}" alt="{{ profile.user.get_full_name|default:profile.user.username }}">
+                {% else %}
+                  <span>{{ profile.user.get_full_name|default:profile.user.username|slice:":1"|upper }}</span>
+                {% endif %}
+              </div>
+              <div class="seller-details">
+                <span class="seller-name">{{ profile.user.get_full_name|default:profile.user.username }}</span>
+                {% if profile.is_verified %}<span class="pro-badge">VERIFIED</span>{% endif %}
+              </div>
+            </div>
+            <div class="card-title">{{ profile.headline|default:"Data analytics specialist" }}</div>
+            <p class="specialist-directory-bio">{{ profile.bio|default:"Available for data analytics projects."|truncatechars:120 }}</p>
+            <div class="rating-row">
+              <span class="star-icon">★</span>
+              <span class="rating-score">{{ profile.average_rating|default:"—" }}</span>
+              <span class="review-count">({{ profile.review_count }} reviews)</span>
+            </div>
+            <div class="card-foot">
+              <span class="category-name">{{ profile.location|default:"Remote" }}</span>
+              <span class="price">{{ profile.years_experience }} yrs experience</span>
+            </div>
+          </div>
+        </a>
+      {% empty %}
+        <div class="empty">No analysts match your search.</div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+      <nav class="listing-pagination" aria-label="Analyst pagination">
+        {% if page_obj.has_previous %}<a class="btn btn-outline btn-sm" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}">← Previous</a>{% endif %}
+        <span class="pagination-info mono">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a class="btn btn-outline btn-sm" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q|urlencode }}{% endif %}">Next →</a>{% endif %}
+      </nav>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

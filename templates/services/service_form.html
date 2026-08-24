@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h2>{% if is_new %}List a new service{% else %}Edit listing{% endif %}</h2>
+    <div class="panel">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">{% if is_new %}Publish listing{% else %}Save changes{% endif %}</button>
+        {% if not is_new %}
+          <a href="{% url 'services:delete' service.slug %}" class="btn btn-danger" style="margin-left:8px;">Delete</a>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

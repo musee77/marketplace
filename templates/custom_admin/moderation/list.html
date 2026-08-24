@@ -1,0 +1,71 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <span>Chat Moderation</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  <h2>Chat Message Moderation</h2>
+  <p style="color:var(--admin-text-muted); margin-bottom: 20px; font-size:0.9rem;">
+    Review the pending chat messages. Approved messages will become visible to recipients in their conversation threads. Rejected messages will remain hidden.
+  </p>
+
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--admin-card-border); text-align: left; color: var(--admin-text-muted);">
+          <th style="padding: 12px 8px; width: 120px;">Sender</th>
+          <th style="padding: 12px 8px; width: 180px;">Conversation Thread</th>
+          <th style="padding: 12px 8px;">Message Content</th>
+          <th style="padding: 12px 8px; width: 150px;">Sent Time</th>
+          <th style="padding: 12px 8px; text-align: right; width: 180px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for msg in pending %}
+        <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.5);">
+          <td style="padding: 12px 8px; font-weight: 600;">
+            {{ msg.sender.username }}
+            <div style="font-size:0.75rem; color:var(--admin-text-muted); font-weight:normal;">{{ msg.sender.get_role_display }}</div>
+          </td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted);">
+            {{ msg.conversation }}
+          </td>
+          <td style="padding: 12px 8px; color: #fff; word-break: break-all; white-space: pre-wrap;">{{ msg.body }}</td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ msg.created_at|date:"M j, Y H:i" }}</td>
+          <td style="padding: 12px 8px; text-align: right; white-space: nowrap;">
+            <a href="{% url 'custom_admin:chat_message_approve' msg.pk %}" class="btn btn-success" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; background: var(--admin-success); color: #fff; text-decoration: none; font-weight: bold; margin-right: 6px;">✓ Approve</a>
+            <a href="{% url 'custom_admin:chat_message_reject' msg.pk %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; background: var(--admin-danger); color: #fff; text-decoration: none; font-weight: bold;">✗ Reject</a>
+            <form method="post" action="{% url 'custom_admin:chat_message_reply' msg.pk %}" style="display:flex; gap:4px; margin-top:8px;">
+              {% csrf_token %}
+              <input name="body" required maxlength="2000" placeholder="Reply to conversation" style="min-width:190px; padding:6px;">
+              <button type="submit" class="btn btn-success" style="padding:6px 10px; border:0; cursor:pointer;">Reply</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" style="padding: 24px; text-align: center; color: var(--admin-text-muted);">No messages require moderation at this time.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:20px;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">&laquo; Prev</a>
+    {% endif %}
+    
+    <span style="padding: 4px 10px; color: var(--admin-text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">Next &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

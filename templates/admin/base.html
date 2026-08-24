@@ -1,0 +1,193 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en-us' }}" dir="{{ LANGUAGE_BIDI|yesno:'rtl,ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ title }} | Synovae Analytics Admin{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/admin.css' %}">
+  {% block extrastyle %}{% endblock %}
+  {% block extrahead %}{% endblock %}
+</head>
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock %}">
+  {% if user.is_authenticated %}
+  <!-- Mobile Header Bar (< 992px) -->
+  <div class="dh-mobile-topbar">
+    <button type="button" id="dh-mobile-toggle" aria-label="Toggle navigation menu">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="{% url 'datahire_admin:index' %}" class="dh-mobile-brand">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#c1943f" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#c1943f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Synovae Analytics Admin
+    </a>
+  </div>
+
+  <!-- Mobile Overlay Backdrop -->
+  <div id="dh-sidebar-overlay"></div>
+  {% endif %}
+
+  <div id="dh-admin-layout">
+    {% if user.is_authenticated %}
+    <!-- Custom Left Vertical Sidebar (Persistent Across All Admin Pages) -->
+    <aside id="dh-sidebar">
+      <div class="dh-sidebar-header">
+        <a href="{% url 'datahire_admin:index' %}" class="dh-sidebar-brand">
+          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#c1943f" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#c1943f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Synovae Analytics <small>ADMIN</small></span>
+        </a>
+      </div>
+
+      <div class="dh-sidebar-nav-wrap">
+        <!-- Main Navigation Section -->
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">MAIN</div>
+          <a href="{% url 'datahire_admin:index' %}" class="dh-sidebar-link {% if request.path == '/admin/' %}active{% endif %}">
+            <span class="dh-nav-icon">📊</span> Dashboard
+          </a>
+        </div>
+
+        <!-- Marketplace Models Section -->
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">MARKETPLACE</div>
+          <a href="{% url 'datahire_admin:accounts_user_changelist' %}" class="dh-sidebar-link {% if '/accounts/user/' in request.path %}active{% endif %}">
+            <span class="dh-nav-icon">👥</span> Users
+          </a>
+          <a href="{% url 'datahire_admin:accounts_specialistprofile_changelist' %}" class="dh-sidebar-link {% if '/accounts/specialistprofile/' in request.path %}active{% endif %}">
+            <span class="dh-nav-icon">🎓</span> Specialists
+          </a>
+          <a href="{% url 'datahire_admin:services_service_changelist' %}" class="dh-sidebar-link {% if '/services/service/' in request.path %}active{% endif %}">
+            <span class="dh-nav-icon">💼</span> Services
+          </a>
+          <a href="{% url 'datahire_admin:orders_order_changelist' %}" class="dh-sidebar-link {% if '/orders/order/' in request.path %}active{% endif %}">
+            <span class="dh-nav-icon">🛒</span> Orders
+          </a>
+          <a href="{% url 'datahire_admin:services_category_changelist' %}" class="dh-sidebar-link {% if '/services/category/' in request.path %}active{% endif %}">
+            <span class="dh-nav-icon">📁</span> Categories
+          </a>
+        </div>
+
+        <!-- Moderation Section -->
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">MODERATION</div>
+          <a href="{% url 'datahire_admin:chat_message_changelist' %}" class="dh-sidebar-link {% if '/chat/message/' in request.path %}active{% endif %}">
+            <span class="dh-nav-icon">💬</span> Chat Messages
+          </a>
+          <a href="{% url 'datahire_admin:reviews_review_changelist' %}" class="dh-sidebar-link {% if '/reviews/review/' in request.path %}active{% endif %}">
+            <span class="dh-nav-icon">⭐</span> Reviews
+          </a>
+          <a href="{% url 'accounts:pending_specialists' %}" class="dh-sidebar-link">
+            <span class="dh-nav-icon">✅</span> Specialist Approvals
+          </a>
+          <a href="{% url 'chat:moderate' %}" class="dh-sidebar-link">
+            <span class="dh-nav-icon">🛡️</span> Moderate Chat
+          </a>
+          <a href="{% url 'datahire_admin:notifications_notification_changelist' %}" class="dh-sidebar-link {% if '/notifications/notification/' in request.path %}active{% endif %}">
+            <span class="dh-nav-icon">🔔</span> Notifications
+          </a>
+        </div>
+
+        <!-- System Section -->
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">SYSTEM</div>
+          <a href="{% url 'core:home' %}" target="_blank" class="dh-sidebar-link">
+            <span class="dh-nav-icon">🌐</span> View Public Site
+          </a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'datahire_admin:password_change' %}" class="dh-sidebar-link">
+              <span class="dh-nav-icon">🔑</span> Change Password
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- User Profile Badge Footer -->
+      {% if user.is_authenticated %}
+        <div class="dh-sidebar-footer">
+          <div class="dh-sidebar-user">
+            <div class="dh-user-avatar">{{ user.username|slice:":1"|upper }}</div>
+            <div class="dh-user-info">
+              <span class="dh-user-title">{{ user.username }}</span>
+              <span class="dh-user-role">{% if user.is_superuser %}Superuser{% else %}Staff Manager{% endif %}</span>
+            </div>
+          </div>
+          <form action="{% url 'accounts:logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="dh-sidebar-logout" title="Log Out">🚪 Logout</button>
+          </form>
+        </div>
+      {% endif %}
+    </aside>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <div id="dh-main-wrapper">
+      {% if user.is_authenticated %}
+      <!-- Sub-header & Breadcrumbs Bar -->
+      <header class="dh-top-subbar">
+        <div class="dh-breadcrumbs">
+          {% block breadcrumbs %}
+            <a href="{% url 'datahire_admin:index' %}">Admin</a>
+            {% if title %} &rsaquo; <span>{{ title }}</span>{% endif %}
+          {% endblock %}
+        </div>
+        <div class="dh-subbar-tools">
+          <a href="{% url 'core:home' %}" target="_blank" class="dh-btn-sub">🌐 Site</a>
+          {% block object-tools %}{% endblock %}
+        </div>
+      </header>
+      {% endif %}
+
+      <!-- System Messages Banner -->
+      {% if messages %}
+        <div class="dh-messages-wrap">
+          {% for message in messages %}
+            <div class="dh-alert dh-alert-{{ message.tags }}">
+              <span>{{ message }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Main Content Body -->
+      <main id="dh-content">
+        {% block content_title %}
+          {% if title %}<h1 class="dh-page-title">{{ title }}</h1>{% endif %}
+        {% endblock %}
+
+        {% block content %}
+        {% endblock %}
+      </main>
+
+      <!-- Footer -->
+      <footer id="dh-footer">
+        <div class="dh-footer-content">
+          <span>Synovae Analytics Marketplace Custom Admin Panel</span>
+          {% if user.is_authenticated %}
+            <span>Logged in as <strong>{{ user.username }}</strong></span>
+          {% endif %}
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const toggleBtn = document.getElementById('dh-mobile-toggle');
+      const sidebar = document.getElementById('dh-sidebar');
+      const overlay = document.getElementById('dh-sidebar-overlay');
+
+      function toggleSidebar() {
+        sidebar.classList.toggle('dh-sidebar-active');
+        overlay.classList.toggle('dh-overlay-active');
+      }
+
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleSidebar);
+      }
+      if (overlay) {
+        overlay.addEventListener('click', toggleSidebar);
+      }
+    });
+  </script>
+</body>
+</html>

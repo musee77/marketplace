@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Offers Received — Synovae Analytics{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Offers Received</h2>
+      <a href="{% url 'chat:inbox' %}" class="btn btn-outline btn-sm">← Back to Inbox</a>
+    </div>
+
+    {% if offers %}
+    <div class="inbox-list">
+      {% for offer in offers %}
+      <a href="{% url 'orders:offer_detail' offer.pk %}" class="inbox-item">
+        <div class="inbox-avatar">{{ offer.specialist.first_name|first|default:"?" }}</div>
+        <div class="inbox-body">
+          <div class="inbox-top">
+            <strong>{{ offer.title }}</strong>
+            <span class="inbox-time">{{ offer.created_at|timesince }} ago</span>
+          </div>
+          <p class="inbox-preview" style="color: var(--ink-soft);">
+            From: <strong>{{ offer.specialist.get_full_name|default:offer.specialist.username }}</strong><br>
+            <span style="font-family: 'IBM Plex Mono', monospace;">💰 ${{ offer.price }} · ⏱️ {{ offer.delivery_days }}d</span>
+          </p>
+        </div>
+        <span class="badge" style="background: {% if offer.status == 'PENDING' %}var(--brass){% elif offer.status == 'ACCEPTED' %}var(--green){% else %}var(--red){% endif %};">
+          {{ offer.get_status_display }}
+        </span>
+      </a>
+      {% endfor %}
+    </div>
+
+      <div style="margin-top:24px;display:flex;gap:10px;align-items:center;">
+        {% if page_obj.has_previous %}
+          <a class="btn btn-outline btn-sm" href="?page={{ page_obj.previous_page_number }}">← Previous</a>
+        {% else %}
+          <button class="btn btn-outline btn-sm" disabled style="opacity:0.4;cursor:not-allowed;">← Previous</button>
+        {% endif %}
+
+        <span class="mono" style="align-self:center;font-size:.875rem;color:var(--slate);padding:0 4px;">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a class="btn btn-outline btn-sm" href="?page={{ page_obj.next_page_number }}">Next →</a>
+        {% else %}
+          <button class="btn btn-outline btn-sm" disabled style="opacity:0.4;cursor:not-allowed;">Next →</button>
+        {% endif %}
+      </div>
+    {% else %}
+    <div class="empty-state">
+      <p>No offers yet.</p>
+      <p>When specialists send you offers, they'll appear here.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

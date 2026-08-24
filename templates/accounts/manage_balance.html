@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h2>Manage balance — {{ target.get_full_name|default:target.username }}</h2>
+    <div class="panel">
+      <p>Current balance: <strong class="mono">${{ profile.balance }}</strong></p>
+      <form method="post" style="display:flex;gap:8px;align-items:center;">{% csrf_token %}
+        <label style="margin:0;">Amount <input type="number" step="0.01" name="amount" required></label>
+        <select name="action">
+          <option value="credit">Credit</option>
+          <option value="debit">Debit</option>
+          <option value="set">Set balance</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Apply</button>
+      </form>
+      <div style="margin-top:12px;">
+        <a href="{% url 'accounts:manager_user_list' %}" class="btn btn-outline">Back to users</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

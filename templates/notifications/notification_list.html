@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Notifications — Synovae Analytics{% endblock %}
+
+{% block content %}
+<div class="wrap" style="padding-top: 2rem; padding-bottom: 3rem;">
+
+  <div class="notif-header">
+    <h1 style="margin-bottom: .2rem;">&#x1F514; Notifications</h1>
+    <p class="text-muted" style="margin-bottom: 1.5rem;">Your recent account activity</p>
+
+    {% if notifications %}
+    <form method="post" action="{% url 'notifications:mark_all_read' %}" style="margin-bottom: 1.5rem;">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline" style="font-size: .85rem;">
+        &#10003; Mark all as read
+      </button>
+    </form>
+    {% endif %}
+  </div>
+
+  {% if notifications %}
+    <div class="notif-list">
+      {% for notif in notifications %}
+        <div class="notif-item {% if not notif.is_read %}notif-item--unread{% endif %}">
+          <div class="notif-icon notif-icon--{{ notif.notif_type|lower }}">
+            {% if notif.notif_type == "ORDER_NEW" %}&#x1F4E6;
+            {% elif notif.notif_type == "ORDER_STATUS" %}&#x1F504;
+            {% elif notif.notif_type == "OFFER_RECEIVED" %}&#x1F4CB;
+            {% elif notif.notif_type == "OFFER_ACCEPTED" %}&#x2705;
+            {% elif notif.notif_type == "OFFER_DECLINED" %}&#x274C;
+            {% elif notif.notif_type == "REVIEW_RECEIVED" %}&#x2B50;
+            {% elif notif.notif_type == "DEPOSIT_DONE" %}&#x1F4B0;
+            {% elif notif.notif_type == "REFERRAL_BONUS" %}&#x1F381;
+            {% else %}&#x1F514;
+            {% endif %}
+          </div>
+
+          <div class="notif-body">
+            <div class="notif-title">
+              {% if not notif.is_read %}<span class="notif-dot"></span>{% endif %}
+              {% if notif.url %}
+                <a href="{{ notif.url }}" class="notif-title-link">{{ notif.title }}</a>
+              {% else %}
+                {{ notif.title }}
+              {% endif %}
+            </div>
+            <div class="notif-message">{{ notif.message }}</div>
+            <div class="notif-meta">
+              <span class="notif-type-tag">{{ notif.get_notif_type_display }}</span>
+              <span class="notif-time">{{ notif.created_at|timesince }} ago</span>
+            </div>
+          </div>
+
+          {% if not notif.is_read %}
+          <form method="post" action="{% url 'notifications:mark_read' pk=notif.pk %}" class="notif-read-form">
+            {% csrf_token %}
+            <button type="submit" class="notif-read-btn" title="Mark as read">&#x2713;</button>
+          </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="notif-pagination" aria-label="Notification pages">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="notif-page-btn">&#8592; Previous</a>
+      {% else %}
+        <span class="notif-page-btn notif-page-btn--disabled">&#8592; Previous</span>
+      {% endif %}
+
+      <div class="notif-page-numbers">
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+            <span class="notif-page-btn notif-page-btn--active">{{ num }}</span>
+          {% elif num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+            <a href="?page={{ num }}" class="notif-page-btn">{{ num }}</a>
+          {% elif num == page_obj.number|add:"-3" or num == page_obj.number|add:"3" %}
+            <span class="notif-page-ellipsis">&hellip;</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="notif-page-btn">Next &#8594;</a>
+      {% else %}
+        <span class="notif-page-btn notif-page-btn--disabled">Next &#8594;</span>
+      {% endif %}
+    </nav>
+    <p class="notif-page-info">
+      Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} notification{{ page_obj.paginator.count|pluralize }}
+    </p>
+    {% endif %}
+
+  {% else %}
+    <div class="empty-state" style="text-align:center; padding: 4rem 0;">
+      <div style="font-size: 3rem; margin-bottom: 1rem;">&#x1F514;</div>
+      <h2 style="font-size: 1.3rem; color: var(--slate);">All caught up!</h2>
+      <p style="color: var(--slate);">You have no notifications yet. Activity on your orders, offers, and account will appear here.</p>
+      <a href="{% url 'core:dashboard' %}" class="btn btn-primary" style="margin-top: 1rem;">Go to dashboard</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

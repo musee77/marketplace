@@ -1,0 +1,37 @@
+{% load i18n %}
+<div class="dh-inline-section">
+  <div class="dh-inline-header">
+    <div>
+      <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
+      {% if inline_admin_formset.opts.description %}<p>{{ inline_admin_formset.opts.description }}</p>{% endif %}
+    </div>
+    <span class="dh-inline-count">{{ inline_admin_formset.formset.total_form_count }} record{{ inline_admin_formset.formset.total_form_count|pluralize }}</span>
+  </div>
+  {{ inline_admin_formset.formset.management_form }}
+  <div class="dh-inline-list">
+    {% for form in inline_admin_formset.formset.forms %}
+      <div class="dh-inline-card">
+        {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+        {% if form.non_field_errors %}<div class="dh-field-errors">{{ form.non_field_errors }}</div>{% endif %}
+        {% for field in form.visible_fields %}
+          {% if field.name != "DELETE" %}
+            <div class="dh-form-field{% if field.errors %} dh-form-field--error{% endif %}">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.errors %}<div class="dh-field-errors">{{ field.errors }}</div>{% endif %}
+              {% if field.help_text %}<div class="dh-form-help">{{ field.help_text|safe }}</div>{% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+        {% if form.DELETE %}
+          <label class="dh-delete-field">{{ form.DELETE }} {% trans "Delete this document" %}</label>
+        {% endif %}
+        {% if form.instance.pk and form.instance.file %}
+          <a class="dh-inline-download" href="{% url 'orders:document_download' form.instance.pk %}" target="_blank">Download existing file</a>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p class="dh-empty-inline">No related records yet.</p>
+    {% endfor %}
+  </div>
+</div>

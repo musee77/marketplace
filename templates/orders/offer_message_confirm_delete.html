@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Delete offer — Synovae Analytics{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="wrap" style="max-width:600px;">
+    <div class="panel">
+      <h2>Delete offer?</h2>
+      <p>This will remove the pending offer from the conversation. Accepted or declined offers cannot be deleted.</p>
+      <form method="post" style="display:flex; gap:10px; margin-top:20px;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary">Delete offer</button>
+        <a href="{% url 'chat:conversation' offer_message.conversation_id %}" class="btn btn-outline">Cancel</a>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

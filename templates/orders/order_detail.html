@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap two-col order-detail-content">
+    <div>
+      <div class="eyebrow">Order #{{ order.pk }}</div>
+      <h2>{{ order.display_title }}</h2>
+      <span class="status status-{{ order.status }}">{{ order.get_status_display }}</span>
+
+      {% if order.status == 'UNDER_REVISION' and order.revision_note %}
+        <div class="dh-alert dh-alert-error" style="margin: 20px 0; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: var(--radius); padding: 16px;">
+          <strong style="margin: 0 0 8px 0; color: var(--danger); font-size: 1.05rem; display: block;">🔄 Revision Requested</strong>
+          <p style="margin: 0; color: var(--ink); font-size: 0.95rem; white-space: pre-line;"><strong>Client Instructions:</strong><br>{{ order.revision_note }}</p>
+        </div>
+      {% endif %}
+
+      <div class="divider"></div>
+      <h3>Order progress</h3>
+      <div style="display:grid;gap:10px;">
+        <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:stretch;">
+          <div style="padding:10px 8px;border-radius:12px;text-align:center;font-size:.85rem;background:{% if order.status == 'PENDING' %}rgba(193,148,63,.25){% elif order.status == 'ACCEPTED' or order.status == 'IN_PROGRESS' or order.status == 'UNDER_REVISION' or order.status == 'DELIVERED' or order.status == 'COMPLETED' %}rgba(193,148,63,.14){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'PENDING' %}var(--brass){% elif order.status == 'ACCEPTED' or order.status == 'IN_PROGRESS' or order.status == 'UNDER_REVISION' or order.status == 'DELIVERED' or order.status == 'COMPLETED' %}rgba(193,148,63,.45){% else %}rgba(255,255,255,.08){% endif %};">Pending</div>
+          <div style="padding:10px 8px;border-radius:12px;text-align:center;font-size:.85rem;background:{% if order.status == 'ACCEPTED' %}rgba(193,148,63,.25){% elif order.status == 'IN_PROGRESS' or order.status == 'UNDER_REVISION' or order.status == 'DELIVERED' or order.status == 'COMPLETED' %}rgba(193,148,63,.14){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'ACCEPTED' %}var(--brass){% elif order.status == 'IN_PROGRESS' or order.status == 'UNDER_REVISION' or order.status == 'DELIVERED' or order.status == 'COMPLETED' %}rgba(193,148,63,.45){% else %}rgba(255,255,255,.08){% endif %};">Accepted</div>
+          <div style="padding:10px 8px;border-radius:12px;text-align:center;font-size:.85rem;background:{% if order.status == 'IN_PROGRESS' or order.status == 'UNDER_REVISION' %}rgba(193,148,63,.25){% elif order.status == 'DELIVERED' or order.status == 'COMPLETED' %}rgba(193,148,63,.14){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'IN_PROGRESS' or order.status == 'UNDER_REVISION' %}var(--brass){% elif order.status == 'DELIVERED' or order.status == 'COMPLETED' %}rgba(193,148,63,.45){% else %}rgba(255,255,255,.08){% endif %};">{% if order.status == 'UNDER_REVISION' %}Under revision{% else %}In progress{% endif %}</div>
+          <div style="padding:10px 8px;border-radius:12px;text-align:center;font-size:.85rem;background:{% if order.status == 'DELIVERED' %}rgba(193,148,63,.25){% elif order.status == 'COMPLETED' %}rgba(193,148,63,.14){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'DELIVERED' %}var(--brass){% elif order.status == 'COMPLETED' %}rgba(193,148,63,.45){% else %}rgba(255,255,255,.08){% endif %};">Delivered</div>
+          <div style="padding:10px 8px;border-radius:12px;text-align:center;font-size:.85rem;background:{% if order.status == 'COMPLETED' %}rgba(193,148,63,.25){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'COMPLETED' %}var(--brass){% else %}rgba(255,255,255,.08){% endif %};">Completed</div>
+        </div>
+        {% if order.status == 'CANCELLED' or order.status == 'DECLINED' %}
+          <div style="padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:.9rem;">
+            Final state: <strong>{{ order.get_status_display }}</strong>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="order-detail-card">
+      <h3>Requirements and Client Reference Documents</h3>
+      <p style="white-space:pre-line;color:var(--slate);">{{ order.requirements|default:"No requirements provided." }}</p>
+
+      {% if order.revision_note %}
+        <div class="divider"></div>
+        <h4>🔄 Revision instructions</h4>
+        <p style="white-space:pre-line;color:var(--slate);">{{ order.revision_note }}</p>
+      {% endif %}
+
+      <h4>📎 Client Reference Documents</h4>
+      {% if client_docs %}
+        <div style="display:grid;gap:8px;margin-bottom:16px;">
+          {% for doc in client_docs %}
+            <a href="{% url 'orders:document_download' doc.pk %}" class="btn btn-outline"
+               style="display:flex;justify-content:space-between;align-items:center;text-align:left;"
+               download>
+              <span>📄 {{ doc.title }}</span>
+              <small>{{ doc.created_at|timesince }} ago · Download ↓</small>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="helptext" style="margin-bottom:16px;">No reference documents uploaded by the client.</p>
+      {% endif %}
+
+      <!-- Client can upload additional reference docs -->
+      {% if user == order.client %}
+        <form method="post" action="{% url 'orders:document_upload' order.pk %}" enctype="multipart/form-data" style="margin-top:12px;">
+          {% csrf_token %}
+          {{ document_form.as_p }}
+          <button type="submit" class="btn btn-outline" style="margin-top:4px;">Upload reference document</button>
+        </form>
+      {% endif %}
+      </div>
+
+      <!-- ====== SPECIALIST DELIVERY PACKAGE ====== -->
+      <div class="order-detail-card">
+      <h3>📦 Specialist Delivery</h3>
+      {% if order.delivery_note or delivery_docs %}
+        <div class="delivery-container" style="background: rgba(193,148,63,.05); border: 1px solid rgba(193,148,63,.2); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+          {% if order.delivery_note %}
+            <div style="margin-bottom: 18px;">
+              <strong style="font-size: 0.9rem; color: var(--brass); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .04em;">Delivery Note</strong>
+              <p style="margin: 0; color: var(--ink); white-space: pre-line; font-size: 0.95rem; line-height: 1.5;">{{ order.delivery_note }}</p>
+            </div>
+          {% endif %}
+          {% if delivery_docs %}
+            <div>
+              <strong style="font-size: 0.9rem; color: var(--brass); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em;">Delivered Files</strong>
+              <div style="display:grid;gap:8px;">
+                {% for doc in delivery_docs %}
+                  {% if doc.title != "Delivery note" %}
+                    <a href="{% url 'orders:document_download' doc.pk %}" class="btn btn-outline" style="display:flex;justify-content:space-between;align-items:center;text-align:left;background:var(--paper);" download>
+                      <span>📄 {{ doc.title }}</span>
+                      <small>{{ doc.created_at|timesince }} ago · Download ↓</small>
+                    </a>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <p class="helptext delivery-empty-message" style="margin-bottom:24px;">
+          {% if user == order.specialist %}
+            No files or notes delivered yet. Use the <strong>Deliver your work</strong> form below to submit your delivery.
+          {% else %}
+            The specialist hasn't delivered their work yet.
+          {% endif %}
+        </p>
+      {% endif %}
+      <!-- ====== INLINE DELIVER WORK FORM (specialist only, when order is In Progress / Under Revision) ====== -->
+      {% if can_deliver %}
+        <div class="delivery-submit-section">
+        <h4>Deliver your work</h4>
+        {% if order.status == 'UNDER_REVISION' and order.revision_note %}
+          <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+            <strong style="color: var(--danger); font-size: 0.9rem; display: block; margin-bottom: 4px;">⚠️ Revision Requested by Client:</strong>
+            <p style="margin: 0; color: var(--ink); white-space: pre-line; font-size: 0.9rem;">{{ order.revision_note }}</p>
+          </div>
+        {% endif %}
+        <p class="delivery-instructions" style="color:var(--slate);margin-bottom:16px;">
+          Upload your completed files. The order will be marked <strong>Delivered</strong> once you submit.
+          The client can then review and approve to release payment.
+        </p>
+        {% if deliver_form.errors %}
+          <div class="dh-alert dh-alert-error" style="margin-bottom:16px;">
+            {% for field, errors in deliver_form.errors.items %}
+              {% for error in errors %}<p style="margin:2px 0;">{{ error }}</p>{% endfor %}
+            {% endfor %}
+          </div>
+        {% endif %}
+        <form method="post" action="" enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" name="deliver_submit" value="1">
+          <div class="form-group" style="margin-bottom:18px;">
+            <label for="{{ deliver_form.files.id_for_label }}" style="font-weight:600;display:block;margin-bottom:6px;">
+              Delivery file(s) <span style="color:var(--brass);">*</span>
+            </label>
+            {{ deliver_form.files }}
+            <small style="color:var(--slate);display:block;margin-top:4px;">{{ deliver_form.files.help_text }}</small>
+            {% if deliver_form.files.errors %}
+              {% for error in deliver_form.files.errors %}
+                <small style="color:var(--danger);">{{ error }}</small>
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="form-group" style="margin-bottom:24px;">
+            <label for="{{ deliver_form.delivery_note.id_for_label }}" style="font-weight:600;display:block;margin-bottom:6px;">
+              Delivery note <span style="color:var(--brass);">*</span>
+            </label>
+            {{ deliver_form.delivery_note }}
+            <small style="color:var(--slate);display:block;margin-top:4px;">{{ deliver_form.delivery_note.help_text }}</small>
+          </div>
+          <button type="submit" class="btn btn-brass">📦 Submit delivery</button>
+        </form>
+        </div>
+      {% endif %}
+      </div>
+
+      {% if order.is_reviewable %}
+        <div class="divider"></div>
+        <a href="{% url 'reviews:create' order.pk %}" class="btn btn-brass">Leave a review</a>
+      {% elif order.review %}
+        <div class="divider"></div>
+        <h3>Your review</h3>
+        <div class="mono" style="color:var(--brass);">{% for i in "12345" %}{% if forloop.counter <= order.review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+        <p>{{ order.review.comment }}</p>
+      {% endif %}
+    </div>
+
+    <div class="panel order-customer-card">
+      <h3>Customer and Order Information</h3>
+      <table style="border:none;">
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Client</td><td style="border:none;padding:4px 0;text-align:right;">{{ order.client.get_full_name|default:order.client.username }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Specialist</td><td style="border:none;padding:4px 0;text-align:right;">{{ order.specialist.get_full_name|default:order.specialist.username }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Price</td><td style="border:none;padding:4px 0;text-align:right;" class="mono">${{ order.price }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Due</td><td style="border:none;padding:4px 0;text-align:right;">{{ order.due_date|default:"—" }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Placed</td><td style="border:none;padding:4px 0;text-align:right;">{{ order.created_at|date:"M j, Y" }}</td></tr>
+        <tr><td style="border:none;padding:4px 0;color:var(--slate);">Payment</td><td style="border:none;padding:4px 0;text-align:right;">{% if order.is_paid %}<span style="color:var(--good);font-weight:600;">✓ Paid</span> {% if order.paid_at %}· {{ order.paid_at|date:"M j, Y H:i" }}{% endif %}{% else %}Unpaid — {{ order.get_payment_method_display }}{% endif %}</td></tr>
+      </table>
+
+      {% if allowed_next %}
+        <div class="divider"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          {% for next_status in allowed_next %}
+            <form method="post" action="{% url 'orders:transition' order.pk next_status %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-outline" style="width:100%;">
+                {% if next_status == "ACCEPTED" %}Accept order
+                {% elif next_status == "DECLINED" %}Decline order
+                {% elif next_status == "IN_PROGRESS" %}Start work
+                {% elif next_status == "COMPLETED" %}Approve &amp; complete
+                {% elif next_status == "CANCELLED" %}Cancel order
+                {% else %}{{ next_status }}{% endif %}
+              </button>
+            </form>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <!-- Request revision — inline form requiring instructions -->
+      {% if can_request_revision %}
+        <div class="divider"></div>
+        <details style="width:100%;">
+          <summary class="btn btn-outline" style="width:100%;text-align:center;cursor:pointer;list-style:none;padding:10px 16px;">
+            🔄 Request revision
+          </summary>
+          <div style="margin-top:12px;">
+            <p style="font-size:.9rem;color:var(--slate);margin-bottom:8px;">
+              Please describe clearly what you'd like the specialist to change or correct.
+            </p>
+            <form method="post" action="{% url 'orders:request_revision' order.pk %}">
+              {% csrf_token %}
+              {{ revision_form.instructions }}
+              {% if revision_form.instructions.errors %}
+                {% for error in revision_form.instructions.errors %}
+                  <small style="color:var(--danger);display:block;margin-top:4px;">{{ error }}</small>
+                {% endfor %}
+              {% endif %}
+              <button type="submit" class="btn btn-outline" style="margin-top:10px;width:100%;">Submit revision request</button>
+            </form>
+          </div>
+        </details>
+      {% endif %}
+
+      {% if user == order.specialist and order.status == "PENDING" %}
+        <div class="divider"></div>
+        <a href="{% url 'orders:decide' order.pk %}" class="btn btn-outline" style="width:100%;display:block;text-align:center;">Go to accept/reject page</a>
+      {% endif %}
+      {% if user == order.client and not order.is_paid %}
+        <div class="divider"></div>
+        <a href="{% url 'orders:pay' order.pk %}" class="btn btn-brass" style="display:block;text-align:center;width:100%;">Pay now — ${{ order.price }}</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

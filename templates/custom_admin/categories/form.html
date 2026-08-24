@@ -1,0 +1,43 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:category_list' %}">Categories</a>
+&rsaquo; <span>{{ title }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="max-width: 580px; margin: 0 auto; padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  <h2>{{ title }}</h2>
+  
+  <form method="post" style="margin-top: 20px;">
+    {% csrf_token %}
+    
+    <div style="display:grid; gap:16px;">
+      <div>
+        <label for="{{ form.name.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Category Name</label>
+        {{ form.name }}
+        {% if form.name.errors %}<small style="color:var(--admin-danger);">{{ form.name.errors }}</small>{% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.slug.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Slug (URL friendly name)</label>
+        {{ form.slug }}
+        <small style="color: var(--admin-text-muted);">Leave blank to auto-generate from the category name.</small>
+        {% if form.slug.errors %}<small style="color:var(--admin-danger);">{{ form.slug.errors }}</small>{% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.icon.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Icon / Emoji</label>
+        {{ form.icon }}
+        <small style="color: var(--admin-text-muted);">Optional: Short emoji or CSS class label.</small>
+        {% if form.icon.errors %}<small style="color:var(--admin-danger);">{{ form.icon.errors }}</small>{% endif %}
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:10px;">
+        <button type="submit" class="btn btn-brass" style="flex: 1; padding: 10px; background: var(--admin-accent); color: #0f172a; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">Save Category</button>
+        <a href="{% url 'custom_admin:category_list' %}" class="btn btn-outline" style="flex: 1; padding: 10px; text-align: center; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">Cancel</a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

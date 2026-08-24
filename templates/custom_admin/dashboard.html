@@ -1,0 +1,202 @@
+{% extends "custom_admin/base.html" %}
+
+{% block content %}
+<div style="display:grid;gap:24px;">
+
+	<!-- Top Metric Cards Grid -->
+	<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+		<div style="padding:18px;border-radius:14px;background:var(--admin-card-bg, #1e293b);border:1px solid var(--admin-card-border, #334155);color:var(--admin-text, #f8fafc);box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+			<div style="font-size:.82rem;color:var(--admin-text-muted, #94a3b8);font-weight:500;">Total Users</div>
+			<div style="font-size:2.1rem;font-weight:700;margin-top:4px;color:#f8fafc;">{{ total_users }}</div>
+		</div>
+		<div style="padding:18px;border-radius:14px;background:var(--admin-card-bg, #1e293b);border:1px solid var(--admin-card-border, #334155);color:var(--admin-text, #f8fafc);box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+			<div style="font-size:.82rem;color:var(--admin-text-muted, #94a3b8);font-weight:500;">Specialists</div>
+			<div style="font-size:2.1rem;font-weight:700;margin-top:4px;color:var(--admin-accent, #c1943f);">{{ total_specialists }}</div>
+		</div>
+		<div style="padding:18px;border-radius:14px;background:var(--admin-card-bg, #1e293b);border:1px solid var(--admin-card-border, #334155);color:var(--admin-text, #f8fafc);box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+			<div style="font-size:.82rem;color:var(--admin-text-muted, #94a3b8);font-weight:500;">Clients</div>
+			<div style="font-size:2.1rem;font-weight:700;margin-top:4px;color:#38bdf8;">{{ total_clients }}</div>
+		</div>
+		<div style="padding:18px;border-radius:14px;background:var(--admin-card-bg, #1e293b);border:1px solid var(--admin-card-border, #334155);color:var(--admin-text, #f8fafc);box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+			<div style="font-size:.82rem;color:var(--admin-text-muted, #94a3b8);font-weight:500;">Orders</div>
+			<div style="font-size:2.1rem;font-weight:700;margin-top:4px;color:#34d399;">{{ total_orders }}</div>
+		</div>
+		<div style="padding:18px;border-radius:14px;background:var(--admin-card-bg, #1e293b);border:1px solid var(--admin-card-border, #334155);color:var(--admin-text, #f8fafc);box-shadow:0 4px 12px rgba(0,0,0,0.2);">
+			<div style="font-size:.82rem;color:var(--admin-text-muted, #94a3b8);font-weight:500;">Revenue (Platform Fees)</div>
+			<div style="font-size:2.1rem;font-weight:700;margin-top:4px;color:#a78bfa;">${{ platform_revenue }}</div>
+		</div>
+	</div>
+
+	<!-- Quick Moderation & Approvals Section -->
+	<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;">
+		<!-- Specialists Pending Approval -->
+		<div style="padding:22px;border:1px solid var(--admin-card-border, #334155);border-radius:16px;background:var(--admin-card-bg, #1e293b);box-shadow:0 4px 14px rgba(0,0,0,0.3);">
+			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--admin-card-border, #334155);padding-bottom:12px;">
+				<h3 style="margin:0;font-size:1.15rem;display:flex;align-items:center;gap:10px;color:var(--admin-text, #f8fafc);">
+					<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--admin-warning, #f59e0b);"></span>
+					Specialists Pending Approval ({{ pending_specialists }})
+				</h3>
+				<a href="{% url 'custom_admin:specialist_approval_list' %}" style="font-size:0.85rem;color:var(--admin-accent, #c1943f);text-decoration:none;font-weight:600;">View all →</a>
+			</div>
+			{% if recent_specialists %}
+			<div style="overflow-x:auto;">
+				<table style="width:100%;border-collapse:collapse;font-size:0.92rem;">
+					<thead>
+						<tr style="border-bottom:1px solid var(--admin-card-border, #334155);text-align:left;color:var(--admin-text-muted, #94a3b8);">
+							<th style="padding:10px 8px;">Specialist</th>
+							<th style="padding:10px 8px;">Headline</th>
+							<th style="padding:10px 8px;">Rate</th>
+							<th style="padding:10px 8px;text-align:right;">Action</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for sp in recent_specialists %}
+						<tr style="border-bottom:1px solid rgba(51,65,85,0.6);">
+							<td style="padding:12px 8px;font-weight:600;">
+								<a href="{% url 'custom_admin:user_detail' sp.user.pk %}" style="color:var(--admin-text, #f8fafc);text-decoration:none;">
+									{{ sp.user.get_full_name|default:sp.user.username }}
+								</a>
+							</td>
+							<td style="padding:12px 8px;color:var(--admin-text-muted, #94a3b8);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+								{{ sp.headline|default:"—" }}
+							</td>
+							<td style="padding:12px 8px;font-family:monospace;color:var(--admin-text, #f8fafc);">${{ sp.hourly_rate }}</td>
+							<td style="padding:12px 8px;text-align:right;">
+								<a href="{% url 'custom_admin:specialist_approve' sp.pk %}" style="display:inline-block;padding:6px 14px;border-radius:6px;background:var(--admin-success, #10b981);color:#fff;font-weight:600;font-size:0.82rem;text-decoration:none;transition:background 0.2s;">✓ Approve</a>
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			{% else %}
+			<p style="color: var(--admin-text-muted); font-size: 0.9rem;">No specialists waiting for approval.</p>
+			{% endif %}
+		</div>
+
+		<!-- Messages Pending Moderation -->
+		<div style="padding:22px;border:1px solid var(--admin-card-border, #334155);border-radius:16px;background:var(--admin-card-bg, #1e293b);box-shadow:0 4px 14px rgba(0,0,0,0.3);">
+			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--admin-card-border, #334155);padding-bottom:12px;">
+				<h3 style="margin:0;font-size:1.15rem;display:flex;align-items:center;gap:10px;color:var(--admin-text, #f8fafc);">
+					<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--admin-warning, #f59e0b);"></span>
+					Messages Pending Moderation ({{ pending_messages }})
+				</h3>
+				<a href="{% url 'custom_admin:chat_moderation_list' %}" style="font-size:0.85rem;color:var(--admin-accent, #c1943f);text-decoration:none;font-weight:600;">View all →</a>
+			</div>
+			{% if recent_messages %}
+			<div style="overflow-x:auto;">
+				<table style="width:100%;border-collapse:collapse;font-size:0.92rem;">
+					<thead>
+						<tr style="border-bottom:1px solid var(--admin-card-border, #334155);text-align:left;color:var(--admin-text-muted, #94a3b8);">
+							<th style="padding:10px 8px;">Sender</th>
+							<th style="padding:10px 8px;">Message</th>
+							<th style="padding:10px 8px;text-align:right;">Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for msg in recent_messages %}
+						<tr style="border-bottom:1px solid rgba(51,65,85,0.6);">
+							<td style="padding:12px 8px;font-weight:600;">
+								{{ msg.sender.username }}
+							</td>
+							<td style="padding:12px 8px;color:var(--admin-text-muted, #94a3b8);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+								{{ msg.body }}
+							</td>
+							<td style="padding:12px 8px;text-align:right;white-space:nowrap;">
+								<a href="{% url 'custom_admin:chat_message_approve' msg.pk %}" style="display:inline-block;padding:5px 10px;border-radius:6px;background:var(--admin-success, #10b981);color:#fff;font-weight:600;font-size:0.8rem;text-decoration:none;margin-right:6px;">✓ Approve</a>
+								<a href="{% url 'custom_admin:chat_message_reject' msg.pk %}" style="display:inline-block;padding:5px 10px;border-radius:6px;background:var(--admin-danger, #ef4444);color:#fff;font-weight:600;font-size:0.8rem;text-decoration:none;">✗ Reject</a>
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			{% else %}
+			<p style="color: var(--admin-text-muted); font-size: 0.9rem;">No messages require moderation.</p>
+			{% endif %}
+		</div>
+	</div>
+
+	<!-- Recent Activity (Users and Orders) -->
+	<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;">
+		<!-- Recent Orders -->
+		<div style="padding:22px;border:1px solid var(--admin-card-border, #334155);border-radius:16px;background:var(--admin-card-bg, #1e293b);box-shadow:0 4px 14px rgba(0,0,0,0.3);">
+			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--admin-card-border, #334155);padding-bottom:12px;">
+				<h3 style="margin:0;font-size:1.15rem;color:var(--admin-text, #f8fafc);">Recent Orders</h3>
+				<a href="{% url 'custom_admin:order_list' %}" style="font-size:0.85rem;color:var(--admin-accent, #c1943f);text-decoration:none;font-weight:600;">View all →</a>
+			</div>
+			{% if recent_orders %}
+			<div style="overflow-x:auto;">
+				<table style="width:100%;border-collapse:collapse;font-size:0.92rem;">
+					<thead>
+						<tr style="border-bottom:1px solid var(--admin-card-border, #334155);text-align:left;color:var(--admin-text-muted, #94a3b8);">
+							<th style="padding:10px 8px;">Order ID</th>
+							<th style="padding:10px 8px;">Client</th>
+							<th style="padding:10px 8px;">Specialist</th>
+							<th style="padding:10px 8px;">Price</th>
+							<th style="padding:10px 8px;text-align:right;">Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for order in recent_orders %}
+						<tr style="border-bottom:1px solid rgba(51,65,85,0.6);">
+							<td style="padding:12px 8px;">
+								<a href="{% url 'custom_admin:order_detail' order.pk %}" style="color:var(--admin-accent, #c1943f);text-decoration:none;font-weight:600;">
+									#{{ order.pk }}
+								</a>
+							</td>
+							<td style="padding:12px 8px;color:var(--admin-text, #f8fafc);">{{ order.client.username }}</td>
+							<td style="padding:12px 8px;color:var(--admin-text, #f8fafc);">{{ order.specialist.username }}</td>
+							<td style="padding:12px 8px;font-family:monospace;color:var(--admin-text, #f8fafc);">${{ order.price }}</td>
+							<td style="padding:12px 8px;text-align:right;">
+								<span class="status status-{{ order.status }}" style="font-size:0.8rem;padding:2px 8px;">{{ order.get_status_display }}</span>
+							</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			{% else %}
+			<p style="color: var(--admin-text-muted); font-size: 0.9rem;">No orders found.</p>
+			{% endif %}
+		</div>
+
+		<!-- Recent Signups -->
+		<div style="padding:22px;border:1px solid var(--admin-card-border, #334155);border-radius:16px;background:var(--admin-card-bg, #1e293b);box-shadow:0 4px 14px rgba(0,0,0,0.3);">
+			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--admin-card-border, #334155);padding-bottom:12px;">
+				<h3 style="margin:0;font-size:1.15rem;color:var(--admin-text, #f8fafc);">Recent Signups</h3>
+				<a href="{% url 'custom_admin:user_list' %}" style="font-size:0.85rem;color:var(--admin-accent, #c1943f);text-decoration:none;font-weight:600;">View all →</a>
+			</div>
+			{% if recent_users %}
+			<div style="overflow-x:auto;">
+				<table style="width:100%;border-collapse:collapse;font-size:0.92rem;">
+					<thead>
+						<tr style="border-bottom:1px solid var(--admin-card-border, #334155);text-align:left;color:var(--admin-text-muted, #94a3b8);">
+							<th style="padding:10px 8px;">User</th>
+							<th style="padding:10px 8px;">Role</th>
+							<th style="padding:10px 8px;text-align:right;">Joined</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for u in recent_users %}
+						<tr style="border-bottom:1px solid rgba(51,65,85,0.6);">
+							<td style="padding:12px 8px;font-weight:600;">
+								<a href="{% url 'custom_admin:user_detail' u.pk %}" style="color:var(--admin-text, #f8fafc);text-decoration:none;">
+									{{ u.get_full_name|default:u.username }}
+								</a>
+							</td>
+							<td style="padding:12px 8px;color:var(--admin-text-muted, #94a3b8);">{{ u.get_role_display }}</td>
+							<td style="padding:12px 8px;text-align:right;color:var(--admin-text-muted, #94a3b8);">{{ u.date_created|date:"M j, Y" }}</td>
+						</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+			{% else %}
+			<p style="color: var(--admin-text-muted); font-size: 0.9rem;">No users found.</p>
+			{% endif %}
+		</div>
+	</div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'custom_admin:blog_list' %}">Blog posts</a> &rsaquo; <span>Delete</span>{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="max-width:620px; padding:24px; background:var(--admin-card-bg); border:1px solid var(--admin-card-border); border-radius:14px;">
+  <h2>Delete blog post?</h2>
+  <p style="color:var(--admin-text-muted);">This will permanently remove <strong>{{ post.title }}</strong>.</p>
+  <form method="post" style="display:flex; gap:10px; margin-top:20px;">{% csrf_token %}<button type="submit" class="btn btn-danger" style="padding:9px 16px;">Delete post</button><a href="{% url 'custom_admin:blog_list' %}" class="btn btn-outline" style="padding:9px 16px; text-decoration:none;">Cancel</a></form>
+</div>
+{% endblock %}

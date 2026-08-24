@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h2>Place an order</h2>
+    <div class="panel">
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Place order</button>
+      </form>
+      <p class="helptext" style="margin-top:12px;">Choose a listing from the dropdown (no search required).</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

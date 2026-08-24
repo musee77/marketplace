@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h2>Dashboard</h2>
+
+    {% if user.is_manager %}
+      <div class="stats-row">
+        <div class="stat"><div class="num">{{ total_users }}</div><div class="lbl">Total users</div></div>
+        <div class="stat"><div class="num">{{ total_specialists }}</div><div class="lbl">Specialists</div></div>
+        <div class="stat"><div class="num">{{ total_clients }}</div><div class="lbl">Clients</div></div>
+        <div class="stat"><div class="num">{{ unverified_specialists }}</div><div class="lbl">Pending verification</div></div>
+        <a href="{% url 'accounts:pending_specialists' %}" class="stat stat-link"><div class="num">{{ pending_approvals }}</div><div class="lbl">Pending approvals</div></a>
+        <a href="{% url 'chat:moderate' %}" class="stat stat-link"><div class="num">{{ pending_messages }}</div><div class="lbl">Pending messages</div></a>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+        <a href="{% url 'accounts:manager_user_list' %}" class="btn btn-brass">Manage users →</a>
+        <a href="{% url 'accounts:pending_specialists' %}" class="btn btn-outline">Review specialists ({{ pending_approvals }})</a>
+        <a href="{% url 'chat:moderate' %}" class="btn btn-outline">Moderate chat ({{ pending_messages }})</a>
+        <a href="/admin/" target="_blank" class="btn btn-outline" style="border-color:var(--brass);color:var(--brass);">Django Admin Panel ↗</a>
+      </div>
+
+      {% if pending_specialists_list %}
+        <div class="section-head" style="margin-top:32px;">
+          <h3>Specialists Pending Approval</h3>
+          <a href="{% url 'accounts:pending_specialists' %}">View all ({{ pending_approvals }}) →</a>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Specialist</th>
+                <th>Headline</th>
+                <th>Rate</th>
+                <th>Joined</th>
+                <th style="text-align:right;">Quick Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sp in pending_specialists_list %}
+              <tr>
+                <td data-label="Specialist">
+                  <strong>{{ sp.user.get_full_name|default:sp.user.username }}</strong>
+                  <br><span style="font-size:.8rem;color:var(--slate);">{{ sp.user.email }}</span>
+                </td>
+                <td data-label="Headline">{{ sp.headline|default:"—"|truncatechars:40 }}</td>
+                <td data-label="Rate" class="mono">${{ sp.hourly_rate }}</td>
+                <td data-label="Joined" style="font-size:.85rem;color:var(--slate);">{{ sp.created_at|date:"M j, Y" }}</td>
+                <td data-label="Action" style="text-align:right;">
+                  <form method="post" action="{% url 'accounts:manager_toggle_approve' sp.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-brass btn-sm" style="background:var(--green);border-color:var(--green);padding:6px 14px;">✓ Approve</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+
+      {% if pending_messages_list %}
+        <div class="section-head" style="margin-top:32px;">
+          <h3>Messages Pending Moderation</h3>
+          <a href="{% url 'chat:moderate' %}">View all ({{ pending_messages }}) →</a>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Sender</th>
+                <th>Message Content</th>
+                <th>Sent</th>
+                <th style="text-align:right;">Quick Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for msg in pending_messages_list %}
+              <tr>
+                <td data-label="Sender"><strong>{{ msg.sender.get_full_name|default:msg.sender.username }}</strong></td>
+                <td data-label="Message" style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ msg.body }}</td>
+                <td data-label="Sent" style="font-size:.85rem;color:var(--slate);">{{ msg.created_at|timesince }} ago</td>
+                <td data-label="Actions" style="text-align:right;white-space:nowrap;">
+                  <form method="post" action="{% url 'chat:approve' msg.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-brass btn-sm" style="background:var(--green);border-color:var(--green);padding:5px 12px;margin-right:4px;">✓ Approve</button>
+                  </form>
+                  <form method="post" action="{% url 'chat:reject' msg.pk %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline btn-sm" style="color:var(--red);border-color:var(--red);padding:5px 12px;">✗ Reject</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+
+    {% elif user.is_specialist %}
+      <div class="stats-row">
+        <div class="stat"><div class="num">${{ specialist_balance|default:0|floatformat:2 }}</div><div class="lbl">Available balance</div></div>
+        <div class="stat"><div class="num">{{ services.count }}</div><div class="lbl">Active listings</div></div>
+        <div class="stat"><div class="num">{{ specialist_completed_orders|default:0 }}</div><div class="lbl">Completed orders</div></div>
+        <div class="stat"><div class="num">{{ specialist_clients_worked_for|default:0 }}</div><div class="lbl">Clients worked for</div></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="{% url 'services:create' %}" class="btn btn-brass">+ New listing</a>
+        <a href="{% url 'accounts:referrals' %}" class="btn btn-outline">🎁 Referral Program (5% Rewards) →</a>
+      </div>
+
+    {% else %}
+      <div class="stats-row">
+        <div class="stat"><div class="num">${{ client_balance|default:0|floatformat:2 }}</div><div class="lbl">Balance</div></div>
+        <div class="stat"><div class="num">{{ client_total_orders|default:0 }}</div><div class="lbl">Orders placed</div></div>
+        <div class="stat"><div class="num">{{ client_completed_orders|default:0 }}</div><div class="lbl">Orders completed</div></div>
+        <div class="stat"><div class="num">{{ client_specialists_hired|default:0 }}</div><div class="lbl">Specialists hired</div></div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="{% url 'accounts:referrals' %}" class="btn btn-outline">🎁 Refer Friends & Save on Fees (10% fee rate) →</a>
+      </div>
+
+      {% if client_pending_offers %}
+      <div class="section-head" style="margin-top:24px;">
+        <h3>Offers received</h3>
+        <a href="{% url 'orders:offer_list' %}">View all →</a>
+      </div>
+      <div class="inbox-list" style="margin-bottom: 30px;">
+        {% for offer in client_pending_offers %}
+        <a href="{% url 'orders:offer_detail' offer.pk %}" class="inbox-item">
+          <div class="inbox-avatar">{{ offer.specialist.first_name|first|default:"?" }}</div>
+          <div class="inbox-body">
+            <div class="inbox-top">
+              <strong>{{ offer.title }}</strong>
+              <span class="inbox-time">{{ offer.created_at|timesince }} ago</span>
+            </div>
+            <p class="inbox-preview" style="color: var(--ink-soft);">
+              From: <strong>{{ offer.specialist.get_full_name|default:offer.specialist.username }}</strong><br>
+              💰 ${{ offer.price }} · ⏱️ {{ offer.delivery_days }}d delivery
+            </p>
+          </div>
+          <span class="badge" style="background: var(--brass);">Pending</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    {% endif %}
+
+    <div class="section-head" style="margin-top:24px;flex-wrap:wrap;gap:12px;">
+      <h3>{% if user.is_specialist %}Orders received{% elif user.is_client %}My orders{% else %}All orders{% endif %} ({{ total_count }})</h3>
+      {% if user.is_client %}
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <a href="{% url 'orders:create_quick' %}" class="btn btn-brass">New order</a>
+          <a href="{% url 'accounts:add_funds' %}" class="btn">Add funds</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="page-grid">
+      <aside class="filters">
+        <h3>Order progress</h3>
+        <div class="filter-group">
+          <h4>Status</h4>
+          <nav class="filter-list" aria-label="Order status filters">
+            <a class="filter-item {% if not status %}active{% endif %}" href="?">All <span class="filter-count">({{ total_count }})</span></a>
+            {% for value, label, count in statuses %}
+              <a class="filter-item {% if status == value %}active{% endif %}" href="?status={{ value }}">{{ label }} <span class="filter-count">({{ count }})</span></a>
+            {% endfor %}
+          </nav>
+        </div>
+      </aside>
+
+      <div class="orders">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Service</th>
+                <th>Client</th>
+                <th>Specialist</th>
+                <th>Progress</th>
+                <th>Status</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in orders %}
+              <tr onclick="window.location='{% url 'orders:detail' o.pk %}'" style="cursor:pointer;">
+                <td data-label="#" class="mono">#{{ o.pk }}</td>
+                <td data-label="Service">{{ o.display_title|truncatechars:32 }}</td>
+                <td data-label="Client">{{ o.client.get_full_name|default:o.client.username }}</td>
+                <td data-label="Specialist">{{ o.specialist.get_full_name|default:o.specialist.username }}</td>
+                <td data-label="Progress" style="min-width:170px;">
+                  <div style="height:8px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;">
+                    <div style="height:100%;width:{% if o.status == 'PENDING' %}20{% elif o.status == 'ACCEPTED' %}40{% elif o.status == 'IN_PROGRESS' %}60{% elif o.status == 'DELIVERED' %}80{% elif o.status == 'COMPLETED' %}100{% else %}100{% endif %}%;background:var(--brass);"></div>
+                  </div>
+                </td>
+                <td data-label="Status"><span class="status status-{{ o.status }}">{{ o.get_status_display }}</span></td>
+                <td data-label="Price" class="mono">${{ o.price }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="7" class="empty">No orders yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination-nav" style="margin-top:24px;">
+          {% if page_obj.has_previous %}
+            <a class="btn btn-outline pagination-btn btn-sm" href="?page={{ page_obj.previous_page_number }}{% if status %}&status={{ status }}{% endif %}">← Previous</a>
+          {% else %}
+            <span class="btn btn-outline pagination-btn btn-sm disabled">← Previous</span>
+          {% endif %}
+
+          <span class="pagination-info mono">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
+
+          {% if page_obj.has_next %}
+            <a class="btn btn-outline pagination-btn btn-sm" href="?page={{ page_obj.next_page_number }}{% if status %}&status={{ status }}{% endif %}">Next →</a>
+          {% else %}
+            <span class="btn btn-outline pagination-btn btn-sm disabled">Next →</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
