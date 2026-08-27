@@ -62,12 +62,23 @@
               <span class="rating-score">{{ profile.average_rating|default:"—" }}</span>
               <span class="review-count">({{ profile.review_count }} reviews)</span>
             </div>
+            {% if profile.random_listings %}
+            <div class="specialist-listings-preview">
+              {% for listing in profile.random_listings %}
+                <a class="listing-pill" href="{{ listing.get_absolute_url }}" onclick="event.stopPropagation()">
+                  <span class="listing-pill-title">{{ listing.title|truncatechars:40 }}</span>
+                  <span class="listing-pill-price">${{ listing.price }}</span>
+                </a>
+              {% endfor %}
+            </div>
+            {% endif %}
             <div class="card-foot">
               <span class="category-name">{{ profile.location|default:"Remote" }}</span>
               <span class="price">{{ profile.years_experience }} yrs experience</span>
             </div>
           </div>
         </a>
+
       {% empty %}
         <div class="empty">No analysts match your search.</div>
       {% endfor %}

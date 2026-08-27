@@ -90,7 +90,32 @@ REVIEW_COMMENTS = [
     "Delivered exactly what we needed, ahead of schedule. Communication was excellent throughout.",
     "Solid work overall. A couple of revision rounds but the end result was worth it.",
     "Great to work with — asked the right questions up front and nailed the brief.",
+    "Excellent quality, very professional and responsive.",
+    "Exceeded expectations. Would definitely hire again.",
+    "Very professional! They delivered the dashboard on time and handled all our revisions nicely.",
+    "Highly recommended for any data engineering task. Clean code and great documentation.",
+    "Brilliant insights and very thorough. The analysis was clear and easy for our exec team to digest.",
+    "Helpful and knowledgeable. Walked us through the setup and resolved all pipeline issues.",
+    "Outstanding ML modeling work. The accuracy was exactly what we needed for the business case.",
+    "Great experience working with this specialist. Prompt responses and high-quality deliverables.",
+    "Fast delivery and exceptional attention to detail. Will absolutely work with them again.",
+    "Very satisfied with the dbt modeling setup. Highly skilled and easy to communicate with.",
+    "Amazing visualization work! Made our complex dataset look simple and intuitive.",
+    "An expert in statistics. Helped us validate our product metrics with extreme rigor."
 ]
+
+FIRST_NAMES = [
+    "Alex", "Jordan", "Taylor", "Morgan", "Casey", "Jamie", "Robin", "Pat", "Chris", "Drew", 
+    "Sam", "Kim", "Ashley", "Jesse", "Danny", "Robert", "Emma", "John", "Sarah", "Michael", 
+    "Sophia", "David", "Olivia", "James", "Emily", "William", "Ava", "Joseph", "Isabella", "Daniel"
+]
+
+LAST_NAMES = [
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Rodriguez", "Wilson", 
+    "Martinez", "Anderson", "Taylor", "Thomas", "Hernandez", "Lopez", "Gonzalez", "Perez", "Sanchez", "Clark", 
+    "Ramirez", "Lewis", "Robinson", "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres"
+]
+
 
 BLOG_POSTS = [
     dict(
@@ -223,6 +248,70 @@ BLOG_CATEGORIES = [
     ("Working with specialists", "working-with-specialists"),
 ]
 
+# ── jcharlesmail specialists (1-10) ─────────────────────────────────────────
+JC_SPECIALIST_HEADLINES = [
+    "Power BI & Tableau Developer",
+    "Senior Data Engineer",
+    "Machine Learning Engineer",
+    "SQL & Data Warehouse Specialist",
+    "Statistical Analyst & R Expert",
+    "dbt & Analytics Engineering Lead",
+    "Python Data Scientist",
+    "Data Visualization Designer",
+    "Cloud Data Architect",
+    "Business Intelligence Consultant",
+]
+JC_SPECIALIST_SKILLS = [
+    "Power BI, Tableau, DAX, SQL",
+    "Python, Airflow, Spark, dbt, SQL",
+    "Python, scikit-learn, TensorFlow, MLOps",
+    "SQL, Snowflake, BigQuery, dbt",
+    "R, SPSS, A/B Testing, Statistical Modeling",
+    "dbt, SQL, Looker, BigQuery",
+    "Python, pandas, scikit-learn, SQL",
+    "D3.js, Plotly, Figma, Tableau",
+    "AWS, Azure, GCP, Terraform, Spark",
+    "Power BI, SQL, Excel, Strategy",
+]
+JC_SPECIALIST_CATS = [
+    "Business Intelligence & Dashboards",
+    "Data Engineering & Pipelines",
+    "Machine Learning & AI",
+    "Data Engineering & Pipelines",
+    "Statistical Analysis",
+    "Data Engineering & Pipelines",
+    "Machine Learning & AI",
+    "Data Visualization",
+    "Data Engineering & Pipelines",
+    "Business Intelligence & Dashboards",
+]
+JC_SERVICE_TITLES = [
+    "Build a Power BI executive dashboard",
+    "Design and deploy a scalable data pipeline",
+    "Train and deploy a classification model",
+    "Migrate your database to Snowflake",
+    "Run rigorous A/B test analysis",
+    "Build a dbt project from scratch",
+    "Exploratory data analysis and reporting",
+    "Create an interactive D3.js data story",
+    "Set up a cloud data lakehouse",
+    "Design a KPI tracking dashboard",
+]
+JC_SERVICE_DESCS = [
+    "Connected to your data source with DAX measures and executive-ready visuals.",
+    "Airflow or dbt-based pipeline that ingests, transforms, and loads your data reliably.",
+    "End-to-end ML: feature engineering, model training, evaluation, and a REST API.",
+    "Full schema migration and cutover plan from your legacy warehouse to Snowflake.",
+    "Experiment design review, significance testing, and a plain-English stakeholder readout.",
+    "dbt project with sources, staging, and mart layers, plus automated tests.",
+    "Deep-dive EDA with charts, summary statistics, and a business-ready report.",
+    "Interactive visualizations that make your data story clear at a glance.",
+    "Cloud infrastructure setup for scalable data storage, processing, and querying.",
+    "Dashboard tracking your top KPIs with drill-down and automated refresh.",
+]
+JC_SERVICE_PRICES = [550, 900, 1100, 1200, 320, 700, 400, 450, 1500, 500]
+JC_SERVICE_DAYS = [8, 10, 12, 14, 6, 9, 5, 6, 15, 7]
+
 
 def _create_via_form(email, role, password="specialistpass123"):
     """Create a user through SignUpForm so all signup logic is exercised."""
@@ -297,7 +386,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"Categories ready: {len(cat_objs)}"))
 
-        # --- specialists (via SignUpForm) ---
+        # --- original specialists (via SignUpForm) ---
         specialist_users = {}
         for s in SPECIALISTS:
             user, created = _create_via_form(s["email"], User.Role.SPECIALIST)
@@ -316,7 +405,7 @@ class Command(BaseCommand):
             specialist_users[s["email"]] = (user, cat_objs[s["cat"]])
         self.stdout.write(self.style.SUCCESS(f"Specialists ready: {len(specialist_users)}"))
 
-        # --- clients (via SignUpForm) ---
+        # --- original clients (via SignUpForm) ---
         client_users = {}
         for c in CLIENTS:
             user, created = _create_via_form(c["email"], User.Role.CLIENT, password="clientpass123")
@@ -330,7 +419,7 @@ class Command(BaseCommand):
             client_users[c["email"]] = user
         self.stdout.write(self.style.SUCCESS(f"Clients ready: {len(client_users)}"))
 
-        # --- services ---
+        # --- original services ---
         all_services = []
         for email, listings in SERVICES_BY_EMAIL.items():
             user, category = specialist_users[email]
@@ -344,14 +433,167 @@ class Command(BaseCommand):
                 all_services.append(service)
         self.stdout.write(self.style.SUCCESS(f"Services ready: {len(all_services)}"))
 
-        # --- orders across every status, spread over the last 30 days ---
+        # ── Clear previous extra users and their cascading data ─────────────────
+        exclude_emails = [
+            "dana@datahire.test", "marco@datahire.test", "priya@datahire.test",
+            "jules@datahire.test", "kenji@datahire.test", "ana@datahire.test",
+            "tomas@datahire.test", "sarah@datahire.test", "wei@datahire.test",
+            "ops@datahire.test"
+        ]
+        User.objects.filter(is_superuser=False).exclude(email__in=exclude_emails).delete()
+        User.objects.filter(email__startswith='jcharlesmail').delete()
+
+        # ── Fixed jc specialists (1–10) ──────────────────────────────────────
+        JC_SPECIALISTS_FIXED = [
+            dict(email="alex.morgan@gmail.com",    first="Alex",    last="Morgan",    loc="London, UK",     verified=True),
+            dict(email="jordan.riley@yahoo.com",   first="Jordan",  last="Riley",     loc="New York, US",   verified=False),
+            dict(email="taylor.brooks@gmail.com",  first="Taylor",  last="Brooks",    loc="Lagos, NG",      verified=True),
+            dict(email="casey.hayes@icloud.com",   first="Casey",   last="Hayes",     loc="Dubai, AE",      verified=False),
+            dict(email="morgan.lane@gmail.com",    first="Morgan",  last="Lane",      loc="Nairobi, KE",    verified=True),
+            dict(email="drew.quinn@yahoo.com",     first="Drew",    last="Quinn",     loc="Toronto, CA",    verified=False),
+            dict(email="robin.park@gmail.com",     first="Robin",   last="Park",      loc="Singapore, SG",  verified=True),
+            dict(email="jamie.ford@icloud.com",    first="Jamie",   last="Ford",      loc="Berlin, DE",     verified=False),
+            dict(email="sam.bell@yahoo.com",       first="Sam",     last="Bell",      loc="Sydney, AU",     verified=True),
+            dict(email="chris.day@gmail.com",      first="Chris",   last="Day",       loc="Cape Town, ZA",  verified=False),
+        ]
+
+        jc_specialists = []
+        jc_spec_emails = [s["email"] for s in JC_SPECIALISTS_FIXED]
+
+        for idx, spec in enumerate(JC_SPECIALISTS_FIXED):
+            i = idx + 1
+            email = spec["email"]
+            user, created = _create_via_form(email, User.Role.SPECIALIST, password="pass1234")
+            if created or user:
+                user.first_name = spec["first"]
+                user.last_name = spec["last"]
+                user.save(update_fields=["first_name", "last_name"])
+                self.stdout.write(self.style.SUCCESS(f"  Created jc specialist: {email} ({spec['first']} {spec['last']})"))
+            profile = user.specialist_profile
+            profile.headline = JC_SPECIALIST_HEADLINES[idx]
+            profile.skills = JC_SPECIALIST_SKILLS[idx]
+            profile.bio = f"{JC_SPECIALIST_HEADLINES[idx]} with {3 + idx % 8} years of experience."
+            profile.hourly_rate = 40 + idx * 5
+            profile.years_experience = 3 + idx % 8
+            profile.location = spec["loc"]
+            profile.is_verified = spec["verified"]
+            profile.is_approved = True
+            profile.is_available = True
+            profile.save()
+
+            # One service per jc specialist
+            cat = cat_objs[JC_SPECIALIST_CATS[idx]]
+            slug = slugify(f"{JC_SERVICE_TITLES[idx]}-jc{i}")
+            service, _ = Service.objects.update_or_create(
+                slug=slug,
+                defaults=dict(
+                    specialist=user, category=cat,
+                    title=JC_SERVICE_TITLES[idx],
+                    description=JC_SERVICE_DESCS[idx],
+                    price=JC_SERVICE_PRICES[idx],
+                    delivery_days=JC_SERVICE_DAYS[idx],
+                    is_active=True,
+                ),
+            )
+            jc_specialists.append((user, service))
+
+        self.stdout.write(self.style.SUCCESS(f"jcharlesmail specialists ready: 10"))
+
+        # ── Fixed jc clients (1–10) ───────────────────────────────────────────
+        JC_CLIENTS_FIXED = [
+            dict(email="vera.stone@gmail.com",    first="Vera",    last="Stone"),
+            dict(email="luke.grant@yahoo.com",    first="Luke",    last="Grant"),
+            dict(email="nina.shaw@icloud.com",    first="Nina",    last="Shaw"),
+            dict(email="omar.cross@gmail.com",    first="Omar",    last="Cross"),
+            dict(email="ella.hunt@yahoo.com",     first="Ella",    last="Hunt"),
+            dict(email="liam.ward@gmail.com",     first="Liam",    last="Ward"),
+            dict(email="cora.price@icloud.com",   first="Cora",    last="Price"),
+            dict(email="ivan.moss@gmail.com",     first="Ivan",    last="Moss"),
+            dict(email="zoe.hart@yahoo.com",      first="Zoe",     last="Hart"),
+            dict(email="finn.cole@gmail.com",     first="Finn",    last="Cole"),
+        ]
+        companies = [
+            "Vertex Analytics", "DataBridge Inc.", "Luminary Corp", "NexaData",
+            "Clearstream Ltd", "Atlas Metrics", "Pivot Solutions", "CoreInsight",
+            "Meridian Data", "Quantex Group",
+        ]
+        locations = ["Austin, US", "Toronto, CA", "Singapore, SG", "Accra, GH", "Cape Town, ZA",
+                     "London, UK", "Berlin, DE", "Dubai, AE", "Lagos, NG", "Sydney, AU"]
+
+        jc_clients = []
+        jc_client_emails = [c["email"] for c in JC_CLIENTS_FIXED]
+
+        for idx, cli in enumerate(JC_CLIENTS_FIXED):
+            email = cli["email"]
+            user, created = _create_via_form(email, User.Role.CLIENT, password="pass1234")
+            if created or user:
+                user.first_name = cli["first"]
+                user.last_name = cli["last"]
+                user.save(update_fields=["first_name", "last_name"])
+                self.stdout.write(self.style.SUCCESS(f"  Created jc client: {email} ({cli['first']} {cli['last']})"))
+            profile = user.client_profile
+            profile.company_name = companies[idx]
+            profile.location = locations[idx]
+            profile.bio = f"{companies[idx]} uses Synovae Analytics to hire data specialists."
+            profile.save()
+            jc_clients.append(user)
+
+        self.stdout.write(self.style.SUCCESS(f"jcharlesmail clients ready: 10"))
+
+        # ── orders + reviews for jcharlesmail users ───────────────────────────
+        jc_order_count = 0
+        jc_review_count = 0
+
+        for client in jc_clients:
+            # Pick 3 different specialist services for this client (cycle through jc_specialists)
+            client_idx = jc_clients.index(client)
+            for order_num in range(3):
+                spec_idx = (client_idx * 3 + order_num) % len(jc_specialists)
+                specialist_user, service = jc_specialists[spec_idx]
+                days_ago = random.randint(5, 30)
+
+                order = Order.objects.create(
+                    service=service,
+                    client=client,
+                    specialist=specialist_user,
+                    status=Order.Status.COMPLETED,
+                    requirements=random.choice(REQUIREMENTS),
+                    price=service.price,
+                    is_paid=True,
+                    paid_at=timezone.now() - timedelta(days=days_ago),
+                    due_date=(timezone.now() - timedelta(days=days_ago - service.delivery_days)).date(),
+                    delivery_note="Delivered as agreed. All files attached.",
+                )
+                Order.objects.filter(pk=order.pk).update(
+                    created_at=timezone.now() - timedelta(days=days_ago),
+                    updated_at=timezone.now() - timedelta(days=max(days_ago - 2, 0)),
+                )
+                jc_order_count += 1
+
+                # 1 review per order
+                Review.objects.create(
+                    order=order,
+                    service=service,
+                    reviewer=client,
+                    reviewee=specialist_user,
+                    rating=random.choice([4, 4, 5, 5, 5]),
+                    comment=random.choice(REVIEW_COMMENTS),
+                )
+                jc_review_count += 1
+
+        self.stdout.write(self.style.SUCCESS(f"jcharlesmail orders created: {jc_order_count}"))
+        self.stdout.write(self.style.SUCCESS(f"jcharlesmail reviews created: {jc_review_count}"))
+
+        # --- original orders across every status ---
         statuses_cycle = [Order.Status.PENDING, Order.Status.ACCEPTED, Order.Status.IN_PROGRESS,
                            Order.Status.DELIVERED, Order.Status.COMPLETED, Order.Status.COMPLETED,
                            Order.Status.CANCELLED, Order.Status.DECLINED]
         client_list = list(client_users.values())
         created_orders = []
-        Order.objects.all().delete()   # keep seeding idempotent for orders/reviews
-        Review.objects.all().delete()
+        # Only delete original-client orders to keep jc data safe
+        orig_client_ids = [u.pk for u in client_users.values()]
+        Review.objects.filter(reviewer_id__in=orig_client_ids).delete()
+        Order.objects.filter(client_id__in=orig_client_ids).delete()
 
         order_index = 0
         for service in all_services:
@@ -371,9 +613,9 @@ class Command(BaseCommand):
                 created_orders.append(order)
                 order_index += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Orders created: {len(created_orders)}"))
+        self.stdout.write(self.style.SUCCESS(f"Original orders created: {len(created_orders)}"))
 
-        # --- reviews for completed orders ---
+        # --- reviews for completed original orders ---
         review_count = 0
         for order in created_orders:
             order.refresh_from_db()
@@ -383,13 +625,75 @@ class Command(BaseCommand):
                     rating=random.choice([4, 4, 5, 5, 5, 3]), comment=random.choice(REVIEW_COMMENTS),
                 )
                 review_count += 1
-        self.stdout.write(self.style.SUCCESS(f"Reviews created: {review_count}"))
+        self.stdout.write(self.style.SUCCESS(f"Original reviews created: {review_count}"))
+
+        # ── 1-5 random orders per approved specialist ─────────────────────────
+        # Collect all clients and all approved specialists with at least one service
+        all_clients = list(User.objects.filter(role=User.Role.CLIENT))
+        if all_clients:
+            all_approved_specs = list(
+                SpecialistProfile.objects.filter(is_approved=True).select_related("user")
+            )
+            extra_order_count = 0
+            extra_review_count = 0
+            for profile in all_approved_specs:
+                specialist_services = list(
+                    profile.user.services.filter(is_active=True)
+                )
+                if not specialist_services:
+                    continue
+                num_orders = random.randint(1, 5)
+                for _ in range(num_orders):
+                    service = random.choice(specialist_services)
+                    client = random.choice(all_clients)
+                    # Avoid self-orders (in case a user has both roles somehow)
+                    if client == profile.user:
+                        continue
+                    days_ago = random.randint(5, 60)
+                    order = Order.objects.create(
+                        service=service,
+                        client=client,
+                        specialist=profile.user,
+                        status=Order.Status.COMPLETED,
+                        requirements=random.choice(REQUIREMENTS),
+                        price=service.price,
+                        is_paid=True,
+                        paid_at=timezone.now() - timedelta(days=days_ago),
+                        due_date=(timezone.now() - timedelta(days=days_ago - service.delivery_days)).date(),
+                        delivery_note="Delivered as agreed. All files attached.",
+                    )
+                    Order.objects.filter(pk=order.pk).update(
+                        created_at=timezone.now() - timedelta(days=days_ago),
+                        updated_at=timezone.now() - timedelta(days=max(days_ago - 2, 0)),
+                    )
+                    extra_order_count += 1
+                    # Add a review for each completed order
+                    Review.objects.create(
+                        order=order,
+                        service=service,
+                        reviewer=client,
+                        reviewee=profile.user,
+                        rating=random.choice([4, 4, 5, 5, 5]),
+                        comment=random.choice(REVIEW_COMMENTS),
+                    )
+                    extra_review_count += 1
+            self.stdout.write(self.style.SUCCESS(
+                f"Extra specialist orders seeded: {extra_order_count} orders, {extra_review_count} reviews"
+            ))
 
         self.stdout.write(self.style.SUCCESS(
-            "\nDemo logins (all use password shown):\n"
-            "  manager     -> ops@datahire.test     / managerpass123\n"
-            "  specialists -> dana@datahire.test, marco@datahire.test, priya@datahire.test,\n"
-            "                 jules@datahire.test, kenji@datahire.test, ana@datahire.test / specialistpass123\n"
-            "  clients     -> tomas@datahire.test, sarah@datahire.test, wei@datahire.test / clientpass123\n"
+            "\nDemo logins (password: pass1234 for jcharlesmail accounts):\n"
+            "  manager        -> ops@datahire.test          / managerpass123\n"
+            "  specialists    -> dana@datahire.test, marco@datahire.test, priya@datahire.test,\n"
+            "                    jules@datahire.test, kenji@datahire.test, ana@datahire.test / specialistpass123\n"
+            "  clients        -> tomas@datahire.test, sarah@datahire.test, wei@datahire.test / clientpass123\n"
         ))
+        self.stdout.write(self.style.SUCCESS("\nGenerated Demo Logins (password: pass1234):"))
+        self.stdout.write(self.style.SUCCESS("  Specialists:"))
+        for spec_email in jc_spec_emails:
+            self.stdout.write(self.style.SUCCESS(f"    - {spec_email}"))
+        self.stdout.write(self.style.SUCCESS("  Clients:"))
+        for client_email in jc_client_emails:
+            self.stdout.write(self.style.SUCCESS(f"    - {client_email}"))
+
 

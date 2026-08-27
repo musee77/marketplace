@@ -13,6 +13,7 @@ from .models import User, SpecialistProfile, ClientProfile, DepositTransaction
 from .forms import SpecialistFinancialForm, ClientFinancialForm, AddFundsForm
 from django.conf import settings as django_settings
 import time
+import random
 from orders.paystack_api import PaystackAPI, PaystackError
 from django.contrib.auth import authenticate
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -80,7 +81,7 @@ def referrals_view(request):
 def specialist_list(request):
     specialists = SpecialistProfile.objects.filter(
         is_approved=True,
-    ).select_related("user")
+    ).select_related("user").prefetch_related("user__services__category")
     query = request.GET.get("q", "").strip()
     if query:
         specialists = specialists.filter(
@@ -94,10 +95,16 @@ def specialist_list(request):
             | models.Q(user__services__title__icontains=query)
         ).distinct()
     page_obj = Paginator(specialists, 12).get_page(request.GET.get("page"))
+    # Attach a random sample of 1-5 active listings to each profile on the page
+    for profile in page_obj:
+        active_services = [s for s in profile.user.services.all() if s.is_active]
+        count = random.randint(1, min(5, len(active_services))) if active_services else 0
+        profile.random_listings = random.sample(active_services, count) if count else []
     return render(request, "accounts/specialist_list.html", {
         "page_obj": page_obj,
         "q": query,
     })
+
 
 
 def login_view(request):

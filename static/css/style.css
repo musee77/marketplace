@@ -365,6 +365,30 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .search-box input { flex: 1; border: none; padding: 12px 14px; font-family: 'Inter'; font-size: .95rem; border-radius: 2px; }
 .search-box input:focus { outline: none; }
 
+/* Tools strip */
+.tools-strip { padding: 20px 0; border-bottom: 1px solid var(--line); }
+.tools-label {
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .7rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--slate);
+  margin: 0 0 14px;
+}
+.tools-logos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 28px;
+}
+.tools-logos span {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: .72rem;
+  color: var(--slate);
+}
+
+
 .search-input {
   flex: 1;
   min-width: 0;
@@ -1006,6 +1030,43 @@ footer {
   color: var(--slate);
   font-size: .86rem;
   line-height: 1.45;
+}
+
+/* Random listings preview pills on specialist directory cards */
+.specialist-listings-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+.listing-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 20px;
+  background: var(--bg-subtle, #f8fafc);
+  color: var(--text, #1e293b);
+  font-size: .78rem;
+  text-decoration: none;
+  transition: background .15s, border-color .15s;
+  max-width: 100%;
+}
+.listing-pill:hover {
+  background: var(--accent-light, #eff6ff);
+  border-color: var(--accent, #3b82f6);
+  color: var(--accent, #3b82f6);
+}
+.listing-pill-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.listing-pill-price {
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .offer-meta-grid { flex-wrap: wrap; }
 .conversation-thread { min-width: 0; }
