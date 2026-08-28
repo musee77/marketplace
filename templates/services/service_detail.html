@@ -119,7 +119,7 @@
       <div class="divider"></div>
       {% if user.is_authenticated and user.is_client %}
         {% if order_form %}
-          <form method="post" action="{% url 'orders:create' service.slug %}">
+          <form method="post" action="{% url 'orders:create' service.slug %}" enctype="multipart/form-data">
             {% csrf_token %}
             {{ order_form.as_p }}
             <button type="submit" class="btn btn-primary" style="width:100%;text-align:center;">Hire for ${{ service.price }}</button>
@@ -129,7 +129,7 @@
         {% endif %}
       {% elif not user.is_authenticated %}
         <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="btn btn-primary" style="width:100%;text-align:center;">Log in to hire</a>
-      {% elif user == service.specialist %}
+      {% elif user == service.specialist or is_manager_or_admin %}
         <a href="{% url 'services:edit' service.slug %}" class="btn btn-outline" style="width:100%;text-align:center;">Edit listing</a>
       {% else %}
         <p class="helptext">Only client accounts can place orders.</p>

@@ -57,8 +57,11 @@
               <span class="status status-cancelled" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Inactive</span>
             {% endif %}
           </td>
-          <td style="padding: 12px 8px; text-align: right;">
-            <a href="{% url 'custom_admin:service_toggle_active' s.pk %}" class="btn {% if s.is_active %}btn-danger{% else %}btn-success{% endif %}" style="font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; background: {% if s.is_active %}var(--admin-danger){% else %}var(--admin-success){% endif %}; color: #fff; text-decoration: none; font-weight: bold;">
+          <td style="padding: 12px 8px; text-align: right; white-space: nowrap;">
+            <a href="{% url 'custom_admin:service_edit' s.pk %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 5px 10px; border-radius: 6px; color: #fff; border: 1px solid var(--admin-card-border); text-decoration: none; margin-right: 6px;">
+              Edit
+            </a>
+            <a href="{% url 'custom_admin:service_toggle_active' s.pk %}" class="btn {% if s.is_active %}btn-danger{% else %}btn-success{% endif %}" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; background: {% if s.is_active %}var(--admin-danger){% else %}var(--admin-success){% endif %}; color: #fff; text-decoration: none; font-weight: bold;">
               {% if s.is_active %}Deactivate{% else %}Activate{% endif %}
             </a>
           </td>

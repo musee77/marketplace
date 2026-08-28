@@ -14,6 +14,7 @@ from decimal import Decimal
 from accounts.models import ClientProfile, SpecialistProfile, User
 from .paystack_api import PaystackAPI, PaystackError
 from chat.models import Conversation, Message
+from django.views.decorators.csrf import csrf_protect
 import time
 
 
@@ -32,6 +33,7 @@ def _save_order_attachments(order, uploaded_files, user):
         )
 
 
+@csrf_protect
 @user_passes_test(is_client)
 def order_create(request, slug):
     service = get_object_or_404(Service, slug=slug, is_active=True)
@@ -75,6 +77,7 @@ def order_create(request, slug):
     return render(request, "orders/order_form.html", {"form": form, "service": service})
 
 
+@csrf_protect
 @user_passes_test(is_client)
 def order_create_quick(request):
     """Create an order from a general form where the client selects a listing from a dropdown."""

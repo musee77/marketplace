@@ -26,6 +26,7 @@ from reviews.models import Review
 from decimal import Decimal, InvalidOperation
 
 
+@csrf_protect
 def signup_view(request):
     if request.user.is_authenticated:
         messages.warning(request, "Please log out first before creating a new account.")
@@ -107,6 +108,7 @@ def specialist_list(request):
 
 
 
+@csrf_protect
 def login_view(request):
     if request.user.is_authenticated:
         messages.warning(request, "You are already logged in. Log out first to switch accounts.")
@@ -117,11 +119,13 @@ def login_view(request):
     if request.method == "POST":
         email = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
-        try:
-            user_obj = User.objects.get(email=email)
-            user = authenticate(request, username=user_obj.username, password=password)
-        except User.DoesNotExist:
-            user = None
+        user = authenticate(request, username=email, password=password)
+        if user is None:
+            try:
+                user_obj = User.objects.get(email=email)
+                user = authenticate(request, username=user_obj.username, password=password)
+            except User.DoesNotExist:
+                user = None
 
         if user is not None:
             if user.is_suspended:

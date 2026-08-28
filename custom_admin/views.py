@@ -16,7 +16,7 @@ from chat.models import Message
 from reviews.models import Review
 from blog.models import BlogCategory, BlogPost
 
-from .forms import BlogPostForm, CategoryForm, UserForm, BalanceForm
+from .forms import BlogPostForm, CategoryForm, UserForm, BalanceForm, AdminServiceForm
 
 
 def is_manager(user):
@@ -356,6 +356,35 @@ def service_toggle_active(request, pk):
     status = "activated" if service.is_active else "deactivated"
     messages.success(request, f"Service '{service.title}' is now {status}.")
     return redirect(request.META.get('HTTP_REFERER') or 'custom_admin:service_list')
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def service_edit_view(request, pk):
+    service = get_object_or_404(Service, pk=pk)
+    if request.method == 'POST':
+        form = AdminServiceForm(request.POST, request.FILES, instance=service)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Service '{service.title}' updated successfully.")
+            return redirect('custom_admin:service_detail', pk=service.pk)
+    else:
+        form = AdminServiceForm(instance=service)
+    return render(request, 'custom_admin/services/form.html', {
+        'form': form,
+        'service': service,
+        'title': f'Edit Service: {service.title}',
+    })
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def service_delete_view(request, pk):
+    service = get_object_or_404(Service, pk=pk)
+    if request.method == 'POST':
+        title = service.title
+        service.delete()
+        messages.success(request, f"Service '{title}' has been deleted.")
+        return redirect('custom_admin:service_list')
+    return render(request, 'custom_admin/services/confirm_delete.html', {'service': service})
 
 
 # ====== CATEGORIES ======

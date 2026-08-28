@@ -50,9 +50,10 @@ def service_detail(request, slug):
     qs = Service.objects.select_related("specialist__specialist_profile", "category")
     service = get_object_or_404(qs, slug=slug)
 
-    # Owner can always preview their own listing (regardless of approval/active status)
+    # Owner or manager/admin can always preview their listing (regardless of approval/active status)
     is_owner = request.user.is_authenticated and service.specialist == request.user
-    if not is_owner:
+    is_manager_or_admin = request.user.is_authenticated and (request.user.is_manager or request.user.is_staff or request.user.is_superuser)
+    if not is_owner and not is_manager_or_admin:
         # For everyone else: must be active and specialist must be approved
         if not service.is_active or not hasattr(service.specialist, "specialist_profile") or not service.specialist.specialist_profile.is_approved:
             from django.http import Http404
@@ -71,11 +72,16 @@ def service_detail(request, slug):
         "reviews": reviews,
         "order_form": order_form,
         "is_owner": is_owner,
+        "is_manager_or_admin": is_manager_or_admin,
     })
 
 
 def is_specialist(user):
     return user.is_authenticated and user.is_specialist
+
+
+def can_edit_services(user):
+    return user.is_authenticated and (user.is_specialist or user.is_manager or user.is_staff or user.is_superuser)
 
 
 @user_passes_test(is_specialist)
@@ -90,23 +96,37 @@ def service_create(request):
     return render(request, "services/service_form.html", {"form": form, "is_new": True})
 
 
-@user_passes_test(is_specialist)
+@user_passes_test(can_edit_services)
 def service_edit(request, slug):
-    service = get_object_or_404(Service, slug=slug, specialist=request.user)
+    is_manager_or_admin = request.user.is_manager or request.user.is_staff or request.user.is_superuser
+    if is_manager_or_admin:
+        service = get_object_or_404(Service, slug=slug)
+    else:
+        service = get_object_or_404(Service, slug=slug, specialist=request.user)
+
     form = ServiceForm(request.POST or None, request.FILES or None, instance=service)
     if request.method == "POST" and form.is_valid():
         form.save()
         messages.success(request, "Service updated.")
+        if is_manager_or_admin:
+            return redirect(service.get_absolute_url())
         return redirect("services:mine")
     return render(request, "services/service_form.html", {"form": form, "is_new": False, "service": service})
 
 
-@user_passes_test(is_specialist)
+@user_passes_test(can_edit_services)
 def service_delete(request, slug):
-    service = get_object_or_404(Service, slug=slug, specialist=request.user)
+    is_manager_or_admin = request.user.is_manager or request.user.is_staff or request.user.is_superuser
+    if is_manager_or_admin:
+        service = get_object_or_404(Service, slug=slug)
+    else:
+        service = get_object_or_404(Service, slug=slug, specialist=request.user)
+
     if request.method == "POST":
         service.delete()
         messages.success(request, "Service removed.")
+        if is_manager_or_admin:
+            return redirect("services:list")
         return redirect("core:dashboard")
     return render(request, "services/service_confirm_delete.html", {"service": service})
 

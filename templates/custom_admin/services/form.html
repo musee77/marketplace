@@ -1,0 +1,86 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:service_list' %}">Services</a>
+&rsaquo; <a href="{% url 'custom_admin:service_detail' service.pk %}">{{ service.title }}</a>
+&rsaquo; <span>Edit</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="max-width: 720px; margin: 0 auto; padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  <h2>{{ title }}</h2>
+  
+  <form method="post" enctype="multipart/form-data" style="margin-top: 20px;">
+    {% csrf_token %}
+    
+    <div style="display:grid; gap:16px;">
+      <div>
+        <label for="{{ form.title.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Title</label>
+        {{ form.title }}
+        {% if form.title.errors %}<small style="color:var(--admin-danger);">{{ form.title.errors }}</small>{% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.slug.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Slug (URL friendly name)</label>
+        {{ form.slug }}
+        {% if form.slug.errors %}<small style="color:var(--admin-danger);">{{ form.slug.errors }}</small>{% endif %}
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+        <div>
+          <label for="{{ form.specialist.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Specialist</label>
+          {{ form.specialist }}
+          {% if form.specialist.errors %}<small style="color:var(--admin-danger);">{{ form.specialist.errors }}</small>{% endif %}
+        </div>
+        <div>
+          <label for="{{ form.category.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Category</label>
+          {{ form.category }}
+          {% if form.category.errors %}<small style="color:var(--admin-danger);">{{ form.category.errors }}</small>{% endif %}
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+        <div>
+          <label for="{{ form.price.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Price ($ USD)</label>
+          {{ form.price }}
+          {% if form.price.errors %}<small style="color:var(--admin-danger);">{{ form.price.errors }}</small>{% endif %}
+        </div>
+        <div>
+          <label for="{{ form.delivery_days.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Delivery (Days)</label>
+          {{ form.delivery_days }}
+          {% if form.delivery_days.errors %}<small style="color:var(--admin-danger);">{{ form.delivery_days.errors }}</small>{% endif %}
+        </div>
+      </div>
+
+      <div>
+        <label for="{{ form.description.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Description</label>
+        {{ form.description }}
+        {% if form.description.errors %}<small style="color:var(--admin-danger);">{{ form.description.errors }}</small>{% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.cover_image.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Cover Image</label>
+        {% if service.cover_image %}
+          <div style="margin-bottom:8px;">
+            <img src="{{ service.cover_image.url }}" alt="{{ service.title }}" style="max-height:120px; border-radius:8px; object-fit:cover;">
+          </div>
+        {% endif %}
+        {{ form.cover_image }}
+        {% if form.cover_image.errors %}<small style="color:var(--admin-danger);">{{ form.cover_image.errors }}</small>{% endif %}
+      </div>
+
+      <div style="display:flex; align-items:center; gap:8px;">
+        {{ form.is_active }}
+        <label for="{{ form.is_active.id_for_label }}" style="font-weight:600; margin:0; cursor:pointer;">Active Listing (Visible to public)</label>
+        {% if form.is_active.errors %}<small style="color:var(--admin-danger);">{{ form.is_active.errors }}</small>{% endif %}
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:10px;">
+        <button type="submit" class="btn btn-brass" style="flex: 1; padding: 10px; background: var(--admin-accent); color: #0f172a; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">Save Changes</button>
+        <a href="{% url 'custom_admin:service_detail' service.pk %}" class="btn btn-outline" style="flex: 1; padding: 10px; text-align: center; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">Cancel</a>
+        <a href="{% url 'custom_admin:service_delete' service.pk %}" class="btn btn-danger" style="padding: 10px 16px; text-decoration: none; border-radius: 6px; background: var(--admin-danger); color: #fff; font-weight: bold;">Delete</a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

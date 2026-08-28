@@ -1,0 +1,25 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:service_list' %}">Services</a>
+&rsaquo; <a href="{% url 'custom_admin:service_detail' service.pk %}">{{ service.title }}</a>
+&rsaquo; <span>Delete Service</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="max-width: 500px; margin: 40px auto; padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px; text-align: center;">
+  <h2 style="color: var(--admin-danger);">Delete Service Listing?</h2>
+  <p style="color: var(--admin-text); margin: 20px 0;">
+    Are you sure you want to permanently delete the service listing <strong>"{{ service.title }}"</strong> (by @{{ service.specialist.username }})?
+    This action cannot be undone.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button type="submit" class="btn btn-danger" style="padding: 10px 20px; background: var(--admin-danger); color: #fff; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">Yes, Delete</button>
+      <a href="{% url 'custom_admin:service_detail' service.pk %}" class="btn btn-outline" style="padding: 10px 20px; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

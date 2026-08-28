@@ -26,7 +26,12 @@
       <h4>Description</h4>
       <p style="white-space:pre-wrap; color:var(--admin-text-muted);">{{ service.description }}</p>
     </div>
-    <a href="{% url 'custom_admin:service_toggle_active' service.pk %}" class="btn btn-brass" style="display:inline-block; margin-top:12px; padding:8px 14px;">{% if service.is_active %}Deactivate listing{% else %}Activate listing{% endif %}</a>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;">
+      <a href="{% url 'custom_admin:service_edit' service.pk %}" class="btn btn-brass" style="padding:8px 14px; text-decoration:none; font-weight:bold;">Edit listing</a>
+      <a href="{% url 'custom_admin:service_toggle_active' service.pk %}" class="btn btn-outline" style="padding:8px 14px; text-decoration:none; color:#fff; border:1px solid var(--admin-card-border);">{% if service.is_active %}Deactivate{% else %}Activate{% endif %}</a>
+      <a href="{{ service.get_absolute_url }}" target="_blank" class="btn btn-outline" style="padding:8px 14px; text-decoration:none; color:#fff; border:1px solid var(--admin-card-border);">View on site ↗</a>
+      <a href="{% url 'custom_admin:service_delete' service.pk %}" class="btn btn-danger" style="padding:8px 14px; text-decoration:none; background:var(--admin-danger); color:#fff; font-weight:bold;">Delete</a>
+    </div>
   </div>
 
   <div class="dh-card" style="padding:24px; background:var(--admin-card-bg); border:1px solid var(--admin-card-border); border-radius:14px;">

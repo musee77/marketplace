@@ -29,6 +29,8 @@ urlpatterns = [
     # Services
     path('services/', views.service_list_view, name='service_list'),
     path('services/<int:pk>/', views.service_detail_view, name='service_detail'),
+    path('services/<int:pk>/edit/', views.service_edit_view, name='service_edit'),
+    path('services/<int:pk>/delete/', views.service_delete_view, name='service_delete'),
     path('services/<int:pk>/toggle-active/', views.service_toggle_active, name='service_toggle_active'),
     
     # Categories
