@@ -14,6 +14,7 @@ urlpatterns = [
     path('users/<int:pk>/toggle-suspend/', views.user_toggle_suspend, name='user_toggle_suspend'),
     path('users/<int:pk>/toggle-verify/', views.user_toggle_verify, name='user_toggle_verify'),
     path('users/<int:pk>/promote/', views.user_promote, name='user_promote'),
+    path('users/<int:pk>/delete/', views.user_delete_view, name='user_delete'),
     
     # Approvals
     path('approvals/', views.specialist_approval_list, name='specialist_approval_list'),

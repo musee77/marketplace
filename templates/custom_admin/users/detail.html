@@ -105,5 +105,21 @@
     {% endif %}
   </div>
 
+  <!-- Danger Zone Card -->
+  <div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 14px; grid-column: 1 / -1;">
+    <h3 style="color: var(--admin-danger); margin-top:0;">Danger Zone</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+      <div>
+        <strong style="color:#fff;">Permanently Delete This User</strong>
+        <p style="color:var(--admin-text-muted); font-size:0.85rem; margin:4px 0 0;">
+          Completely remove @{{ target_user.username }} and all associated profile data, services, and activity from the platform.
+        </p>
+      </div>
+      <a href="{% url 'custom_admin:user_delete' target_user.pk %}" class="btn btn-danger" style="padding:10px 20px; background:var(--admin-danger); color:#fff; font-weight:bold; border-radius:6px; text-decoration:none;">
+        Delete User
+      </a>
+    </div>
+  </div>
+
 </div>
 {% endblock %}

@@ -1,0 +1,28 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:user_list' %}">Users</a>
+&rsaquo; <a href="{% url 'custom_admin:user_detail' target_user.pk %}">{{ target_user.username }}</a>
+&rsaquo; <span>Delete User</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="max-width: 540px; margin: 40px auto; padding: 28px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px; text-align: center;">
+  <div style="font-size: 2.5rem; margin-bottom: 12px;">⚠️</div>
+  <h2 style="color: var(--admin-danger); margin-bottom: 12px;">Delete User Account?</h2>
+  <p style="color: var(--admin-text); margin: 0 0 16px; line-height: 1.5;">
+    Are you sure you want to permanently delete user <strong>{{ target_user.get_full_name|default:target_user.username }}</strong> (@{{ target_user.username }})?
+  </p>
+  <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 14px; margin-bottom: 24px; text-align: left; font-size: 0.85rem; color: #fca5a5;">
+    <strong>Warning:</strong> Deleting this user will remove their account, profile data, linked services, and related records. This action is irreversible.
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button type="submit" class="btn btn-danger" style="padding: 10px 22px; background: var(--admin-danger); color: #fff; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">Yes, Permanently Delete</button>
+      <a href="{% url 'custom_admin:user_list' %}" class="btn btn-outline" style="padding: 10px 20px; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

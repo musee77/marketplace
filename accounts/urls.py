@@ -22,6 +22,7 @@ urlpatterns = [
     path("manage/users/<int:pk>/toggle-verify/", views.manager_toggle_verify, name="manager_toggle_verify"),
     path("manage/users/<int:pk>/toggle-manager/", views.manager_promote, name="manager_promote"),
     path("manage/users/<int:pk>/balance/", views.manager_manage_balance, name="manager_manage_balance"),
+    path("manage/users/<int:pk>/delete/", views.manager_delete_user, name="manager_delete_user"),
     path("manage/pending-specialists/", views.manager_pending_specialists, name="pending_specialists"),
     path("manage/users/<int:pk>/toggle-approve/", views.manager_toggle_approve, name="manager_toggle_approve"),
     path("admin-login/", views.admin_login, name="admin_login"),

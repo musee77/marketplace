@@ -233,6 +233,23 @@ def user_promote(request, pk):
     return redirect(request.META.get('HTTP_REFERER') or 'custom_admin:user_list')
 
 
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def user_delete_view(request, pk):
+    target = get_object_or_404(User, pk=pk)
+    if target.id == request.user.id:
+        messages.error(request, "You cannot delete your own account.")
+        return redirect('custom_admin:user_list')
+    if target.is_manager and not request.user.is_superuser:
+        messages.error(request, "Only a superuser can delete another manager.")
+        return redirect('custom_admin:user_list')
+    if request.method == 'POST':
+        username = target.username
+        target.delete()
+        messages.success(request, f"User '{username}' has been permanently deleted.")
+        return redirect('custom_admin:user_list')
+    return render(request, 'custom_admin/users/confirm_delete.html', {'target_user': target})
+
+
 # ====== SPECIALIST APPROVALS ======
 
 @user_passes_test(is_manager, login_url='custom_admin:login')

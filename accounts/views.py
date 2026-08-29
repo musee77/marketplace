@@ -430,6 +430,22 @@ def manager_promote(request, pk):
 
 
 @user_passes_test(is_manager)
+def manager_delete_user(request, pk):
+    target = get_object_or_404(User, pk=pk)
+    if target.id == request.user.id:
+        messages.error(request, "You cannot delete your own account.")
+        return redirect("accounts:manager_user_list")
+    if target.is_manager and not request.user.is_superuser:
+        messages.error(request, "Only a superuser can delete another manager.")
+        return redirect("accounts:manager_user_list")
+    if request.method == "POST":
+        username = target.username
+        target.delete()
+        messages.success(request, f"User '{username}' has been permanently deleted.")
+    return redirect("accounts:manager_user_list")
+
+
+@user_passes_test(is_manager)
 def manager_pending_specialists(request):
     pending = SpecialistProfile.objects.filter(is_approved=False).select_related("user")
     paginator = Paginator(pending, 10)

@@ -92,6 +92,12 @@
                       </button>
                     </form>
                   {% endif %}
+                  <form method="post" action="{% url 'accounts:manager_delete_user' u.pk %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete user @{{ u.username }}? This action cannot be undone.');">
+                    {% csrf_token %}
+                    <button type="submit" class="dh-action-link" style="border: 1px solid var(--admin-danger); cursor: pointer; font-family: inherit; background: rgba(239, 68, 68, 0.15); color: var(--admin-danger);">
+                      Delete
+                    </button>
+                  </form>
                 </div>
               </td>
             </tr>
