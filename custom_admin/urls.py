@@ -52,4 +52,9 @@ urlpatterns = [
     # Reviews
     path('reviews/', views.review_list_view, name='review_list'),
     path('reviews/<int:pk>/delete/', views.review_delete_view, name='review_delete'),
+
+    # Inquiries / Support
+    path('inquiries/', views.contact_list_view, name='contact_list'),
+    path('inquiries/<int:pk>/', views.contact_detail_view, name='contact_detail'),
+    path('inquiries/<int:pk>/delete/', views.contact_delete_view, name='contact_delete'),
 ]

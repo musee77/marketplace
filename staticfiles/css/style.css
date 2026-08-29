@@ -1002,10 +1002,239 @@ footer {
   text-decoration: none;
 }
 
-.specialist-directory-bio {
-  color: var(--slate);
-  font-size: .86rem;
+/* Specialist Directory Card Styles */
+.specialist-directory-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 8px;
+  background: var(--paper, #ffffff);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.specialist-directory-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  border-color: var(--brass, #c1943f);
+}
+.specialist-card-banner {
+  height: 48px;
+  background: linear-gradient(135deg, #1c2b3e 0%, #152233 100%);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  position: relative;
+  flex-shrink: 0;
+}
+.specialist-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.specialist-badge-verified {
+  background: rgba(193, 148, 63, 0.2);
+  color: var(--brass, #c1943f);
+  border: 1px solid rgba(193, 148, 63, 0.4);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.4px;
+}
+.specialist-badge-available {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.specialist-badge-available .status-dot {
+  width: 5px;
+  height: 5px;
+  background: #34d399;
+  border-radius: 50%;
+  display: inline-block;
+}
+.specialist-card-body {
+  padding: 0 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  background: var(--paper, #ffffff);
+}
+.specialist-avatar-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: -26px;
+  margin-bottom: 2px;
+  position: relative;
+  z-index: 2;
+}
+.specialist-avatar-lg {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid var(--paper, #ffffff);
+  background: #1c2b3e;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.15rem;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+.specialist-avatar-lg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.specialist-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.specialist-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink, #1c2b3e);
+  margin: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.specialist-directory-card:hover .specialist-name {
+  color: var(--brass, #c1943f);
+}
+.specialist-headline {
+  font-size: 0.8rem;
+  color: var(--slate, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.specialist-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--slate, #64748b);
+  flex-wrap: wrap;
+}
+.specialist-meta-row .meta-dot {
+  opacity: 0.5;
+}
+.specialist-location {
+  font-size: 0.76rem;
+  color: var(--slate, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.specialist-bio-snippet {
+  font-size: 0.82rem;
+  color: var(--slate, #64748b);
   line-height: 1.45;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.38em;
+}
+.specialist-skills-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 2px 0;
+}
+.skill-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  padding: 2px 7px;
+  background: rgba(193, 148, 63, 0.08);
+  color: var(--brass-soft, #b48535);
+  border-radius: 4px;
+  border: 1px solid rgba(193, 148, 63, 0.2);
+  white-space: nowrap;
+}
+.specialist-services-preview {
+  background: var(--bg-subtle, #f8fafc);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-top: 2px;
+}
+.specialist-services-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--slate, #64748b);
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+.specialist-services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.specialist-service-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.76rem;
+}
+.service-item-title {
+  color: var(--ink, #1c2b3e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 6px;
+}
+.service-item-price {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  color: var(--brass, #c1943f);
+  flex-shrink: 0;
+}
+.specialist-card-foot {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid var(--line, #e2e8f0);
+  flex-shrink: 0;
+}
+.specialist-experience-badge {
+  font-size: 0.78rem;
+  color: var(--slate, #64748b);
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+.specialist-experience-badge .exp-num {
+  font-weight: 700;
+  color: var(--ink, #1c2b3e);
+  font-size: 0.88rem;
 }
 .offer-meta-grid { flex-wrap: wrap; }
 .conversation-thread { min-width: 0; }

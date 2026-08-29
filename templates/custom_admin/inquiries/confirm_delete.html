@@ -1,0 +1,25 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:contact_list' %}">Inquiries</a>
+&rsaquo; <a href="{% url 'custom_admin:contact_detail' inquiry.pk %}">#{{ inquiry.pk }}</a>
+&rsaquo; <span>Delete</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="max-width: 500px; margin: 40px auto; padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px; text-align: center;">
+  <h2 style="color: var(--admin-danger);">Delete Inquiry Message?</h2>
+  <p style="color: var(--admin-text); margin: 20px 0;">
+    Are you sure you want to permanently delete the inquiry <strong>"{{ inquiry.subject }}"</strong> from <strong>{{ inquiry.name }} ({{ inquiry.email }})</strong>?
+    This action cannot be undone.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button type="submit" class="btn btn-danger" style="padding: 10px 20px; background: var(--admin-danger); color: #fff; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">Yes, Delete</button>
+      <a href="{% url 'custom_admin:contact_detail' inquiry.pk %}" class="btn btn-outline" style="padding: 10px 20px; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

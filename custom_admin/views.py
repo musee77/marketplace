@@ -15,6 +15,7 @@ from orders.forms import OrderDocumentForm
 from chat.models import Message
 from reviews.models import Review
 from blog.models import BlogCategory, BlogPost
+from core.models import ContactMessage
 
 from .forms import BlogPostForm, CategoryForm, UserForm, BalanceForm, AdminServiceForm
 
@@ -589,3 +590,107 @@ def review_delete_view(request, pk):
         messages.success(request, "Review deleted.")
         return redirect('custom_admin:review_list')
     return render(request, 'custom_admin/reviews/confirm_delete.html', {'review': review})
+
+
+# ====== INQUIRIES / CONTACT MESSAGES ======
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def contact_list_view(request):
+    q = request.GET.get('q', '').strip()
+    status_filter = request.GET.get('status', '').strip()
+    category_filter = request.GET.get('category', '').strip()
+
+    messages_qs = ContactMessage.objects.select_related('user').order_by('-created_at')
+
+    if q:
+        messages_qs = messages_qs.filter(
+            Q(name__icontains=q)
+            | Q(email__icontains=q)
+            | Q(subject__icontains=q)
+            | Q(message__icontains=q)
+            | Q(admin_notes__icontains=q)
+        )
+    if status_filter:
+        messages_qs = messages_qs.filter(status=status_filter)
+    if category_filter:
+        messages_qs = messages_qs.filter(category=category_filter)
+
+    paginator = Paginator(messages_qs, 12)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    pending_count = ContactMessage.objects.filter(status=ContactMessage.Status.PENDING).count()
+
+    context = {
+        'inquiries': page_obj,
+        'page_obj': page_obj,
+        'q': q,
+        'status_filter': status_filter,
+        'category_filter': category_filter,
+        'statuses': ContactMessage.Status.choices,
+        'categories': ContactMessage.Category.choices,
+        'pending_count': pending_count,
+    }
+    return render(request, 'custom_admin/inquiries/list.html', context)
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def contact_detail_view(request, pk):
+    from notifications.models import Notification
+    from django.urls import reverse
+
+    inquiry = get_object_or_404(ContactMessage.objects.select_related('user'), pk=pk)
+    if request.method == 'POST':
+        new_status = request.POST.get('status', '').strip()
+        admin_notes = request.POST.get('admin_notes', '').strip()
+        admin_reply = request.POST.get('admin_reply', '').strip()
+
+        old_reply = inquiry.admin_reply
+        old_status = inquiry.status
+
+        if new_status in dict(ContactMessage.Status.choices):
+            inquiry.status = new_status
+        inquiry.admin_notes = admin_notes
+        
+        reply_changed = False
+        if admin_reply:
+            inquiry.admin_reply = admin_reply
+            if admin_reply != old_reply:
+                inquiry.replied_at = timezone.now()
+                inquiry.is_read_by_user = False
+                reply_changed = True
+
+        inquiry.save(update_fields=['status', 'admin_notes', 'admin_reply', 'replied_at', 'is_read_by_user', 'updated_at'])
+        
+        # If user is registered, send them an in-app notification about response/status
+        if inquiry.user and (reply_changed or (new_status and new_status != old_status)):
+            notif_msg = f"Your inquiry '{inquiry.subject}' status is now '{inquiry.get_status_display()}'."
+            if admin_reply and reply_changed:
+                notif_msg += f"\nResponse: {admin_reply[:140]}"
+            Notification.notify(
+                recipient=inquiry.user,
+                notif_type="ORDER_STATUS",
+                title=f"Support Response: {inquiry.subject}",
+                message=notif_msg,
+                url=reverse("core:inquiry_detail", kwargs={"pk": inquiry.pk}),
+            )
+
+        messages.success(request, f"Inquiry #{inquiry.pk} updated successfully.")
+        return redirect('custom_admin:contact_detail', pk=inquiry.pk)
+
+    context = {
+        'inquiry': inquiry,
+        'statuses': ContactMessage.Status.choices,
+    }
+    return render(request, 'custom_admin/inquiries/detail.html', context)
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def contact_delete_view(request, pk):
+    inquiry = get_object_or_404(ContactMessage, pk=pk)
+    if request.method == 'POST':
+        subject = inquiry.subject
+        inquiry.delete()
+        messages.success(request, f"Inquiry '{subject}' has been deleted.")
+        return redirect('custom_admin:contact_list')
+    return render(request, 'custom_admin/inquiries/confirm_delete.html', {'inquiry': inquiry})
+

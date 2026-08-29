@@ -33,48 +33,86 @@
         <h1>Browse analysts</h1>
       </div>
       <form method="get" class="listing-search-form analysts-search-form">
-        <input type="search" name="q" value="{{ q }}" placeholder="Search analysts..." class="listing-search-input">
+        <input type="search" name="q" value="{{ q }}" placeholder="Search analysts by name, skill, tool, location..." class="listing-search-input">
         <button class="btn btn-outline btn-sm" type="submit">Search</button>
       </form>
     </div>
 
     <div class="grid listing-grid">
       {% for profile in page_obj %}
-        <a class="card specialist-directory-card" href="{{ profile.get_absolute_url }}">
-          <div class="card-body">
-            <div class="seller-info">
-              <div class="seller-avatar">
+        <a class="specialist-directory-card" href="{{ profile.get_absolute_url }}">
+          <!-- Top Card Banner -->
+          <div class="specialist-card-banner">
+            <div class="specialist-card-badges">
+              {% if profile.is_verified %}
+                <span class="specialist-badge-verified">VERIFIED</span>
+              {% endif %}
+              {% if profile.is_available %}
+                <span class="specialist-badge-available"><span class="status-dot"></span> Available</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Card Body -->
+          <div class="specialist-card-body">
+            <div class="specialist-avatar-row">
+              <div class="specialist-avatar-lg">
                 {% if profile.user.avatar %}
                   <img src="{{ profile.user.avatar.url }}" alt="{{ profile.user.get_full_name|default:profile.user.username }}">
                 {% else %}
                   <span>{{ profile.user.get_full_name|default:profile.user.username|slice:":1"|upper }}</span>
                 {% endif %}
               </div>
-              <div class="seller-details">
-                <span class="seller-name">{{ profile.user.get_full_name|default:profile.user.username }}</span>
-                {% if profile.is_verified %}<span class="pro-badge">VERIFIED</span>{% endif %}
+            </div>
+
+            <div class="specialist-names">
+              <div class="specialist-name">{{ profile.user.get_full_name|default:profile.user.username }}</div>
+              <div class="specialist-headline">{{ profile.headline|default:"Data Analytics Specialist" }}</div>
+            </div>
+
+            <div class="specialist-meta-row">
+              <div class="rating-row">
+                <span class="star-icon">★</span>
+                <span class="rating-score">{{ profile.average_rating|default:"5.0" }}</span>
+                <span class="review-count">({{ profile.review_count }})</span>
               </div>
+              <span class="meta-dot">·</span>
+              <span class="specialist-location">📍 {{ profile.location|default:"Remote" }}</span>
             </div>
-            <div class="card-title">{{ profile.headline|default:"Data analytics specialist" }}</div>
-            <p class="specialist-directory-bio">{{ profile.bio|default:"Available for data analytics projects."|truncatechars:120 }}</p>
-            <div class="rating-row">
-              <span class="star-icon">★</span>
-              <span class="rating-score">{{ profile.average_rating|default:"—" }}</span>
-              <span class="review-count">({{ profile.review_count }} reviews)</span>
-            </div>
-            {% if profile.random_listings %}
-            <div class="specialist-listings-preview">
-              {% for listing in profile.random_listings %}
-                <a class="listing-pill" href="{{ listing.get_absolute_url }}" onclick="event.stopPropagation()">
-                  <span class="listing-pill-title">{{ listing.title|truncatechars:40 }}</span>
-                  <span class="listing-pill-price">${{ listing.price }}</span>
-                </a>
+
+            <p class="specialist-bio-snippet">{{ profile.bio|default:"Available for data analytics, dashboard engineering, and business intelligence projects."|truncatechars:110 }}</p>
+
+            {% if profile.skills_list %}
+            <div class="specialist-skills-chips">
+              {% for skill in profile.skills_list %}
+                <span class="skill-tag">{{ skill }}</span>
               {% endfor %}
             </div>
             {% endif %}
-            <div class="card-foot">
-              <span class="category-name">{{ profile.location|default:"Remote" }}</span>
-              <span class="price">{{ profile.years_experience }} yrs experience</span>
+
+            {% if profile.random_listings %}
+            <div class="specialist-services-preview">
+              <span class="specialist-services-label">SERVICES OFFERED</span>
+              <div class="specialist-services-list">
+                {% for listing in profile.random_listings %}
+                  <div class="specialist-service-item">
+                    <span class="service-item-title">{{ listing.title|truncatechars:32 }}</span>
+                    <span class="service-item-price">${{ listing.price }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <div class="specialist-card-foot">
+              <div class="specialist-experience-badge">
+                <span class="exp-num">{{ profile.years_experience }}</span>
+                <span>yr{{ profile.years_experience|pluralize }} exp</span>
+              </div>
+              <div class="price-block">
+                <span class="starting-at">RATE</span>
+                <span class="price"><span class="cur">$</span>{{ profile.hourly_rate|default:"—" }}<small style="font-size:0.75rem; color:var(--slate); font-weight:normal;">/hr</small></span>
+              </div>
             </div>
           </div>
         </a>

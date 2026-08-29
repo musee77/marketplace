@@ -101,6 +101,10 @@ def specialist_list(request):
         active_services = [s for s in profile.user.services.all() if s.is_active]
         count = random.randint(1, min(5, len(active_services))) if active_services else 0
         profile.random_listings = random.sample(active_services, count) if count else []
+        if profile.skills:
+            profile.skills_list = [s.strip() for s in profile.skills.split(",") if s.strip()][:4]
+        else:
+            profile.skills_list = []
     return render(request, "accounts/specialist_list.html", {
         "page_obj": page_obj,
         "q": query,

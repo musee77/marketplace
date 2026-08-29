@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Inquiries &amp; Support | Synovae Analytics{% endblock %}
+
+{% block seo %}
+<meta name="description" content="Get in touch with the Synovae Analytics team for questions about hiring specialists, listing services, order support, or platform assistance.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:title" content="Inquiries &amp; Support | Synovae Analytics">
+<meta property="og:description" content="Reach our support and operations team for any inquiries or assistance across the platform.">
+<meta property="og:site_name" content="Synovae Analytics">
+{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 48px 0 64px;">
+  <div class="wrap">
+    
+    <!-- Top Header Area with Responses Button -->
+    <div style="max-width: 960px; margin: 0 auto 36px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <div class="eyebrow" style="margin-bottom: 6px;">SUPPORT &amp; INQUIRIES</div>
+        <h1 style="font-size: 2.2rem; margin: 0 0 8px; color: #fff;">Inquiries &amp; Support</h1>
+        <p style="color: var(--slate); font-size: 1rem; line-height: 1.5; margin: 0;">
+          Have a question about hiring a specialist, managing orders, billing, or joining our network? Submit your inquiry below.
+        </p>
+      </div>
+
+      {% if user.is_authenticated %}
+        <div>
+          <a href="{% url 'core:my_inquiries' %}" class="btn btn-brass" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600; text-decoration: none; padding: 10px 18px;">
+            <span>💬</span> View Responses
+            {% if user_inquiries_unread_count > 0 %}
+              <span class="badge" style="background: #ef4444; color: #fff; font-size: 0.75rem; padding: 2px 7px; border-radius: 10px;">{{ user_inquiries_unread_count }}</span>
+            {% endif %}
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; max-width: 960px; margin: 0 auto;">
+      
+      <!-- Contact Form Panel -->
+      <div class="panel" style="padding: 32px; background: var(--surface, #1e293b); border: 1px solid var(--border, #334155); border-radius: 12px;">
+        <div class="eyebrow" style="margin-bottom: 6px; font-size: 0.72rem; color: var(--brass-soft, #c1943f);">INQUIRY FORM</div>
+        <h2 style="font-size: 1.35rem; margin: 0 0 20px; font-weight: 600; color: #fff;">Submit an Inquiry</h2>
+        
+        {% if submitted %}
+          <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <div style="font-size: 2.2rem; color: #10b981; margin-bottom: 8px;">✓</div>
+            <h3 style="color: #10b981; margin-bottom: 8px;">Message Sent Successfully!</h3>
+            <p style="color: var(--text, #f8fafc); font-size: 0.95rem; margin: 0 0 20px; line-height: 1.5;">
+              Thank you for reaching out. We have received your inquiry and our support team will respond within 24 hours.
+            </p>
+            
+            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+              {% if user.is_authenticated %}
+                <a href="{% url 'core:my_inquiries' %}" class="btn btn-brass" style="font-weight: 600; text-decoration: none;">
+                  💬 View Inquiries &amp; Responses
+                </a>
+              {% endif %}
+              <a href="{% url 'core:contact' %}" class="btn btn-outline" style="text-decoration: none;">
+                Send another message
+              </a>
+            </div>
+          </div>
+        {% else %}
+          <form method="post" novalidate>
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+              <div class="errorlist" style="margin-bottom: 16px; color: var(--danger, #ef4444);">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px;">
+              <div>
+                <label for="{{ form.name.id_for_label }}" style="display:block; font-weight:600; font-size:0.88rem; margin-bottom:6px; color:#fff;">Your Name *</label>
+                {{ form.name }}
+                {% if form.name.errors %}<small style="color: var(--danger, #ef4444);">{{ form.name.errors.0 }}</small>{% endif %}
+              </div>
+              <div>
+                <label for="{{ form.email.id_for_label }}" style="display:block; font-weight:600; font-size:0.88rem; margin-bottom:6px; color:#fff;">Email Address *</label>
+                {{ form.email }}
+                {% if form.email.errors %}<small style="color: var(--danger, #ef4444);">{{ form.email.errors.0 }}</small>{% endif %}
+              </div>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+              <label for="{{ form.category.id_for_label }}" style="display:block; font-weight:600; font-size:0.88rem; margin-bottom:6px; color:#fff;">Topic / Category *</label>
+              {{ form.category }}
+              {% if form.category.errors %}<small style="color: var(--danger, #ef4444);">{{ form.category.errors.0 }}</small>{% endif %}
+            </div>
+
+            <div style="margin-bottom: 16px;">
+              <label for="{{ form.subject.id_for_label }}" style="display:block; font-weight:600; font-size:0.88rem; margin-bottom:6px; color:#fff;">Subject *</label>
+              {{ form.subject }}
+              {% if form.subject.errors %}<small style="color: var(--danger, #ef4444);">{{ form.subject.errors.0 }}</small>{% endif %}
+            </div>
+
+            <div style="margin-bottom: 24px;">
+              <label for="{{ form.message.id_for_label }}" style="display:block; font-weight:600; font-size:0.88rem; margin-bottom:6px; color:#fff;">Message *</label>
+              {{ form.message }}
+              {% if form.message.errors %}<small style="color: var(--danger, #ef4444);">{{ form.message.errors.0 }}</small>{% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-brass" style="width: 100%; padding: 13px; font-weight: 600; font-size: 1rem; cursor: pointer;">
+              Submit Inquiry
+            </button>
+          </form>
+        {% endif %}
+      </div>
+
+      <!-- Information & Direct Assistance Column -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        
+        <!-- Direct Assistance Card -->
+        <div class="panel" style="padding: 28px; background: var(--surface-alt, #0f172a); border: 1px solid var(--border, #334155); border-radius: 12px;">
+          <div class="eyebrow" style="margin-bottom: 6px; font-size: 0.72rem; color: var(--brass-soft, #c1943f);">CHANNELS &amp; RESPONSE</div>
+          <h3 style="font-size: 1.3rem; margin: 0 0 12px; font-weight: 600; color: #fff; letter-spacing: -0.01em;">
+            Direct assistance
+          </h3>
+          <p style="color: var(--slate, #94a3b8); font-size: 0.92rem; line-height: 1.55; margin-bottom: 18px;">
+            Whether you are a client looking to hire or a data specialist building your client roster, our operations team is here to support you.
+          </p>
+          
+          <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--slate, #94a3b8);">Email Support</span>
+              <a href="mailto:support@synovae.com" style="color: var(--accent, #c1943f); font-weight: 600; text-decoration: none;">support@synovae.com</a>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+              <span style="color: var(--slate, #94a3b8);">Response Time</span>
+              <span style="color: #fff; font-weight: 500;">Within 12–24 hrs</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+              <span style="color: var(--slate, #94a3b8);">Operations</span>
+              <span style="color: #fff; font-weight: 500;">Mon – Sat (UTC)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Responses & Quick Help Card -->
+        <div class="panel" style="padding: 28px; background: var(--surface-alt, #0f172a); border: 1px solid var(--border, #334155); border-radius: 12px;">
+          <div class="eyebrow" style="margin-bottom: 6px; font-size: 0.72rem; color: var(--brass-soft, #c1943f);">RESPONSES &amp; LINKS</div>
+          <h3 style="font-size: 1.3rem; margin: 0 0 14px; font-weight: 600; color: #fff; letter-spacing: -0.01em;">
+            Support navigation
+          </h3>
+          
+          <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 0.92rem;">
+            {% if user.is_authenticated %}
+              <li>
+                <a href="{% url 'core:my_inquiries' %}" style="color: var(--accent, #c1943f); font-weight: 600; text-decoration: none; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 6px; background: rgba(193, 148, 63, 0.08); border: 1px solid rgba(193, 148, 63, 0.2);">
+                  <span>💬 View My Inquiries &amp; Responses</span>
+                  <span>&rarr;</span>
+                </a>
+              </li>
+            {% endif %}
+            <li>
+              <a href="{% url 'services:list' %}" style="color: #fff; text-decoration: none; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 6px; transition: background 0.15s; background: rgba(255,255,255,0.02);">
+                <span>Browse vetted services</span>
+                <span style="color: var(--accent, #c1943f); font-weight: bold;">&rarr;</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'accounts:specialist_list' %}" style="color: #fff; text-decoration: none; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 6px; transition: background 0.15s; background: rgba(255,255,255,0.02);">
+                <span>Find an analytics specialist</span>
+                <span style="color: var(--accent, #c1943f); font-weight: bold;">&rarr;</span>
+              </a>
+            </li>
+            <li>
+              <a href="{% url 'blog:list' %}" style="color: #fff; text-decoration: none; display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: 6px; transition: background 0.15s; background: rgba(255,255,255,0.02);">
+                <span>Analytics Guides &amp; Insights</span>
+                <span style="color: var(--accent, #c1943f); font-weight: bold;">&rarr;</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
+{% endblock %}

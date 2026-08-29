@@ -1,0 +1,125 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <span>Inquiries &amp; Support</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
+  
+  <div class="dh-changelist-topbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
+    <div>
+      <h2>User Inquiries &amp; Support Messages</h2>
+      <div style="font-size: 0.85rem; color: var(--admin-text-muted); margin-top: 4px;">
+        {% if pending_count > 0 %}
+          <span style="color: #f59e0b; font-weight: 600;">● {{ pending_count }} pending inquir{{ pending_count|pluralize:"y,ies" }}</span> requiring attention
+        {% else %}
+          <span style="color: var(--admin-success);">✓ All inquiries resolved</span>
+        {% endif %}
+      </div>
+    </div>
+    
+    <!-- Search and Filter Form -->
+    <form method="get" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+      <input type="text" name="q" value="{{ q }}" placeholder="Search name, email, subject..." class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff; min-width: 220px;">
+      
+      <select name="status" class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff;">
+        <option value="">All Statuses</option>
+        {% for val, label in statuses %}
+          <option value="{{ val }}" {% if status_filter == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="category" class="form-control" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff;">
+        <option value="">All Categories</option>
+        {% for val, label in categories %}
+          <option value="{{ val }}" {% if category_filter == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      
+      <button type="submit" class="btn btn-brass" style="padding: 8px 16px; background: var(--admin-accent); color: #0f172a; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">Apply</button>
+      {% if q or status_filter or category_filter %}
+        <a href="{% url 'custom_admin:contact_list' %}" class="btn btn-outline" style="padding: 8px 16px; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">Clear</a>
+      {% endif %}
+    </form>
+  </div>
+
+  <div style="overflow-x:auto;">
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+      <thead>
+        <tr style="border-bottom: 2px solid var(--admin-card-border); text-align: left; color: var(--admin-text-muted);">
+          <th style="padding: 12px 8px;">Inquiry / Subject</th>
+          <th style="padding: 12px 8px;">Sender</th>
+          <th style="padding: 12px 8px;">Topic</th>
+          <th style="padding: 12px 8px;">Status</th>
+          <th style="padding: 12px 8px;">Received</th>
+          <th style="padding: 12px 8px; text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inq in inquiries %}
+        <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.5);">
+          <td style="padding: 12px 8px; font-weight: 600;">
+            <a href="{% url 'custom_admin:contact_detail' inq.pk %}" style="color: #fff; text-decoration: none;">{{ inq.subject }}</a>
+            <div style="font-size:0.78rem; color:var(--admin-text-muted); font-weight:normal; margin-top:2px;">{{ inq.message|truncatechars:75 }}</div>
+          </td>
+          <td style="padding: 12px 8px;">
+            <div style="color: #fff; font-weight: 500;">{{ inq.name }}</div>
+            <div style="font-size: 0.78rem; color: var(--admin-text-muted);">{{ inq.email }}</div>
+            {% if inq.user %}
+              <div style="font-size: 0.72rem; color: var(--admin-accent);">Linked: @{{ inq.user.username }} ({{ inq.user.get_role_display }})</div>
+            {% else %}
+              <div style="font-size: 0.72rem; color: var(--admin-text-muted);">Guest Visitor</div>
+            {% endif %}
+          </td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted);">
+            <span style="font-size: 0.8rem; background: rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 4px;">{{ inq.get_category_display }}</span>
+          </td>
+          <td style="padding: 12px 8px;">
+            {% if inq.status == 'PENDING' %}
+              <span class="status" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Pending</span>
+            {% elif inq.status == 'IN_PROGRESS' %}
+              <span class="status" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">In Progress</span>
+            {% elif inq.status == 'RESOLVED' %}
+              <span class="status" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Resolved</span>
+            {% else %}
+              <span class="status" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">Closed</span>
+            {% endif %}
+          </td>
+          <td style="padding: 12px 8px; color: var(--admin-text-muted); font-size: 0.82rem; white-space: nowrap;">
+            {{ inq.created_at|date:"M j, Y H:i" }}
+          </td>
+          <td style="padding: 12px 8px; text-align: right; white-space: nowrap;">
+            <a href="{% url 'custom_admin:contact_detail' inq.pk %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 5px 12px; border-radius: 6px; color: #fff; border: 1px solid var(--admin-card-border); text-decoration: none; margin-right: 6px;">
+              View &amp; Manage
+            </a>
+            <a href="{% url 'custom_admin:contact_delete' inq.pk %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 5px 10px; border-radius: 6px; background: var(--admin-danger); color: #fff; text-decoration: none; font-weight: bold;">
+              Delete
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" style="padding: 32px; text-align: center; color: var(--admin-text-muted);">No inquiries found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div style="display:flex; justify-content:center; gap:8px; margin-top:20px;">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">&laquo; Prev</a>
+    {% endif %}
+    
+    <span style="padding: 4px 10px; color: var(--admin-text-muted);">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if category_filter %}&category={{ category_filter }}{% endif %}" class="btn btn-outline" style="padding: 4px 10px; text-decoration:none; color:#fff; border: 1px solid var(--admin-card-border); border-radius:4px;">Next &raquo;</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

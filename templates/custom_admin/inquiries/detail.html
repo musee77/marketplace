@@ -1,0 +1,132 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:contact_list' %}">Inquiries</a>
+&rsaquo; <span>#{{ inquiry.pk }} · {{ inquiry.subject|truncatechars:35 }}</span>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:24px;">
+  
+  <!-- Left card: Message Details -->
+  <div class="dh-card" style="padding:24px; background:var(--admin-card-bg); border:1px solid var(--admin-card-border); border-radius:14px;">
+    <div style="display:flex; justify-content:space-between; gap:16px; align-items:flex-start; margin-bottom: 16px;">
+      <div>
+        <div style="color:var(--admin-text-muted); font-size:.8rem; text-transform:uppercase;">Inquiry #{{ inquiry.pk }}</div>
+        <h2 style="font-size: 1.4rem; margin-top: 4px;">{{ inquiry.subject }}</h2>
+      </div>
+      <div>
+        {% if inquiry.status == 'PENDING' %}
+          <span class="status" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Pending</span>
+        {% elif inquiry.status == 'IN_PROGRESS' %}
+          <span class="status" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">In Progress</span>
+        {% elif inquiry.status == 'RESOLVED' %}
+          <span class="status" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Resolved</span>
+        {% else %}
+          <span class="status" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Closed</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse; margin-top:12px; font-size: 0.92rem;">
+      <tr>
+        <td style="padding:8px 0; color:var(--admin-text-muted);">Sender Name</td>
+        <td style="padding:8px 0; text-align:right; font-weight: 600; color: #fff;">{{ inquiry.name }}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0; color:var(--admin-text-muted);">Email Address</td>
+        <td style="padding:8px 0; text-align:right;">
+          <a href="mailto:{{ inquiry.email }}?subject=Re: {{ inquiry.subject|urlencode }}" style="color: var(--admin-accent); text-decoration: none;">
+            {{ inquiry.email }} ✉
+          </a>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0; color:var(--admin-text-muted);">Category / Topic</td>
+        <td style="padding:8px 0; text-align:right; color: #fff;">{{ inquiry.get_category_display }}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0; color:var(--admin-text-muted);">Submitted Date</td>
+        <td style="padding:8px 0; text-align:right; color: var(--admin-text-muted);">{{ inquiry.created_at|date:"M j, Y H:i" }} ({{ inquiry.created_at|timesince }} ago)</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 0; color:var(--admin-text-muted);">Account Link</td>
+        <td style="padding:8px 0; text-align:right;">
+          {% if inquiry.user %}
+            <a href="{% url 'custom_admin:user_detail' inquiry.user.pk %}" style="color: var(--admin-accent); text-decoration: none; font-weight: 600;">
+              @{{ inquiry.user.username }} ({{ inquiry.user.get_role_display }})
+            </a>
+          {% else %}
+            <span style="color: var(--admin-text-muted);">Guest Visitor (Unauthenticated)</span>
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+
+    <div style="margin-top:20px; padding-top:18px; border-top:1px solid var(--admin-card-border);">
+      <h4 style="margin-bottom: 8px;">Inquiry Message</h4>
+      <div style="white-space:pre-wrap; color:var(--admin-text); background: rgba(0,0,0,0.25); padding: 16px; border-radius: 8px; border: 1px solid var(--admin-card-border); font-size: 0.95rem; line-height: 1.6;">{{ inquiry.message }}</div>
+    </div>
+
+    <div style="margin-top:20px; display: flex; gap: 10px; flex-wrap: wrap;">
+      <a href="mailto:{{ inquiry.email }}?subject=Re: {{ inquiry.subject|urlencode }}" class="btn btn-brass" style="padding: 8px 16px; text-decoration: none; font-weight: bold;">
+        ✉ Reply via Email
+      </a>
+      <a href="{% url 'custom_admin:contact_delete' inquiry.pk %}" class="btn btn-danger" style="padding: 8px 14px; text-decoration: none; font-weight: bold;">
+        Delete Inquiry
+      </a>
+    </div>
+  </div>
+
+  <!-- Right card: Status & Admin Management -->
+  <div class="dh-card" style="padding:24px; background:var(--admin-card-bg); border:1px solid var(--admin-card-border); border-radius:14px; height: fit-content;">
+    <h3>Manage Inquiry Status &amp; Notes</h3>
+    <p style="color: var(--admin-text-muted); font-size: 0.88rem; margin: 6px 0 20px;">
+      Update processing status and log internal team notes regarding resolution.
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      
+      <div style="margin-bottom: 20px;">
+        <label for="id_status" style="display:block; font-weight:600; font-size:0.88rem; margin-bottom:6px; color:#fff;">Status</label>
+        <select name="status" id="id_status" class="form-control" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff;">
+          {% for val, label in statuses %}
+            <option value="{{ val }}" {% if inquiry.status == val %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label for="id_admin_reply" style="display:block; font-weight:600; font-size:0.88rem; margin-bottom:6px; color:#fff;">
+          Official Response to User
+        </label>
+        <textarea name="admin_reply" id="id_admin_reply" rows="5" placeholder="Type the official answer / resolution for the user. If the user is registered, this sends an instant in-app update..." class="form-control" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff; line-height: 1.5;">{{ inquiry.admin_reply }}</textarea>
+        <small style="color: var(--admin-accent); display: block; margin-top: 4px;">
+          {% if inquiry.user %}
+            ✓ Visible to user on their "My Inquiries" dashboard &amp; triggers an Updates notification.
+          {% else %}
+            Notice: Sender is a guest visitor. Use "Reply via Email" button above to send them an email.
+          {% endif %}
+        </small>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <label for="id_admin_notes" style="display:block; font-weight:600; font-size:0.88rem; margin-bottom:6px; color:#fff;">Internal Staff Notes</label>
+        <textarea name="admin_notes" id="id_admin_notes" rows="4" placeholder="Internal team notes, investigation details..." class="form-control" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); background: #0f172a; color: #fff; line-height: 1.5;">{{ inquiry.admin_notes }}</textarea>
+        <small style="color: var(--admin-text-muted); display: block; margin-top: 4px;">Private notes only visible to staff &amp; managers.</small>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button type="submit" class="btn btn-brass" style="flex:1; padding: 10px; background: var(--admin-accent); color: #0f172a; font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">
+          Save Updates &amp; Send
+        </button>
+        <a href="{% url 'custom_admin:contact_list' %}" class="btn btn-outline" style="flex:1; padding: 10px; text-align: center; text-decoration: none; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff;">
+          Back to List
+        </a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

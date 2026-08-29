@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Inquiry #{{ inquiry.pk }}: {{ inquiry.subject }} | Synovae Analytics{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 40px 0 64px;">
+  <div class="wrap">
+    
+    <!-- Top Breadcrumbs & Back Link -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+      <div style="font-size: 0.88rem; color: var(--slate);">
+        <a href="{% url 'core:my_inquiries' %}" style="color: var(--brass-soft, #c1943f); text-decoration: none; font-weight: 500;">&larr; Back to Inquiries</a>
+        <span style="margin: 0 8px; opacity: 0.5;">/</span>
+        <span style="color: #fff;">Inquiry #{{ inquiry.pk }}</span>
+      </div>
+      <div>
+        <a href="{% url 'core:contact' %}" class="btn btn-outline btn-sm" style="text-decoration: none;">
+          + New Inquiry
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px; max-width: 1040px;">
+      
+      <!-- Left Column: Inquiry & Team Response Details -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
+        
+        <!-- Header & Original Inquiry Card -->
+        <article class="panel" style="padding: 28px; background: var(--surface, #1e293b); border: 1px solid var(--border, #334155); border-radius: 12px;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 18px;">
+            <div>
+              <div class="eyebrow" style="margin-bottom: 4px; font-size: 0.72rem; color: var(--brass-soft, #c1943f);">
+                {{ inquiry.get_category_display }}
+              </div>
+              <h1 style="font-size: 1.6rem; margin: 0; color: #fff; line-height: 1.3;">
+                {{ inquiry.subject }}
+              </h1>
+            </div>
+
+            <div>
+              {% if inquiry.status == 'PENDING' %}
+                <span class="status" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 5px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">Pending Review</span>
+              {% elif inquiry.status == 'IN_PROGRESS' %}
+                <span class="status" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 5px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">In Progress</span>
+              {% elif inquiry.status == 'RESOLVED' %}
+                <span class="status" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 5px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">Resolved</span>
+              {% else %}
+                <span class="status" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; padding: 5px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">Closed</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Submission Metadata -->
+          <div style="font-size: 0.85rem; color: var(--slate); border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 16px; margin-bottom: 20px;">
+            Submitted by <strong>{{ inquiry.name }}</strong> ({{ inquiry.email }}) on <strong>{{ inquiry.created_at|date:"F j, Y" }} at {{ inquiry.created_at|date:"H:i" }}</strong> ({{ inquiry.created_at|timesince }} ago)
+          </div>
+
+          <!-- Original Message Content -->
+          <div>
+            <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--slate); margin-bottom: 8px; font-weight: 600; font-family: 'IBM Plex Mono', monospace;">Your Submitted Message:</div>
+            <div style="white-space: pre-wrap; font-size: 0.95rem; color: #f1f5f9; line-height: 1.6; background: rgba(0,0,0,0.25); padding: 18px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">{{ inquiry.message }}</div>
+          </div>
+
+        </article>
+
+        <!-- Official Response Section -->
+        <article class="panel" style="padding: 28px; background: var(--surface, #1e293b); border: 1px solid var(--border, #334155); border-radius: 12px;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px;">
+            <h2 style="font-size: 1.25rem; margin: 0; color: #fff; display: flex; align-items: center; gap: 8px;">
+              <span>💬</span> Official Response
+            </h2>
+            {% if inquiry.replied_at %}
+              <div style="font-size: 0.82rem; color: var(--slate);">
+                Replied on {{ inquiry.replied_at|date:"M j, Y H:i" }}
+              </div>
+            {% endif %}
+          </div>
+
+          {% if inquiry.admin_reply %}
+            <div style="background: rgba(193, 148, 63, 0.08); border-left: 4px solid var(--accent, #c1943f); padding: 20px; border-radius: 0 8px 8px 0;">
+              <div style="font-weight: 600; color: var(--accent, #c1943f); font-size: 0.9rem; margin-bottom: 8px;">
+                Synovae Support Operations Team:
+              </div>
+              <div style="white-space: pre-wrap; font-size: 0.96rem; color: #fff; line-height: 1.65;">{{ inquiry.admin_reply }}</div>
+            </div>
+          {% else %}
+            <div style="background: rgba(0,0,0,0.18); border: 1px dashed var(--border, #334155); border-radius: 8px; padding: 24px; text-align: center;">
+              <div style="font-size: 1.8rem; margin-bottom: 8px;">⏳</div>
+              <h3 style="font-size: 1.05rem; color: #fff; margin-bottom: 6px;">Awaiting Support Response</h3>
+              <p style="color: var(--slate); font-size: 0.88rem; margin: 0; line-height: 1.5; max-width: 480px; margin: 0 auto;">
+                Our operations team has received your message and is currently reviewing it. Once answered, the response will be displayed here and you'll receive an in-app notification.
+              </p>
+            </div>
+          {% endif %}
+
+        </article>
+
+      </div>
+
+      <!-- Right Column: Assistance Info & Navigation -->
+      <div style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <div class="panel" style="padding: 24px; background: var(--surface-alt, #0f172a); border: 1px solid var(--border, #334155); border-radius: 12px;">
+          <div class="eyebrow" style="margin-bottom: 6px; font-size: 0.72rem; color: var(--brass-soft, #c1943f);">SUPPORT CHANNELS</div>
+          <h3 style="font-size: 1.2rem; margin: 0 0 12px; font-weight: 600; color: #fff;">Need further help?</h3>
+          <p style="color: var(--slate); font-size: 0.88rem; line-height: 1.5; margin-bottom: 16px;">
+            If your inquiry requires urgent escalation or additional attachments, you can reach out directly via email.
+          </p>
+          
+          <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.88rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--slate);">Email Support</span>
+              <a href="mailto:support@synovae.com?subject=Regarding Inquiry #{{ inquiry.pk }}: {{ inquiry.subject|urlencode }}" style="color: var(--accent, #c1943f); font-weight: 600; text-decoration: none;">support@synovae.com</a>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+              <span style="color: var(--slate);">Inquiry ID</span>
+              <span style="color: #fff; font-weight: 600; font-family: 'IBM Plex Mono', monospace;">#{{ inquiry.pk }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+              <span style="color: var(--slate);">Status</span>
+              <span style="color: #fff; font-weight: 500;">{{ inquiry.get_status_display }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="padding: 24px; background: var(--surface-alt, #0f172a); border: 1px solid var(--border, #334155); border-radius: 12px;">
+          <div class="eyebrow" style="margin-bottom: 6px; font-size: 0.72rem; color: var(--brass-soft, #c1943f);">NAVIGATION</div>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <a href="{% url 'core:my_inquiries' %}" class="btn btn-brass" style="width: 100%; text-align: center; text-decoration: none; font-weight: 600; padding: 10px;">
+              View All Inquiries
+            </a>
+            <a href="{% url 'core:contact' %}" class="btn btn-outline" style="width: 100%; text-align: center; text-decoration: none; font-weight: 500; padding: 10px;">
+              Submit New Inquiry
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
+{% endblock %}

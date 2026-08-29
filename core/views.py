@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 
 from services.models import Service, Category
 from orders.models import Order
@@ -59,6 +59,56 @@ def home(request):
 
 def about(request):
     return render(request, "core/about.html")
+
+
+def contact(request):
+    from django.contrib import messages
+    from django.db.models import Q
+    from .forms import ContactForm
+    from .models import ContactMessage
+
+    user_inquiries = ContactMessage.objects.none()
+    if request.user.is_authenticated:
+        user_inquiries = ContactMessage.objects.filter(
+            Q(user=request.user) | Q(email__iexact=request.user.email)
+        ).order_by("-created_at")
+        # Mark unread responses as seen
+        user_inquiries.filter(is_read_by_user=False).update(is_read_by_user=True)
+
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            contact_msg = form.save(commit=False)
+            if request.user.is_authenticated:
+                contact_msg.user = request.user
+            contact_msg.save()
+            messages.success(
+                request,
+                "Thank you for contacting us! Your message has been received, and our support team will respond to you shortly.",
+            )
+            # Re-fetch inquiries after saving
+            if request.user.is_authenticated:
+                user_inquiries = ContactMessage.objects.filter(
+                    Q(user=request.user) | Q(email__iexact=request.user.email)
+                ).order_by("-created_at")
+            return render(request, "core/contact.html", {
+                "form": ContactForm(),
+                "submitted": True,
+                "user_inquiries": user_inquiries,
+            })
+    else:
+        initial = {}
+        if request.user.is_authenticated:
+            initial["name"] = request.user.get_full_name() or request.user.username
+            initial["email"] = request.user.email
+        form = ContactForm(initial=initial)
+
+    return render(request, "core/contact.html", {
+        "form": form,
+        "submitted": False,
+        "user_inquiries": user_inquiries,
+    })
+
 
 
 @login_required
@@ -135,3 +185,69 @@ def dashboard(request):
     if user.is_manager:
         context["recent_orders"] = orders[:10]
     return render(request, "core/dashboard.html", context)
+
+
+@login_required
+def my_inquiries(request):
+    from django.contrib import messages
+    from django.db.models import Q
+    from .forms import ContactForm
+    from .models import ContactMessage
+
+    user = request.user
+
+    if request.method == "POST":
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            contact_msg = form.save(commit=False)
+            contact_msg.user = user
+            contact_msg.save()
+            messages.success(
+                request,
+                "Your inquiry has been submitted successfully! Our support team will review and respond here shortly.",
+            )
+            return redirect("core:my_inquiries")
+    else:
+        initial = {
+            "name": user.get_full_name() or user.username,
+            "email": user.email,
+        }
+        form = ContactForm(initial=initial)
+
+    inquiries_qs = ContactMessage.objects.filter(
+        Q(user=user) | Q(email__iexact=user.email)
+    ).order_by("-created_at")
+
+    # Mark all unread responses as read when viewing this page
+    inquiries_qs.filter(is_read_by_user=False).update(is_read_by_user=True)
+
+    paginator = Paginator(inquiries_qs, 10)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(request, "core/my_inquiries.html", {
+        "form": form,
+        "inquiries": page_obj,
+        "page_obj": page_obj,
+    })
+
+
+@login_required
+def inquiry_detail(request, pk):
+    from django.http import Http404
+    from .models import ContactMessage
+
+    user = request.user
+    inquiry = get_object_or_404(ContactMessage, pk=pk)
+
+    # Security check: owner or manager only
+    if not (inquiry.user == user or inquiry.email.lower() == user.email.lower() or user.is_manager):
+        raise Http404("Inquiry not found.")
+
+    if not inquiry.is_read_by_user and (inquiry.user == user or inquiry.email.lower() == user.email.lower()):
+        inquiry.is_read_by_user = True
+        inquiry.save(update_fields=["is_read_by_user"])
+
+    return render(request, "core/inquiry_detail.html", {"inquiry": inquiry})
+
+
+

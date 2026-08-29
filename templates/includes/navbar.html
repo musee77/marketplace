@@ -25,6 +25,7 @@
             <ul class="dropdown-menu">
               <li><a href="{% url 'chat:inbox' %}">&#x2709;&#xFE0F; Messages {% if unread_messages_count > 0 %}<span class="badge">{{ unread_messages_count }}</span>{% endif %}</a></li>
               <li><a href="{% url 'notifications:list' %}">&#x1F514; Notifications {% if unread_notifications_count > 0 %}<span class="badge">{{ unread_notifications_count }}</span>{% endif %}</a></li>
+              <li><a href="{% url 'core:contact' %}">&#x1F4AC; Inquiries</a></li>
             </ul>
           </li>
           {% endwith %}

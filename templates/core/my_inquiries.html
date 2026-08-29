@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}My Inquiries | Synovae Analytics{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 40px 0 64px;">
+  <div class="wrap">
+    
+    <!-- Page Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 28px;">
+      <div>
+        <div class="eyebrow" style="margin-bottom: 4px; font-size: 0.72rem; color: var(--brass-soft, #c1943f);">HELP &amp; SUPPORT HUB</div>
+        <h1 style="font-size: 2rem; margin: 0; color: #fff;">My Inquiries</h1>
+      </div>
+      <a href="{% url 'core:contact' %}" class="btn btn-brass" style="font-weight: 600; text-decoration: none;">
+        + New Inquiry
+      </a>
+    </div>
+
+    <!-- Inquiries List Container -->
+    <div style="display: flex; flex-direction: column; gap: 16px; max-width: 960px;">
+      
+      {% for inq in inquiries %}
+        <article class="panel" style="padding: 24px; background: var(--surface, #1e293b); border: 1px solid var(--border, #334155); border-radius: 12px; transition: border-color 0.2s;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 12px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+                <h3 style="font-size: 1.2rem; margin: 0;">
+                  <a href="{% url 'core:inquiry_detail' inq.pk %}" style="color: #fff; text-decoration: none;">
+                    {{ inq.subject }}
+                  </a>
+                </h3>
+                <span style="font-size: 0.75rem; background: rgba(255,255,255,0.08); color: var(--slate); padding: 2px 8px; border-radius: 4px;">
+                  {{ inq.get_category_display }}
+                </span>
+                {% if inq.admin_reply and not inq.is_read_by_user %}
+                  <span style="font-size: 0.72rem; background: #c1943f; color: #0f172a; font-weight: bold; padding: 2px 6px; border-radius: 4px;">NEW RESPONSE</span>
+                {% endif %}
+              </div>
+              
+              <div style="font-size: 0.82rem; color: var(--slate);">
+                Submitted on {{ inq.created_at|date:"M j, Y H:i" }} ({{ inq.created_at|timesince }} ago)
+              </div>
+            </div>
+
+            <div>
+              {% if inq.status == 'PENDING' %}
+                <span class="status" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Pending Review</span>
+              {% elif inq.status == 'IN_PROGRESS' %}
+                <span class="status" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">In Progress</span>
+              {% elif inq.status == 'RESOLVED' %}
+                <span class="status" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Resolved</span>
+              {% else %}
+                <span class="status" style="background: rgba(148, 163, 184, 0.15); color: #94a3b8; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600;">Closed</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Message Preview -->
+          <div style="margin-bottom: 16px; color: #cbd5e1; font-size: 0.92rem; line-height: 1.5; background: rgba(0,0,0,0.2); padding: 12px 14px; border-radius: 8px;">
+            {{ inq.message|truncatechars:180 }}
+          </div>
+
+          <!-- Status / Action footer -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px;">
+            <div>
+              {% if inq.admin_reply %}
+                <span style="color: var(--accent, #c1943f); font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                  <span>✓</span> Official Response Available
+                  {% if inq.replied_at %}<small style="color: var(--slate); font-weight: normal;">({{ inq.replied_at|date:"M j" }})</small>{% endif %}
+                </span>
+              {% else %}
+                <span style="color: var(--slate); font-size: 0.85rem; font-style: italic;">
+                  ⏳ Awaiting response from operations team
+                </span>
+              {% endif %}
+            </div>
+
+            <a href="{% url 'core:inquiry_detail' inq.pk %}" class="btn btn-brass" style="padding: 6px 14px; font-size: 0.85rem; font-weight: 600; text-decoration: none;">
+              View Response &amp; Details &rarr;
+            </a>
+          </div>
+
+        </article>
+      {% empty %}
+        <div class="panel" style="text-align: center; padding: 48px 16px; background: var(--surface, #1e293b); border: 1px solid var(--border, #334155); border-radius: 12px;">
+          <div style="font-size: 2.5rem; margin-bottom: 12px;">💬</div>
+          <h3 style="color: #fff; margin-bottom: 8px;">No inquiries submitted yet</h3>
+          <p style="color: var(--slate); font-size: 0.92rem; max-width: 440px; margin: 0 auto 20px;">
+            Have a question about an order, platform features, or specialist projects? Reach out anytime.
+          </p>
+          <a href="{% url 'core:contact' %}" class="btn btn-brass">Submit an Inquiry</a>
+        </div>
+      {% endfor %}
+
+      <!-- Pagination -->
+      {% if page_obj.has_other_pages %}
+        <div style="display:flex; justify-content:center; gap:8px; margin-top:24px;">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline btn-sm">&laquo; Previous</a>
+          {% endif %}
+          <span style="padding: 6px 12px; color: var(--slate); font-size: 0.85rem;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline btn-sm">Next &raquo;</a>
+          {% endif %}
+        </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+</section>
+{% endblock %}

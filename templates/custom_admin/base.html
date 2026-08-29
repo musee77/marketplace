@@ -71,7 +71,10 @@
 
         <!-- Moderation Section -->
         <div class="dh-nav-group">
-          <div class="dh-nav-title">MODERATION &amp; APPROVALS</div>
+          <div class="dh-nav-title">MODERATION &amp; SUPPORT</div>
+          <a href="custom_admin:contact_list" class="dh-sidebar-link {% if 'contact' in request.resolver_match.url_name %}active{% endif %}" onclick="location.href='{% url 'custom_admin:contact_list' %}'; return false;">
+            <span class="dh-nav-icon">✉️</span> User Inquiries
+          </a>
           <a href="custom_admin:specialist_approval_list" class="dh-sidebar-link {% if 'specialist' in request.resolver_match.url_name %}active{% endif %}" onclick="location.href='{% url 'custom_admin:specialist_approval_list' %}'; return false;">
             <span class="dh-nav-icon">🎓</span> Specialist Approvals
           </a>
