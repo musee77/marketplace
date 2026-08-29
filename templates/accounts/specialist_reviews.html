@@ -28,11 +28,32 @@
       {% for r in reviews %}
         <div class="listing-review-card">
           <div class="listing-review-header">
-            <span class="listing-reviewer-name">{{ r.reviewer.get_full_name|default:r.reviewer.username }}</span>
+            <div class="review-avatar">
+              {% if r.reviewer.avatar %}
+                <img src="{{ r.reviewer.avatar.url }}" alt="{{ r.reviewer.get_full_name|default:r.reviewer.username }}">
+              {% else %}
+                <span>{{ r.reviewer.get_full_name|default:r.reviewer.username|slice:":1"|upper }}</span>
+              {% endif %}
+            </div>
+            <div class="listing-review-meta">
+              <span class="listing-reviewer-name">{{ r.reviewer.get_full_name|default:r.reviewer.username }}</span>
+              <div class="listing-review-stars">
+                {% for i in "12345" %}
+                  <span class="{% if forloop.counter <= r.rating %}star filled{% else %}star empty{% endif %}">★</span>
+                {% endfor %}
+                <span class="listing-review-rating">{{ r.rating }}.0</span>
+              </div>
+            </div>
             <span class="listing-review-date">{{ r.created_at|date:"M j, Y" }}</span>
           </div>
-          <div class="listing-review-stars">{% for i in "12345" %}<span class="star {% if forloop.counter <= r.rating %}filled{% else %}empty{% endif %}">★</span>{% endfor %} {{ r.rating }}/5</div>
           <p class="listing-review-comment">{{ r.comment }}</p>
+          {% if r.image %}
+            <div class="review-image-attachment">
+              <a href="{{ r.image.url }}" target="_blank" rel="noopener noreferrer" title="View attached work sample">
+                <img src="{{ r.image.url }}" alt="Review attachment">
+              </a>
+            </div>
+          {% endif %}
           {% if r.service %}<small class="review-service">For: {{ r.service.title }}</small>{% endif %}
         </div>
       {% empty %}

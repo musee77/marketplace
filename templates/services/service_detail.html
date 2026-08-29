@@ -95,7 +95,16 @@
               </div>
               <span class="listing-review-date">{{ r.created_at|date:"M j, Y" }}</span>
             </div>
-            <p class="listing-review-comment">{{ r.comment }}</p>
+            {% if r.comment %}
+              <p class="listing-review-comment">{{ r.comment }}</p>
+            {% endif %}
+            {% if r.image %}
+              <div class="review-image-attachment">
+                <a href="{{ r.image.url }}" target="_blank" rel="noopener noreferrer" title="View attached work sample">
+                  <img src="{{ r.image.url }}" alt="Review attachment">
+                </a>
+              </div>
+            {% endif %}
           </div>
         {% empty %}
           <p class="empty">No reviews yet — be the first to work with this specialist!</p>

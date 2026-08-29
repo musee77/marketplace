@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
 <section class="section">
-  <div class="wrap">
+  <div class="wrap" style="max-width: 600px;">
     <h2>Review: {{ order.display_title }}</h2>
+    <p style="color: var(--slate); margin-bottom: 20px;">Share feedback about your experience with @{{ order.specialist.username }}. You can also attach an image or work sample proof.</p>
     <div class="panel">
-      <form method="post">
+      <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Submit review</button>
+        <div style="margin-top: 20px;">
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Submit review</button>
+        </div>
       </form>
     </div>
   </div>

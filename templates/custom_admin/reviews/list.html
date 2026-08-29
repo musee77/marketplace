@@ -19,6 +19,7 @@
           <th style="padding: 12px 8px; width: 150px;">Specialist (Reviewee)</th>
           <th style="padding: 12px 8px; width: 80px;">Rating</th>
           <th style="padding: 12px 8px;">Comment</th>
+          <th style="padding: 12px 8px; width: 90px;">Attachment</th>
           <th style="padding: 12px 8px; width: 120px;">Date</th>
           <th style="padding: 12px 8px; text-align: right; width: 100px;">Actions</th>
         </tr>
@@ -27,7 +28,19 @@
         {% for r in reviews %}
         <tr style="border-bottom: 1px solid rgba(51, 65, 85, 0.5);">
           <td style="padding: 12px 8px; font-weight: 600; color: #fff;">
-            @{{ r.reviewer.username }}
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; overflow: hidden; background: #1e293b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0;">
+                {% if r.reviewer.avatar %}
+                  <img src="{{ r.reviewer.avatar.url }}" alt="{{ r.reviewer.username }}" style="width: 100%; height: 100%; object-fit: cover;">
+                {% else %}
+                  <span>{{ r.reviewer.username|slice:":1"|upper }}</span>
+                {% endif %}
+              </div>
+              <div>
+                <div>{{ r.reviewer.get_full_name|default:r.reviewer.username }}</div>
+                <div style="font-size: 0.75rem; color: var(--admin-text-muted); font-weight: normal;">@{{ r.reviewer.username }}</div>
+              </div>
+            </div>
           </td>
           <td style="padding: 12px 8px; color: #fff;">
             @{{ r.reviewee.username }}
@@ -37,6 +50,15 @@
           </td>
           <td style="padding: 12px 8px; color: var(--admin-text-muted); word-break: break-all;">
             {{ r.comment }}
+          </td>
+          <td style="padding: 12px 8px;">
+            {% if r.image %}
+              <a href="{{ r.image.url }}" target="_blank" title="View attached image">
+                <img src="{{ r.image.url }}" alt="Attachment" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--admin-card-border);">
+              </a>
+            {% else %}
+              <span style="color: var(--admin-text-muted); font-size: 0.8rem;">—</span>
+            {% endif %}
           </td>
           <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ r.created_at|date:"M j, Y" }}</td>
           <td style="padding: 12px 8px; text-align: right;">

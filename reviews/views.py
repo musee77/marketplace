@@ -16,7 +16,7 @@ def review_create(request, order_pk):
         messages.error(request, "This order can't be reviewed right now.")
         return redirect(order.get_absolute_url())
 
-    form = ReviewForm(request.POST or None)
+    form = ReviewForm(request.POST or None, request.FILES or None)
     if request.method == "POST" and form.is_valid():
         review = form.save(commit=False)
         review.order = order

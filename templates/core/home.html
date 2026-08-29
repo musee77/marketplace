@@ -238,19 +238,38 @@
     <div class="section-head"><h2>Top reviews</h2></div>
     <div class="reviews-grid">
       {% for r in top_reviews|slice:":5" %}
-        <div class="review-card"><div class="review-stars">{% for i in "12345" %}<span class="star {% if forloop.counter <= r.rating %}filled{% else %}empty{% endif %}">★</span>{% endfor %}</div><p class="review-quote">"{{ r.comment|truncatechars:130 }}"</p><div class="review-footer"><span class="review-name">{{ r.reviewer.get_full_name|default:r.reviewer.username }}</span><span class="review-service">{{ r.service.title|default:"Service review"|truncatechars:32 }}</span><span class="review-date">{{ r.created_at|date:'M j' }}</span></div></div>
+        <div class="review-card">
+          <div class="review-stars">
+            {% for i in "12345" %}
+              <span class="star {% if forloop.counter <= r.rating %}filled{% else %}empty{% endif %}">★</span>
+            {% endfor %}
+          </div>
+          <p class="review-quote">"{{ r.comment|truncatechars:120 }}"</p>
+          {% if r.image %}
+            <div class="review-image-attachment" style="margin: 8px 0;">
+              <a href="{{ r.image.url }}" target="_blank" rel="noopener noreferrer" title="View attached work sample">
+                <img src="{{ r.image.url }}" alt="Review attachment" style="max-height: 80px; width: auto; border-radius: 6px; object-fit: cover;">
+              </a>
+            </div>
+          {% endif %}
+          <div class="review-footer">
+            <div class="review-avatar" style="width: 28px; height: 28px; font-size: 0.72rem;">
+              {% if r.reviewer.avatar %}
+                <img src="{{ r.reviewer.avatar.url }}" alt="{{ r.reviewer.get_full_name|default:r.reviewer.username }}">
+              {% else %}
+                <span>{{ r.reviewer.get_full_name|default:r.reviewer.username|slice:":1"|upper }}</span>
+              {% endif %}
+            </div>
+            <div class="review-meta">
+              <span class="review-name">{{ r.reviewer.get_full_name|default:r.reviewer.username }}</span>
+              <span class="review-service">{{ r.service.title|default:"Service review"|truncatechars:26 }}</span>
+            </div>
+            <span class="review-date" style="font-size: 0.72rem; color: var(--slate); margin-left: auto;">{{ r.created_at|date:'M j' }}</span>
+          </div>
+        </div>
       {% empty %}<div class="empty">No reviews yet.</div>{% endfor %}
     </div>
   </div>
 </section>
 {% endif %}
-
-<section class="section">
-  <div class="wrap">
-    <div class="section-head"><h2>About us</h2></div>
-    <div class="panel wide">
-      <p>Our specialists provide practical data services that help businesses turn information into action. From data analysis, engineering, and visualization to machine learning and statistical consulting, clients can find the right expertise, share their requirements, and receive reliable results through one trusted platform.</p>
-    </div>
-  </div>
-</section>
 {% endblock %}
