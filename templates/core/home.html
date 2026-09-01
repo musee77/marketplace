@@ -136,73 +136,10 @@
   </div>
 </section>
 
-{% if not user.is_authenticated and recent_order_activity %}
-<section class="section">
-  <div class="wrap">
-    <div class="section-head"><h2>Recent order activity</h2></div>
-    <div class="ledger">
-      {% for order in recent_order_activity|slice:":5" %}
-        <div class="ledger-row">
-          <div>
-            <div class="name">A client ordered {{ order.service.title|truncatechars:42 }}</div>
-            <div class="meta">{{ order.service.category.name|default:"Data analytics" }} · {{ order.created_at|timesince }} ago</div>
-          </div>
-          <a href="{{ order.service.get_absolute_url }}" class="btn btn-outline btn-sm">View service</a>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
-</section>
-{% endif %}
-
-{% if user.is_authenticated and user.is_client %}
-<section class="section">
-  <div class="wrap">
-    <div class="section-head"><h2>Orders progress</h2><a href="{% url 'core:dashboard' %}">View all orders →</a></div>
-    {% if client_orders %}
-      <div class="table-responsive"><table>
-        <thead><tr><th>Order</th><th>Specialist</th><th>Status</th><th>Next step</th></tr></thead>
-        <tbody>
-          {% for order in client_orders %}
-          <tr>
-            <td data-label="Order"><a href="{{ order.get_absolute_url }}">#{{ order.pk }} · {{ order.display_title|truncatechars:32 }}</a></td>
-            <td data-label="Specialist">{{ order.specialist.get_full_name|default:order.specialist.username }}</td>
-            <td data-label="Status"><span class="status status-{{ order.status }}">{{ order.get_status_display }}</span></td>
-            <td data-label="Next step">
-              {% if order.status == 'PENDING' %}Wait for specialist acceptance
-              {% elif order.status == 'ACCEPTED' %}Specialist will start work after payment
-              {% elif order.status == 'IN_PROGRESS' %}Specialist is working on your order
-              {% elif order.status == 'DELIVERED' %}Review the delivery or request changes
-              {% elif order.status == 'UNDER_REVISION' %}Specialist is applying your requested changes
-              {% elif order.status == 'COMPLETED' and order.is_reviewable %}Leave a review for the specialist
-              {% elif order.status == 'COMPLETED' %}Order completed and reviewed
-              {% else %}No further action required{% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table></div>
-    {% else %}<p class="empty">Your orders will appear here after you hire a specialist.</p>{% endif %}
-  </div>
-</section>
-{% elif not user.is_authenticated %}
-<section class="section">
-  <div class="wrap">
-    <div class="section-head"><h2>Order progress</h2><a href="{% url 'accounts:signup' %}" class="btn btn-brass">Get started</a></div>
-    <div class="grid order-process-grid">
-      <div class="panel"><strong>01 · Choose</strong><p>Select a vetted specialist and service.</p><span class="status status-COMPLETED">Start</span></div>
-      <div class="panel"><strong>02 · Order and pay</strong><p>Share requirements and pay securely.</p><span class="status status-PENDING">Pending</span></div>
-      <div class="panel"><strong>03 · Work in progress</strong><p>Message the specialist and track delivery.</p><span class="status status-IN_PROGRESS">In progress</span></div>
-      <div class="panel"><strong>04 · Review delivery</strong><p>Approve the files or request a revision.</p><span class="status status-COMPLETED">Complete</span></div>
-    </div>
-  </div>
-</section>
-{% endif %}
-
 {% if user.is_authenticated %}
 <section class="section">
   <div class="wrap">
-    <div class="section-head"><h2>How ordering works</h2></div>
+    <div class="section-head"><h2>How it works</h2></div>
     <div class="grid order-process-grid">
       <div class="panel"><strong>01 · Choose</strong><p>Find a specialist and select a service that fits your needs.</p></div>
       <div class="panel"><strong>02 · Order and pay</strong><p>Share your requirements, then pay securely by card or account balance.</p></div>

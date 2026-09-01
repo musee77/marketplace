@@ -34,14 +34,6 @@ def home(request):
         .order_by("-rating", "-created_at")[:10]
     )
     keywords = SearchKeyword.objects.filter(is_active=True)
-    recent_order_activity = (
-        Order.objects.filter(is_paid=True, service__isnull=False)
-        .select_related("service", "service__category")
-        .order_by("-created_at")[:6]
-    )
-    client_orders = Order.objects.none()
-    if request.user.is_authenticated and request.user.is_client:
-        client_orders = Order.objects.filter(client=request.user).select_related("service", "specialist")[:5]
     return render(
         request,
         "core/home.html",
@@ -51,8 +43,6 @@ def home(request):
             "categories": categories,
             "top_reviews": top_reviews,
             "keywords": keywords,
-            "recent_order_activity": recent_order_activity,
-            "client_orders": client_orders,
         },
     )
 
