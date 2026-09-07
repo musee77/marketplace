@@ -90,9 +90,9 @@
   </div>
 </section>
 
-<section class="tools-strip">
+<section class="tools-strip" aria-label="Tools used by specialists">
   <div class="wrap">
-    <p class="tools-label">Tools our specialists work with</p>
+    <p class="tools-label">Tools used</p>
     <div class="tools-logos">
       <span>Power BI</span>
       <span>Python</span>
@@ -110,9 +110,76 @@
 
 <section class="section">
   <div class="wrap">
+    <div class="order-process-layout">
+      <div class="order-process-intro">
+        <div class="eyebrow">A clear path from question to outcome</div>
+        <h2>How it works</h2>
+        <p class="order-process-lead">Find the right expertise, define the work, and stay close to delivery from the first message to the final file.</p>
+        <div class="order-process-content">
+          <img src="/media/services/pexels-sanaan-3075993.jpg" alt="City lights representing ideas moving from order to delivery">
+          <p class="order-process-caption">Specialist-led work, with visibility at every stage.</p>
+        </div>
+      </div>
+      <div class="order-process-steps">
+        <div class="order-process-step">
+          <span class="order-process-number">01</span>
+          <div><h3>Choose a specialist</h3><p>Browse vetted services and find the experience that matches your project.</p></div>
+        </div>
+        <div class="order-process-step">
+          <span class="order-process-number">02</span>
+          <div><h3>Share the brief</h3><p>Explain what you need, agree on the scope, and pay securely.</p></div>
+        </div>
+        <div class="order-process-step">
+          <span class="order-process-number">03</span>
+          <div><h3>Work together</h3><p>Message your specialist, follow progress, and keep the work moving.</p></div>
+        </div>
+        <div class="order-process-step">
+          <span class="order-process-number">04</span>
+          <div><h3>Review the delivery</h3><p>Receive your files, request a revision when needed, and approve the final work.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section orders-progress-section">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Orders progress</h2>
+      {% if user.is_authenticated and user.is_client %}<a href="{% url 'core:dashboard' %}">View all orders <span aria-hidden="true">Ã¢â€ â€™</span></a>{% elif is_public_orders_view %}<span class="section-note">Live active orders</span>{% endif %}
+    </div>
+    {% if orders_progress %}
+      <div class="orders-progress-table-wrap">
+        <table class="orders-progress-table">
+          <thead>
+            <tr><th>Order</th><th>Specialist</th><th>Status</th><th>Next step</th></tr>
+          </thead>
+          <tbody>
+            {% for item in orders_progress %}
+              <tr>
+                <td data-label="Order">{% if item.is_public %}{{ item.display_title }}{% else %}<a href="{{ item.order.get_absolute_url }}">#{{ item.order.pk }} Ã‚Â· {{ item.display_title|truncatechars:42 }}</a>{% endif %}</td>
+                <td data-label="Specialist">{{ item.specialist_name }}</td>
+                <td data-label="Status"><span class="order-status order-status-{{ item.order.status|lower }}">{{ item.status_label }}</span></td>
+                <td data-label="Next step">{{ item.next_step }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="panel orders-progress-empty">
+        <p>{% if user.is_authenticated and user.is_client %}You have no orders yet. Browse services to get started.{% elif is_public_orders_view %}No active orders are in progress right now.{% else %}Sign in as a client to track your orders here.{% endif %}</p>
+        <a class="btn btn-primary" href="{% url 'services:list' %}">Browse services</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
     <div class="section-head">
       <h2>Browse by specialty</h2>
-      <a href="/services/">View all listings →</a>
+      <a href="/services/">View all listings â†’</a>
     </div>
     <div class="chips">
       <a class="chip active" href="/services/">All</a>
@@ -127,7 +194,7 @@
           <div class="card-body">
             <div class="seller-info"><div class="seller-avatar">{% if s.specialist.avatar %}<img src="{{ s.specialist.avatar.url }}" alt="{{ s.specialist.username }}">{% else %}<span>{{ s.specialist.username|slice:":1"|upper }}</span>{% endif %}</div><div class="seller-details"><span class="seller-name">{{ s.specialist.get_full_name|default:s.specialist.username }}</span>{% if s.specialist.specialist_profile.is_verified %}<span class="pro-badge">TOP RATED</span>{% endif %}</div></div>
             <div class="card-title">{{ s.title }}</div>
-            <div class="rating-row"><span class="star-icon">★</span><span class="rating-score">{{ s.average_rating|default:"5.0" }}</span><span class="review-count">({{ s.review_count }})</span></div>
+            <div class="rating-row"><span class="star-icon">â˜…</span><span class="rating-score">{{ s.average_rating|default:"5.0" }}</span><span class="review-count">({{ s.review_count }})</span></div>
             <div class="card-foot"><span class="category-name">{{ s.category.name|default:"General" }}</span><div class="price-block"><span class="starting-at">STARTING AT</span><span class="price"><span class="cur">$</span>{{ s.price }}</span></div></div>
           </div>
         </a>
@@ -135,20 +202,6 @@
     </div>
   </div>
 </section>
-
-{% if user.is_authenticated %}
-<section class="section">
-  <div class="wrap">
-    <div class="section-head"><h2>How it works</h2></div>
-    <div class="grid order-process-grid">
-      <div class="panel"><strong>01 · Choose</strong><p>Find a specialist and select a service that fits your needs.</p></div>
-      <div class="panel"><strong>02 · Order and pay</strong><p>Share your requirements, then pay securely by card or account balance.</p></div>
-      <div class="panel"><strong>03 · Collaborate</strong><p>Track progress and message the specialist while work is in progress.</p></div>
-      <div class="panel"><strong>04 · Review delivery</strong><p>Download files, request a revision if needed, then complete and review the order.</p></div>
-    </div>
-  </div>
-</section>
-{% endif %}
 
 {% if not user.is_authenticated or user.is_client %}
 <section class="section">
@@ -209,4 +262,39 @@
   </div>
 </section>
 {% endif %}
+
+<section class="home-cta" aria-labelledby="home-cta-title">
+  <div class="wrap home-cta-inner">
+    <div>
+      <span class="eyebrow">Ready when you are</span>
+      <h2 id="home-cta-title">Turn your next question into useful work.</h2>
+      <p>Find the right specialist, share your requirements, and move forward with confidence.</p>
+    </div>
+    <div class="home-cta-actions">
+      <a href="{% url 'services:list' %}" class="btn btn-brass">Browse services</a>
+      {% if user.is_authenticated and user.is_client %}
+        <a href="{% url 'orders:create_quick' %}" class="btn btn-outline">Start an order</a>
+      {% elif not user.is_authenticated %}
+        <a href="{% url 'accounts:signup' %}" class="btn btn-outline">Create an account</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="home-cta contact-section" aria-labelledby="contact-section-title">
+  <div class="wrap home-cta-inner">
+    <div>
+      <span class="eyebrow">Need a hand?</span>
+      <h2 id="contact-section-title">Contact us</h2>
+      <p>Have a question about a service, order, or your account? Send us an inquiry and our support team will help.</p>
+    </div>
+    <div class="home-cta-actions">
+      {% if user.is_authenticated %}
+        <a href="{% url 'core:my_inquiries' %}" class="btn btn-brass">Open inquiries</a>
+      {% else %}
+        <a href="{% url 'accounts:login' %}?next={% url 'core:my_inquiries' %}" class="btn btn-brass">Log in to contact us</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
 {% endblock %}

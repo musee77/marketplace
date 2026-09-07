@@ -34,6 +34,41 @@ def home(request):
         .order_by("-rating", "-created_at")[:10]
     )
     keywords = SearchKeyword.objects.filter(is_active=True)
+    next_steps = {
+        Order.Status.PENDING: "Wait for specialist acceptance",
+        Order.Status.ACCEPTED: "Share requirements and get started",
+        Order.Status.IN_PROGRESS: "Wait for the specialist's delivery",
+        Order.Status.DELIVERED: "Review the delivery and request changes",
+        Order.Status.UNDER_REVISION: "Wait for the revised delivery",
+        Order.Status.COMPLETED: "Order completed and reviewed",
+        Order.Status.CANCELLED: "Order cancelled",
+        Order.Status.DECLINED: "Choose another specialist",
+    }
+    orders_progress = []
+    is_public_orders_view = not request.user.is_authenticated
+    if request.user.is_authenticated and request.user.is_client:
+        orders = Order.objects.filter(client=request.user).select_related("service", "specialist")[:5]
+    elif is_public_orders_view:
+        current_statuses = [
+            Order.Status.PENDING,
+            Order.Status.ACCEPTED,
+            Order.Status.IN_PROGRESS,
+            Order.Status.DELIVERED,
+            Order.Status.UNDER_REVISION,
+        ]
+        orders = Order.objects.filter(status__in=current_statuses).select_related("service")[:5]
+    else:
+        orders = Order.objects.none()
+
+    for order in orders:
+        orders_progress.append({
+            "order": order,
+            "display_title": "An active marketplace order" if is_public_orders_view else order.display_title,
+            "specialist_name": "Verified specialist" if is_public_orders_view else (order.specialist.get_full_name() or order.specialist.username),
+            "status_label": order.get_status_display(),
+            "next_step": next_steps.get(order.status, "View order details"),
+            "is_public": is_public_orders_view,
+        })
     return render(
         request,
         "core/home.html",
@@ -43,6 +78,8 @@ def home(request):
             "categories": categories,
             "top_reviews": top_reviews,
             "keywords": keywords,
+            "orders_progress": orders_progress,
+            "is_public_orders_view": is_public_orders_view,
         },
     )
 

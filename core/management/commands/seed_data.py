@@ -2,6 +2,7 @@ import random
 from datetime import timedelta
 
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -330,6 +331,28 @@ def _create_via_form(email, role, password="specialistpass123"):
     return user, True
 
 
+def _create_simulated_order(*, service, client, specialist, status, requirements,
+                            price, due_date, paid=False, paid_at=None,
+                            delivery_note=""):
+    """Create demo orders with the same fee and payment fields as real orders."""
+    order = Order(
+        service=service,
+        client=client,
+        specialist=specialist,
+        status=status,
+        requirements=requirements,
+        price=price,
+        due_date=due_date,
+        delivery_note=delivery_note,
+    )
+    order.compute_fees()
+    if paid:
+        order.is_paid = True
+        order.paid_at = paid_at or timezone.now()
+    order.save()
+    return order
+
+
 class Command(BaseCommand):
     help = "Seed the database with demo users, services, orders, and reviews."
 
@@ -340,14 +363,41 @@ class Command(BaseCommand):
         random.seed(7)
 
         if options["flush"]:
-            Review.objects.all().delete()
-            BlogPost.objects.all().delete()
-            Order.objects.all().delete()
-            Service.objects.all().delete()
-            SpecialistProfile.objects.all().delete()
-            ClientProfile.objects.all().delete()
-            User.objects.filter(is_superuser=False).delete()
-            self.stdout.write(self.style.WARNING("Cleared existing demo data."))
+            managed_emails = {
+                *(s["email"] for s in SPECIALISTS),
+                *(c["email"] for c in CLIENTS),
+                "alex.morgan@gmail.com", "jordan.riley@yahoo.com",
+                "taylor.brooks@gmail.com", "casey.hayes@icloud.com",
+                "morgan.lane@gmail.com", "drew.quinn@yahoo.com",
+                "robin.park@gmail.com", "jamie.ford@icloud.com",
+                "sam.bell@yahoo.com", "chris.day@gmail.com",
+                "vera.stone@gmail.com", "luke.grant@yahoo.com",
+                "nina.shaw@icloud.com", "omar.cross@gmail.com",
+                "ella.hunt@yahoo.com", "liam.ward@gmail.com",
+                "cora.price@icloud.com", "ivan.moss@gmail.com",
+                "zoe.hart@yahoo.com", "finn.cole@gmail.com",
+            }
+            managed_users = User.objects.filter(
+                Q(email__in=managed_emails) | Q(username="ops_manager")
+            )
+            managed_user_ids = list(managed_users.values_list("pk", flat=True))
+            managed_order_ids = Order.objects.filter(
+                Q(client_id__in=managed_user_ids) | Q(specialist_id__in=managed_user_ids)
+            ).values_list("pk", flat=True)
+            Review.objects.filter(
+                Q(order_id__in=managed_order_ids)
+                | Q(reviewer_id__in=managed_user_ids)
+                | Q(reviewee_id__in=managed_user_ids)
+            ).delete()
+            BlogPost.objects.filter(slug__in=[post["slug"] for post in BLOG_POSTS]).delete()
+            Order.objects.filter(
+                Q(client_id__in=managed_user_ids) | Q(specialist_id__in=managed_user_ids)
+            ).delete()
+            Service.objects.filter(specialist_id__in=managed_user_ids).delete()
+            SpecialistProfile.objects.filter(user_id__in=managed_user_ids).delete()
+            ClientProfile.objects.filter(user_id__in=managed_user_ids).delete()
+            User.objects.filter(pk__in=managed_user_ids, is_superuser=False).delete()
+            self.stdout.write(self.style.WARNING("Cleared managed demo data."))
 
         # --- manager (created directly — special role not in SignUpForm) ---
         manager, created = User.objects.get_or_create(
@@ -433,16 +483,6 @@ class Command(BaseCommand):
                 all_services.append(service)
         self.stdout.write(self.style.SUCCESS(f"Services ready: {len(all_services)}"))
 
-        # ── Clear previous extra users and their cascading data ─────────────────
-        exclude_emails = [
-            "dana@datahire.test", "marco@datahire.test", "priya@datahire.test",
-            "jules@datahire.test", "kenji@datahire.test", "ana@datahire.test",
-            "tomas@datahire.test", "sarah@datahire.test", "wei@datahire.test",
-            "ops@datahire.test"
-        ]
-        User.objects.filter(is_superuser=False).exclude(email__in=exclude_emails).delete()
-        User.objects.filter(email__startswith='jcharlesmail').delete()
-
         # ── Fixed jc specialists (1–10) ──────────────────────────────────────
         JC_SPECIALISTS_FIXED = [
             dict(email="alex.morgan@gmail.com",    first="Alex",    last="Morgan",    loc="London, UK",     verified=True),
@@ -464,7 +504,7 @@ class Command(BaseCommand):
             i = idx + 1
             email = spec["email"]
             user, created = _create_via_form(email, User.Role.SPECIALIST, password="pass1234")
-            if created or user:
+            if created:
                 user.first_name = spec["first"]
                 user.last_name = spec["last"]
                 user.save(update_fields=["first_name", "last_name"])
@@ -540,6 +580,22 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"jcharlesmail clients ready: 10"))
 
+        # Rebuild only orders owned by this command. Real application users and
+        # their history must survive a normal seed run.
+        managed_client_ids = [
+            user.pk for user in [*client_users.values(), *jc_clients]
+        ]
+        managed_specialist_ids = [
+            user.pk for user in [
+                *(user for user, _ in specialist_users.values()),
+                *(user for user, _ in jc_specialists),
+            ]
+        ]
+        Order.objects.filter(
+            client_id__in=managed_client_ids,
+            specialist_id__in=managed_specialist_ids,
+        ).delete()
+
         # ── orders + reviews for jcharlesmail users ───────────────────────────
         jc_order_count = 0
         jc_review_count = 0
@@ -552,17 +608,17 @@ class Command(BaseCommand):
                 specialist_user, service = jc_specialists[spec_idx]
                 days_ago = random.randint(5, 30)
 
-                order = Order.objects.create(
+                order = _create_simulated_order(
                     service=service,
                     client=client,
                     specialist=specialist_user,
                     status=Order.Status.COMPLETED,
                     requirements=random.choice(REQUIREMENTS),
                     price=service.price,
-                    is_paid=True,
-                    paid_at=timezone.now() - timedelta(days=days_ago),
                     due_date=(timezone.now() - timedelta(days=days_ago - service.delivery_days)).date(),
                     delivery_note="Delivered as agreed. All files attached.",
+                    paid=True,
+                    paid_at=timezone.now() - timedelta(days=days_ago),
                 )
                 Order.objects.filter(pk=order.pk).update(
                     created_at=timezone.now() - timedelta(days=days_ago),
@@ -601,10 +657,11 @@ class Command(BaseCommand):
                 status = statuses_cycle[order_index % len(statuses_cycle)]
                 client = client_list[order_index % len(client_list)]
                 days_ago = random.randint(1, 28)
-                order = Order.objects.create(
+                order = _create_simulated_order(
                     service=service, client=client, specialist=service.specialist, status=status,
                     requirements=random.choice(REQUIREMENTS), price=service.price,
                     due_date=timezone.now().date() + timedelta(days=random.randint(3, 20)),
+                    paid=status != Order.Status.PENDING,
                 )
                 Order.objects.filter(pk=order.pk).update(
                     created_at=timezone.now() - timedelta(days=days_ago),
@@ -629,10 +686,13 @@ class Command(BaseCommand):
 
         # ── 1-5 random orders per approved specialist ─────────────────────────
         # Collect all clients and all approved specialists with at least one service
-        all_clients = list(User.objects.filter(role=User.Role.CLIENT))
+        all_clients = list(User.objects.filter(pk__in=managed_client_ids))
         if all_clients:
             all_approved_specs = list(
-                SpecialistProfile.objects.filter(is_approved=True).select_related("user")
+                SpecialistProfile.objects.filter(
+                    is_approved=True,
+                    user_id__in=managed_specialist_ids,
+                ).select_related("user")
             )
             extra_order_count = 0
             extra_review_count = 0
@@ -650,17 +710,17 @@ class Command(BaseCommand):
                     if client == profile.user:
                         continue
                     days_ago = random.randint(5, 60)
-                    order = Order.objects.create(
+                    order = _create_simulated_order(
                         service=service,
                         client=client,
                         specialist=profile.user,
                         status=Order.Status.COMPLETED,
                         requirements=random.choice(REQUIREMENTS),
                         price=service.price,
-                        is_paid=True,
-                        paid_at=timezone.now() - timedelta(days=days_ago),
                         due_date=(timezone.now() - timedelta(days=days_ago - service.delivery_days)).date(),
                         delivery_note="Delivered as agreed. All files attached.",
+                        paid=True,
+                        paid_at=timezone.now() - timedelta(days=days_ago),
                     )
                     Order.objects.filter(pk=order.pk).update(
                         created_at=timezone.now() - timedelta(days=days_ago),
