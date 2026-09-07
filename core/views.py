@@ -63,7 +63,7 @@ def home(request):
     for order in orders:
         orders_progress.append({
             "order": order,
-            "display_title": "An active marketplace order" if is_public_orders_view else order.display_title,
+            "display_title": "An active order" if is_public_orders_view else order.display_title,
             "specialist_name": "Verified specialist" if is_public_orders_view else (order.specialist.get_full_name() or order.specialist.username),
             "status_label": order.get_status_display(),
             "next_step": next_steps.get(order.status, "View order details"),
