@@ -2,8 +2,9 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponseForbidden, FileResponse
+from django.http import HttpResponseForbidden
 from django.urls import reverse
+from core.file_responses import AsyncFileResponse
 from django.conf import settings as django_settings
 
 from services.models import Service
@@ -277,7 +278,7 @@ def order_document_download(request, pk):
         return HttpResponseForbidden("You don't have access to this document.")
     document.file.open("rb")
     filename = document.file.name.rsplit("/", 1)[-1]
-    return FileResponse(document.file, as_attachment=True, filename=filename)
+    return AsyncFileResponse(document.file, as_attachment=True, filename=filename)
 
 
 @user_passes_test(is_client)

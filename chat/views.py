@@ -175,7 +175,8 @@ def conversation_detail(request, pk):
 @login_required
 def chat_attachment_download(request, pk):
     """Serve a chat message attachment only to conversation participants."""
-    from django.http import FileResponse, HttpResponseForbidden
+    from django.http import HttpResponseForbidden
+    from core.file_responses import AsyncFileResponse
     msg = get_object_or_404(Message, pk=pk)
     if not msg.attachment:
         from django.http import Http404
@@ -184,7 +185,7 @@ def chat_attachment_download(request, pk):
         return HttpResponseForbidden("You don't have access to this file.")
     msg.attachment.open("rb")
     filename = msg.attachment_name or msg.attachment.name.rsplit("/", 1)[-1]
-    return FileResponse(msg.attachment, as_attachment=True, filename=filename)
+    return AsyncFileResponse(msg.attachment, as_attachment=True, filename=filename)
 
 
 @login_required
