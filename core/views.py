@@ -1,7 +1,10 @@
+from datetime import timedelta
+
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 
 from services.models import Service, Category
 from orders.models import Order
@@ -47,8 +50,11 @@ def home(request):
     }
     orders_progress = []
     is_public_orders_view = not request.user.is_authenticated
+    recent_orders = Order.objects.filter(
+        created_at__gte=timezone.now() - timedelta(days=7)
+    )
     if request.user.is_authenticated and request.user.is_client:
-        orders = Order.objects.filter(client=request.user).select_related("service", "specialist")[:5]
+        orders = recent_orders.filter(client=request.user).select_related("service", "specialist")[:5]
     elif is_public_orders_view:
         current_statuses = [
             Order.Status.PENDING,
@@ -57,7 +63,7 @@ def home(request):
             Order.Status.DELIVERED,
             Order.Status.UNDER_REVISION,
         ]
-        orders = Order.objects.filter(
+        orders = recent_orders.filter(
             Q(status__in=current_statuses) | Q(is_simulated=True)
         ).select_related("service")[:5]
     else:

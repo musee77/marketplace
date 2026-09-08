@@ -21,6 +21,7 @@ Set these environment variables on the deployment platform:
 - `ALLOWED_HOSTS`: comma-separated production hostnames
 - `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, and `DB_PORT`: production PostgreSQL settings
 - `PAYSTACK_SECRET_KEY` and `PAYSTACK_PUBLIC_KEY`: payment credentials when payments are enabled
+- `REDIS_URL` or `CELERY_BROKER_URL`: Redis connection URL for Celery workers and scheduled tasks
 
 Run the release tasks before starting the web process:
 
