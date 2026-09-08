@@ -1,1 +1,1 @@
-web: gunicorn dataMarketplace.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+web: python manage.py collectstatic --noinput && gunicorn dataMarketplace.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
