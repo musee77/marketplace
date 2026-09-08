@@ -184,6 +184,7 @@
                 <th>Specialist</th>
                 <th>Progress</th>
                 <th>Status</th>
+                <th>Fake</th>
                 <th>Price</th>
               </tr>
             </thead>
@@ -200,10 +201,11 @@
                   </div>
                 </td>
                 <td data-label="Status"><span class="status status-{{ o.status }}">{{ o.get_status_display }}</span></td>
+                <td data-label="Fake">{% if o.is_simulated %}Yes{% else %}No{% endif %}</td>
                 <td data-label="Price" class="mono">${{ o.price }}</td>
               </tr>
               {% empty %}
-              <tr><td colspan="7" class="empty">No orders yet.</td></tr>
+              <tr><td colspan="8" class="empty">No orders yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>

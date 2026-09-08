@@ -62,7 +62,9 @@ def referrals_view(request):
     user = request.user
     referral_link = request.build_absolute_uri(reverse("accounts:signup") + f"?ref={user.referral_code}")
     referred_qs = user.referrals.select_related("specialist_profile", "client_profile").order_by("-date_created")
-    referral_orders = user.referral_orders.select_related("client", "service").order_by("-created_at")
+    referral_orders = user.referral_orders.filter(
+        is_simulated=False,
+    ).select_related("client", "service").order_by("-created_at")
 
     paginator = Paginator(referred_qs, 10)
     page_number = request.GET.get("page", 1)
@@ -169,13 +171,13 @@ def edit_profile(request):
         profile, _ = SpecialistProfile.objects.get_or_create(user=user)
         profile_form = SpecialistProfileForm(instance=profile)
         ranking = {"average": profile.average_rating, "reviews": profile.review_count}
-        total_orders = Order.objects.filter(specialist=user).count()
+        total_orders = Order.objects.filter(specialist=user, is_simulated=False).count()
         profile_reviews = user.reviews_received.select_related("reviewer", "service").order_by("-created_at")
         financial_form = SpecialistFinancialForm(instance=profile)
     elif user.is_client:
         profile, _ = ClientProfile.objects.get_or_create(user=user)
         profile_form = ClientProfileForm(instance=profile)
-        total_orders = Order.objects.filter(client=user).count()
+        total_orders = Order.objects.filter(client=user, is_simulated=False).count()
 
     if request.method == "POST":
         action = request.POST.get("form_action") or request.POST.get("action")

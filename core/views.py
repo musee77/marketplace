@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 
 from services.models import Service, Category
@@ -56,7 +57,9 @@ def home(request):
             Order.Status.DELIVERED,
             Order.Status.UNDER_REVISION,
         ]
-        orders = Order.objects.filter(status__in=current_statuses).select_related("service")[:5]
+        orders = Order.objects.filter(
+            Q(status__in=current_statuses) | Q(is_simulated=True)
+        ).select_related("service")[:5]
     else:
         orders = Order.objects.none()
 
@@ -68,6 +71,7 @@ def home(request):
             "status_label": order.get_status_display(),
             "next_step": next_steps.get(order.status, "View order details"),
             "is_public": is_public_orders_view,
+            "is_simulated": order.is_simulated,
         })
     return render(
         request,
@@ -143,9 +147,10 @@ def dashboard(request):
     user = request.user
     context = {}
     status = request.GET.get("status", "")
+    real_orders = Order.objects.filter(is_simulated=False)
     if user.is_client:
         from orders.models import Offer
-        client_orders = Order.objects.filter(client=user)
+        client_orders = real_orders.filter(client=user)
         client_profile, _ = ClientProfile.objects.get_or_create(user=user)
         context["client_balance"] = client_profile.balance
         context["client_total_orders"] = client_orders.count()
@@ -159,15 +164,15 @@ def dashboard(request):
         )
         orders = client_orders
     elif user.is_specialist:
-        orders = Order.objects.filter(specialist=user)
+        orders = real_orders.filter(specialist=user)
         sp_profile, _ = SpecialistProfile.objects.get_or_create(user=user)
         context["specialist_balance"] = sp_profile.balance
         context["services"] = Service.objects.filter(specialist=user)
         context["specialist_completed_orders"] = orders.filter(status=Order.Status.COMPLETED).count()
         context["specialist_clients_worked_for"] = orders.values("client").distinct().count()
-        context["pending_count"] = Order.objects.filter(specialist=user, status=Order.Status.PENDING).count()
+        context["pending_count"] = orders.filter(status=Order.Status.PENDING).count()
         context["pending_orders"] = (
-            Order.objects.filter(specialist=user, status=Order.Status.PENDING)
+            orders.filter(status=Order.Status.PENDING)
             .select_related("service", "client")[:10]
         )
     elif user.is_manager:
@@ -179,8 +184,8 @@ def dashboard(request):
         context["pending_messages"] = Message.objects.filter(is_approved=False, is_rejected=False).count()
         context["pending_specialists_list"] = SpecialistProfile.objects.filter(is_approved=False).select_related("user")[:6]
         context["pending_messages_list"] = Message.objects.filter(is_approved=False, is_rejected=False).select_related("sender", "conversation")[:6]
-        context["total_orders"] = Order.objects.count()
-        orders = Order.objects.all()
+        context["total_orders"] = real_orders.count()
+        orders = real_orders
     else:
         orders = Order.objects.none()
 

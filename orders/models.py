@@ -52,6 +52,10 @@ class Order(models.Model):
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default="CARD")
     is_paid = models.BooleanField(default=False)
     paid_at = models.DateTimeField(null=True, blank=True)
+    is_simulated = models.BooleanField(
+        default=False,
+        help_text="Marks demo data created by the seed command, not a real customer order.",
+    )
     # If this order was created from a chat offer message, store the message PK here
     # so the Paystack callback can mark the offer ACCEPTED after payment succeeds.
     offer_message_id = models.IntegerField(null=True, blank=True)
@@ -107,7 +111,11 @@ class Order(models.Model):
         # Determine if this is the client's first referred order
         is_first_referred = False
         if self.client and getattr(self.client, 'referred_by', None):
-            has_other_paid = Order.objects.filter(client=self.client, is_paid=True).exclude(pk=self.pk).exists()
+            has_other_paid = Order.objects.filter(
+                client=self.client,
+                is_paid=True,
+                is_simulated=False,
+            ).exclude(pk=self.pk).exists()
             if not has_other_paid:
                 is_first_referred = True
 

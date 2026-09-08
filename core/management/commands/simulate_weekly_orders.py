@@ -111,6 +111,7 @@ class Command(BaseCommand):
             due_date=(now + timedelta(days=service.delivery_days)).date(),
             is_paid=True,
             paid_at=now,
+            is_simulated=True,
             delivery_note=(
                 "Simulated delivery ready for review."
                 if status == Order.Status.DELIVERED

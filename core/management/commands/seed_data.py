@@ -344,6 +344,7 @@ def _create_simulated_order(*, service, client, specialist, status, requirements
         price=price,
         due_date=due_date,
         delivery_note=delivery_note,
+        is_simulated=True,
     )
     order.compute_fees()
     if paid:

@@ -56,13 +56,16 @@ class User(AbstractUser):
 
     @property
     def referral_orders_count(self):
-        return self.referral_orders.filter(is_paid=True).count()
+        return self.referral_orders.filter(is_paid=True, is_simulated=False).count()
 
     @property
     def referral_earnings_total(self):
         from decimal import Decimal
         from django.db.models import Sum
-        total = self.referral_orders.filter(is_paid=True).aggregate(Sum("referral_bonus"))["referral_bonus__sum"]
+        total = self.referral_orders.filter(
+            is_paid=True,
+            is_simulated=False,
+        ).aggregate(Sum("referral_bonus"))["referral_bonus__sum"]
         return total or Decimal("0.00")
 
     def __str__(self):

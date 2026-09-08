@@ -60,10 +60,11 @@ def dashboard_view(request):
     total_users = User.objects.count()
     total_clients = User.objects.filter(role=User.Role.CLIENT).count()
     total_specialists = User.objects.filter(role=User.Role.SPECIALIST).count()
-    total_orders = Order.objects.count()
+    real_orders = Order.objects.filter(is_simulated=False)
+    total_orders = real_orders.count()
     
     # Platform revenue sum
-    platform_revenue = Order.objects.filter(is_paid=True).aggregate(Sum('platform_fee'))['platform_fee__sum'] or Decimal('0.00')
+    platform_revenue = real_orders.filter(is_paid=True).aggregate(Sum('platform_fee'))['platform_fee__sum'] or Decimal('0.00')
 
     # Pending moderation / approvals counts
     pending_specialists = SpecialistProfile.objects.filter(is_approved=False).count()
@@ -72,7 +73,7 @@ def dashboard_view(request):
     # Recent list widgets
     recent_specialists = SpecialistProfile.objects.filter(is_approved=False).select_related('user').order_by('-created_at')[:5]
     recent_messages = Message.objects.filter(message_type='TEXT', is_approved=False, is_rejected=False).select_related('sender', 'conversation').order_by('-created_at')[:5]
-    recent_orders = Order.objects.select_related('client', 'specialist', 'service').order_by('-created_at')[:5]
+    recent_orders = real_orders.select_related('client', 'specialist', 'service').order_by('-created_at')[:5]
     recent_users = User.objects.order_by('-date_created')[:5]
 
     context = {
