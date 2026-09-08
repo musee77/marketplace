@@ -62,7 +62,6 @@
           <div class="card-body">
             <div class="blog-card-meta"><span class="eyebrow">{{ post.published_at|date:"M j, Y" }}</span>{% if post.category %}<span class="chip">{{ post.category.name }}</span>{% endif %}</div>
             <div class="card-title">{{ post.title }}</div>
-            {% if post.author %}<p class="blog-card-author">By {{ post.author.get_full_name|default:post.author.username }}</p>{% endif %}
             <p class="card-by">{{ post.excerpt }}</p>
             <span class="btn btn-outline btn-sm">Read article</span>
           </div>

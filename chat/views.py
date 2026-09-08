@@ -100,7 +100,12 @@ def inbox(request):
 
     if request.user.is_client:
         quick_contacts = (
-            User.objects.filter(role=User.Role.SPECIALIST, is_suspended=False)
+            User.objects.filter(
+                role=User.Role.SPECIALIST,
+                is_suspended=False,
+                specialist_profile__is_approved=True,
+                specialist_profile__is_verified=True,
+            )
             .select_related("specialist_profile")
             .order_by("-date_created")[:6]
         )
