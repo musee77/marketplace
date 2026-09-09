@@ -50,13 +50,14 @@ def home(request):
     }
     orders_progress = []
     is_public_orders_view = not request.user.is_authenticated
-    recent_orders = Order.objects.filter(
-        created_at__gte=timezone.now() - timedelta(days=7)
+    simulated_orders = Order.objects.filter(
+        is_simulated=True,
+        created_at__gte=timezone.now() - timedelta(days=14),
     )
     if request.user.is_authenticated and request.user.is_client:
-        orders = recent_orders.filter(is_simulated=True).select_related("service")[:5]
+        orders = simulated_orders.select_related("service")[:5]
     elif is_public_orders_view:
-        orders = recent_orders.filter(is_simulated=True).select_related("service")[:5]
+        orders = simulated_orders.select_related("service")[:5]
     else:
         orders = Order.objects.none()
 
