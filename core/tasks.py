@@ -21,12 +21,38 @@ SIMULATED_STATUSES = (
     Order.Status.IN_PROGRESS,
     Order.Status.DELIVERED,
 )
+SIMULATED_NEXT_STATUS = {
+    Order.Status.PENDING: Order.Status.ACCEPTED,
+    Order.Status.ACCEPTED: Order.Status.IN_PROGRESS,
+    Order.Status.IN_PROGRESS: Order.Status.DELIVERED,
+    Order.Status.DELIVERED: Order.Status.COMPLETED,
+}
+
+
+def _advance_simulated_orders():
+    advanced = 0
+    simulated_orders = Order.objects.filter(
+        is_simulated=True,
+        status__in=SIMULATED_NEXT_STATUS,
+    )
+    for order in simulated_orders.only("status"):
+        order.status = SIMULATED_NEXT_STATUS[order.status]
+        order.save(update_fields=("status", "updated_at"))
+        advanced += 1
+    return advanced
+
+
+@shared_task
+def advance_simulated_orders():
+    """Move each simulated order one valid step forward."""
+    return {"advanced": _advance_simulated_orders()}
 
 
 @shared_task
 def create_simulated_orders(count=10):
     """Create one weekly batch of demo orders spread across the last week."""
     count = max(1, min(int(count), 10))
+    advanced = _advance_simulated_orders()
     source_orders = list(
         Order.objects.filter(is_simulated=True, service__isnull=False)
         .select_related("service", "specialist", "client")
@@ -43,7 +69,11 @@ def create_simulated_orders(count=10):
             ).select_related("specialist").order_by("pk")[:50]
         )
         if not clients or not services:
-            return {"created": 0, "reason": "Active clients and services are required."}
+            return {
+                "created": 0,
+                "advanced": advanced,
+                "reason": "Active clients and services are required.",
+            }
         source_orders = [
             (service, client)
             for service in services
@@ -51,7 +81,11 @@ def create_simulated_orders(count=10):
             if client.pk != service.specialist_id
         ]
         if not source_orders:
-            return {"created": 0, "reason": "A client different from the specialist is required."}
+            return {
+                "created": 0,
+                "advanced": advanced,
+                "reason": "A client different from the specialist is required.",
+            }
 
     created = 0
     now = timezone.now()
@@ -87,4 +121,4 @@ def create_simulated_orders(count=10):
             )
             created += 1
 
-    return {"created": created}
+    return {"created": created, "advanced": advanced}
