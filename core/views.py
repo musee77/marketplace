@@ -50,19 +50,18 @@ def home(request):
     }
     orders_progress = []
     is_public_orders_view = not request.user.is_authenticated
-    simulated_orders = Order.objects.filter(
-        is_simulated=True,
+    orders = Order.objects.filter(
         created_at__gte=timezone.now() - timedelta(days=14),
-    )
-    if request.user.is_authenticated and request.user.is_client:
-        orders = simulated_orders.select_related("service")[:5]
-    elif is_public_orders_view:
-        orders = simulated_orders.select_related("service")[:5]
-    else:
-        orders = Order.objects.none()
+    ).select_related("service", "specialist")
 
     for order in orders:
-        is_public_order = is_public_orders_view or order.is_simulated
+        can_view_private_order = (
+            request.user.is_authenticated
+            and request.user.is_client
+            and order.client_id == request.user.pk
+            and not order.is_simulated
+        )
+        is_public_order = not can_view_private_order
         orders_progress.append({
             "order": order,
             "display_title": "An active order" if is_public_order else order.display_title,
