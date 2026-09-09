@@ -54,29 +54,21 @@ def home(request):
         created_at__gte=timezone.now() - timedelta(days=7)
     )
     if request.user.is_authenticated and request.user.is_client:
-        orders = recent_orders.filter(client=request.user).select_related("service", "specialist")[:5]
+        orders = recent_orders.filter(is_simulated=True).select_related("service")[:5]
     elif is_public_orders_view:
-        current_statuses = [
-            Order.Status.PENDING,
-            Order.Status.ACCEPTED,
-            Order.Status.IN_PROGRESS,
-            Order.Status.DELIVERED,
-            Order.Status.UNDER_REVISION,
-        ]
-        orders = recent_orders.filter(
-            Q(status__in=current_statuses) | Q(is_simulated=True)
-        ).select_related("service")[:5]
+        orders = recent_orders.filter(is_simulated=True).select_related("service")[:5]
     else:
         orders = Order.objects.none()
 
     for order in orders:
+        is_public_order = is_public_orders_view or order.is_simulated
         orders_progress.append({
             "order": order,
-            "display_title": "An active order" if is_public_orders_view else order.display_title,
-            "specialist_name": "Verified specialist" if is_public_orders_view else (order.specialist.get_full_name() or order.specialist.username),
+            "display_title": "An active order" if is_public_order else order.display_title,
+            "specialist_name": "Verified specialist" if is_public_order else (order.specialist.get_full_name() or order.specialist.username),
             "status_label": order.get_status_display(),
             "next_step": next_steps.get(order.status, "View order details"),
-            "is_public": is_public_orders_view,
+            "is_public": is_public_order,
             "is_simulated": order.is_simulated,
         })
     return render(

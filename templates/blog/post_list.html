@@ -52,7 +52,6 @@
         {% endfor %}
       </div>
     </div>
-    <p class="blog-result-count">{{ page_obj.paginator.count }} article{{ page_obj.paginator.count|pluralize }}</p>
     <div class="grid listing-grid blog-post-list">
       {% for post in page_obj %}
         <a class="card blog-post-row" href="{{ post.get_absolute_url }}">
