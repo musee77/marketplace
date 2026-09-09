@@ -61,13 +61,14 @@ class BlogPostForm(forms.ModelForm):
 
     class Meta:
         model = BlogPost
-        fields = ['title', 'slug', 'category', 'excerpt', 'content', 'cover_image', 'status', 'seo_title', 'seo_description', 'canonical_url']
+        fields = ['title', 'slug', 'category', 'excerpt', 'content', 'cover_image', 'cover_image_url', 'status', 'seo_title', 'seo_description', 'canonical_url']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'slug': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'excerpt': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'cover_image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'cover_image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://example.com/cover.jpg'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'seo_title': forms.TextInput(attrs={'class': 'form-control', 'maxlength': 60}),
             'seo_description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'maxlength': 160}),

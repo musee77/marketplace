@@ -9,12 +9,12 @@
 <meta property="og:url" content="{% if post.canonical_url %}{{ post.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}">
 <meta property="og:title" content="{{ post.meta_title }}">
 <meta property="og:description" content="{{ post.meta_description }}">
-{% if post.cover_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.cover_image.url }}">{% endif %}
+{% if post.cover_image %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.cover_image.url }}">{% elif post.cover_image_url %}<meta property="og:image" content="{{ post.cover_image_url }}">{% endif %}
 <meta property="og:site_name" content="Synovae Analytics">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ post.meta_title }}">
 <meta name="twitter:description" content="{{ post.meta_description }}">
-{% if post.cover_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.cover_image.url }}">{% endif %}
+{% if post.cover_image %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.cover_image.url }}">{% elif post.cover_image_url %}<meta name="twitter:image" content="{{ post.cover_image_url }}">{% endif %}
 {% endblock %}
 
 {% block canonical_url %}{% if post.canonical_url %}{{ post.canonical_url }}{% else %}{{ request.build_absolute_uri }}{% endif %}{% endblock %}
@@ -30,7 +30,8 @@
   "dateModified": "{{ post.updated_at|date:'c' }}",
   "mainEntityOfPage": {"@type": "WebPage", "@id": "{{ request.build_absolute_uri }}"}{% if post.author %},
   "author": {"@type": "Person", "name": "{{ post.author.get_full_name|default:post.author.username|escapejs }}"}{% endif %}{% if post.cover_image %},
-  "image": "{{ request.scheme }}://{{ request.get_host }}{{ post.cover_image.url }}"{% endif %}
+  "image": "{{ request.scheme }}://{{ request.get_host }}{{ post.cover_image.url }}"{% elif post.cover_image_url %},
+  "image": "{{ post.cover_image_url|escapejs }}"{% endif %}
 }
 </script>
 {% endblock %}
@@ -44,7 +45,7 @@
       <a href="{% url 'custom_admin:blog_edit' post.pk %}" class="btn btn-outline btn-sm">Edit article content</a>
     {% endif %}
     <p class="card-by">{% if post.category %}<a href="{% url 'blog:list' %}?category={{ post.category.slug }}">{{ post.category.name }}</a> · {% endif %}{{ post.published_at|date:"F j, Y" }}</p>
-    {% if post.cover_image %}<img src="{{ post.cover_image.url }}" alt="{{ post.title }}" style="width:100%; max-height:480px; object-fit:cover; border-radius:var(--radius); margin:24px 0;">{% endif %}
+    {% if post.cover_image %}<img src="{{ post.cover_image.url }}" alt="{{ post.title }}" style="width:100%; max-height:480px; object-fit:cover; border-radius:var(--radius); margin:24px 0;">{% elif post.cover_image_url %}<img src="{{ post.cover_image_url }}" alt="{{ post.title }}" style="width:100%; max-height:480px; object-fit:cover; border-radius:var(--radius); margin:24px 0;">{% endif %}
     <p class="lead">{{ post.excerpt }}</p>
     <div class="article-content">{{ post.content|blog_markdown }}</div>
   </article>

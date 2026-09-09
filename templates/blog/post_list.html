@@ -56,7 +56,7 @@
       {% for post in page_obj %}
         <a class="card blog-post-row" href="{{ post.get_absolute_url }}">
           <div class="blog-post-image">
-            {% if post.cover_image %}<img src="{{ post.cover_image.url }}" alt="{{ post.title }}">{% else %}<div class="card-img-placeholder" aria-hidden="true">No image</div>{% endif %}
+            {% if post.cover_image %}<img src="{{ post.cover_image.url }}" alt="{{ post.title }}">{% elif post.cover_image_url %}<img src="{{ post.cover_image_url }}" alt="{{ post.title }}">{% else %}<div class="card-img-placeholder" aria-hidden="true">No image</div>{% endif %}
           </div>
           <div class="card-body">
             <div class="blog-card-meta"><span class="eyebrow">{{ post.published_at|date:"M j, Y" }}</span>{% if post.category %}<span class="chip">{{ post.category.name }}</span>{% endif %}</div>

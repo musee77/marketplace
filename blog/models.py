@@ -45,6 +45,7 @@ class BlogPost(models.Model):
     excerpt = models.CharField(max_length=300)
     content = models.TextField()
     cover_image = models.ImageField(upload_to="blog/", blank=True, null=True)
+    cover_image_url = models.URLField(blank=True, help_text="Optional external cover image URL.")
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.DRAFT)
     published_at = models.DateTimeField(blank=True, null=True)
     seo_title = models.CharField(max_length=60, blank=True)
