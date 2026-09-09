@@ -5,7 +5,9 @@ from celery import shared_task
 from django.db import transaction
 from django.utils import timezone
 
+from accounts.models import User
 from orders.models import Order
+from services.models import Service
 
 
 SIMULATED_REQUIREMENTS = (
@@ -31,7 +33,25 @@ def create_simulated_orders(count=10):
         .order_by("-created_at")[:50]
     )
     if not source_orders:
-        return {"created": 0, "reason": "Run seed_data first."}
+        clients = list(
+            User.objects.filter(role=User.Role.CLIENT, is_active=True).order_by("pk")
+        )
+        services = list(
+            Service.objects.filter(
+                is_active=True,
+                specialist__role=User.Role.SPECIALIST,
+            ).select_related("specialist").order_by("pk")[:50]
+        )
+        if not clients or not services:
+            return {"created": 0, "reason": "Active clients and services are required."}
+        source_orders = [
+            (service, client)
+            for service in services
+            for client in clients
+            if client.pk != service.specialist_id
+        ]
+        if not source_orders:
+            return {"created": 0, "reason": "A client different from the specialist is required."}
 
     created = 0
     now = timezone.now()
@@ -39,15 +59,22 @@ def create_simulated_orders(count=10):
     with transaction.atomic():
         for _ in range(count):
             source = random.choice(source_orders)
+            if isinstance(source, tuple):
+                service, client = source
+                specialist = service.specialist
+            else:
+                service = source.service
+                client = source.client
+                specialist = source.specialist
             created_at = now - timedelta(seconds=random.randint(0, week_seconds))
             order = Order(
-                service=source.service,
-                client=source.client,
-                specialist=source.specialist,
+                service=service,
+                client=client,
+                specialist=specialist,
                 status=random.choice(SIMULATED_STATUSES),
                 requirements=random.choice(SIMULATED_REQUIREMENTS),
-                price=source.service.price,
-                due_date=(created_at + timedelta(days=source.service.delivery_days)).date(),
+                price=service.price,
+                due_date=(created_at + timedelta(days=service.delivery_days)).date(),
                 is_simulated=True,
                 is_paid=True,
                 paid_at=created_at,
