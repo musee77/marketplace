@@ -718,6 +718,18 @@ footer {
   color: var(--slate);
   line-height: 1.7;
 }
+.footer-advert {
+  margin: 0;
+  color: var(--ink);
+  font-size: .88rem;
+}
+.footer-advert a {
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--brass);
+  text-underline-offset: 3px;
+}
 .footer-actions {
   display: flex;
   gap: 12px;

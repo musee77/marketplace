@@ -30,6 +30,7 @@
   <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
 
   <link rel="stylesheet" href="{% static 'css/style.css' %}?v=9">
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
   {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -52,6 +53,7 @@
       <div class="footer-branding">
         <div class="footer-title">Synovae Analytics</div>
         <p class="footer-copy">A marketplace for hiring vetted data analytics specialists — trusted by clients, specialists, and managers across analytics, BI, and modeling.</p>
+        <p class="footer-advert">Need a website like this? <a href="tel:+254101048520">Contact: +254 101 048 520</a></p>
       </div>
       <div class="footer-actions">
         <a href="{% url 'accounts:signup' %}" class="btn btn-primary">Become a specialist</a>
