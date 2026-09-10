@@ -1,11 +1,7 @@
-from datetime import timedelta
-
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
-from django.utils import timezone
-
 from services.models import Service, Category
 from orders.models import Order
 from accounts.models import User, SpecialistProfile, ClientProfile
@@ -39,7 +35,6 @@ def home(request):
     )
     keywords = SearchKeyword.objects.filter(is_active=True)
     next_steps = {
-        Order.Status.PENDING: "Wait for specialist acceptance",
         Order.Status.ACCEPTED: "Share requirements and get started",
         Order.Status.IN_PROGRESS: "Wait for the specialist's delivery",
         Order.Status.DELIVERED: "Review the delivery and request changes",
@@ -51,8 +46,13 @@ def home(request):
     orders_progress = []
     is_public_orders_view = not request.user.is_authenticated
     orders = Order.objects.filter(
-        created_at__gte=timezone.now() - timedelta(days=14),
-    ).select_related("service", "specialist")
+        status__in=[
+            Order.Status.ACCEPTED,
+            Order.Status.IN_PROGRESS,
+            Order.Status.DELIVERED,
+            Order.Status.COMPLETED,
+        ],
+    ).exclude(status=Order.Status.PENDING).select_related("service", "specialist")[:5]
 
     for order in orders:
         can_view_private_order = (
