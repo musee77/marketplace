@@ -45,7 +45,7 @@ def order_create(request, slug):
         order.service = service
         order.client = request.user
         order.specialist = service.specialist
-        order.price = service.price
+        order.price = form.cleaned_data["price"]
         attachments = form.cleaned_data.get("attachments", [])
         # handle payment: support BALANCE deduction or CARD payment redirect
         pm = form.cleaned_data.get("payment_method", Order.PAYMENT_METHODS[0][0])
@@ -88,7 +88,7 @@ def order_create_quick(request):
         service = order.service
         order.client = request.user
         order.specialist = service.specialist
-        order.price = service.price
+        order.price = form.cleaned_data["price"]
         attachments = form.cleaned_data.get("attachments", [])
         pm = form.cleaned_data.get("payment_method", Order.PAYMENT_METHODS[0][0])
         order.payment_method = pm

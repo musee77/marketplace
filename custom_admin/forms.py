@@ -7,14 +7,13 @@ from decimal import Decimal
 class AdminServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['title', 'slug', 'specialist', 'category', 'description', 'price', 'delivery_days', 'cover_image', 'is_active']
+        fields = ['title', 'slug', 'specialist', 'category', 'description', 'delivery_days', 'cover_image', 'is_active']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'slug': forms.TextInput(attrs={'class': 'form-control'}),
             'specialist': forms.Select(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 6}),
-            'price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'delivery_days': forms.NumberInput(attrs={'class': 'form-control'}),
             'cover_image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),

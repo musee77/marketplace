@@ -10,7 +10,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ("title", "specialist", "category", "price", "is_active", "created_at")
+    list_display = ("title", "specialist", "category", "is_active", "created_at")
     list_filter = ("is_active", "category")
     search_fields = ("title", "specialist__username")
     prepopulated_fields = {"slug": ("title",)}

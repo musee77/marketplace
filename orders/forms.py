@@ -23,6 +23,13 @@ class MultipleFileField(forms.FileField):
 
 class OrderCreateForm(forms.ModelForm):
     service = forms.ModelChoiceField(queryset=Service.objects.filter(is_active=True), required=True)
+    price = forms.DecimalField(
+        max_digits=9,
+        decimal_places=2,
+        min_value=0.01,
+        label="Price (USD)",
+        widget=forms.NumberInput(attrs={"placeholder": "0.00", "step": "0.01", "class": "form-control"}),
+    )
     attachments = MultipleFileField(
         required=False,
         label="Reference documents",
@@ -31,14 +38,17 @@ class OrderCreateForm(forms.ModelForm):
 
     class Meta:
         model = Order
-        fields = ["service", "requirements", "due_date"]
-        widgets = {"due_date": forms.DateInput(attrs={"type": "date"})}
+        fields = ["service", "requirements", "price", "due_date"]
+        widgets = {
+            "requirements": forms.Textarea(attrs={"rows": 5, "placeholder": "Describe your project requirements...", "class": "form-control"}),
+            "due_date": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # show active services only, ordered by newest
         self.fields["service"].queryset = Service.objects.filter(is_active=True).select_related("specialist").order_by("-created_at")
-        self.fields["service"].label_from_instance = lambda obj: f"{obj.title} — {obj.specialist.get_full_name() or obj.specialist.username} (${obj.price})"
+        self.fields["service"].label_from_instance = lambda obj: f"{obj.title} — {obj.specialist.get_full_name() or obj.specialist.username}"
         # include payment method choices
         self.fields["payment_method"] = forms.ChoiceField(choices=Order.PAYMENT_METHODS, initial=Order.PAYMENT_METHODS[0][0])
 

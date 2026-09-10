@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from accounts.models import User, SpecialistProfile
+from orders.forms import OrderCreateForm
 from services.models import Service, Category
 
 
@@ -37,4 +38,14 @@ class ServicePaginationTestCase(TestCase):
         self.assertEqual(page_obj.paginator.per_page, 10)
         self.assertEqual(len(page_obj), 10)
         self.assertEqual(page_obj.paginator.num_pages, 2)
+
+    def test_service_form_excludes_price_field(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("services:create"))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("price", response.content.decode("utf-8").lower())
+
+    def test_order_form_requires_client_defined_price(self):
+        form = OrderCreateForm()
+        self.assertIn("price", form.fields)
 

@@ -6,7 +6,7 @@ from .models import Service, Category
 class ServiceForm(forms.ModelForm):
     class Meta:
         model = Service
-        fields = ["title", "category", "description", "price", "delivery_days", "cover_image", "is_active"]
+        fields = ["title", "category", "description", "delivery_days", "cover_image", "is_active"]
 
     def save(self, commit=True):
         instance = super().save(commit=False)

@@ -13,7 +13,6 @@
           <tr>
             <th>Title</th>
             <th>Category</th>
-            <th>Price</th>
             <th>Status</th>
             <th>Rating</th>
             <th></th>
@@ -24,7 +23,6 @@
           <tr>
             <td data-label="Title"><a href="{{ s.get_absolute_url }}">{{ s.title }}</a></td>
             <td data-label="Category">{{ s.category.name|default:"—" }}</td>
-            <td data-label="Price" class="mono">${{ s.price }}</td>
             <td data-label="Status">
               {% if s.is_active %}
                 <span class="status status-COMPLETED">Active</span>

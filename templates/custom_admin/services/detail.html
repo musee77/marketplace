@@ -18,7 +18,6 @@
     <table style="width:100%; border-collapse:collapse; margin-top:18px;">
       <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Specialist</td><td style="padding:8px 0; text-align:right;">@{{ service.specialist.username }}</td></tr>
       <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Category</td><td style="padding:8px 0; text-align:right;">{{ service.category.name|default:"Uncategorized" }}</td></tr>
-      <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Price</td><td style="padding:8px 0; text-align:right;">${{ service.price }}</td></tr>
       <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Delivery</td><td style="padding:8px 0; text-align:right;">{{ service.delivery_days }} days</td></tr>
       <tr><td style="padding:8px 0; color:var(--admin-text-muted);">Rating</td><td style="padding:8px 0; text-align:right;">★ {{ service.average_rating }} ({{ service.review_count }} reviews)</td></tr>
     </table>

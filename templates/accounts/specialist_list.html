@@ -97,7 +97,6 @@
                 {% for listing in profile.random_listings %}
                   <div class="specialist-service-item">
                     <span class="service-item-title">{{ listing.title|truncatechars:32 }}</span>
-                    <span class="service-item-price">${{ listing.price }}</span>
                   </div>
                 {% endfor %}
               </div>

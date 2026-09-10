@@ -156,11 +156,6 @@ try:
         pass
 
     try:
-        custom_admin_site.register(Review, reviews_admin.ReviewAdmin)
-    except Exception:
-        pass
-
-    try:
         custom_admin_site.register(Notification, notifications_admin.NotificationAdmin)
     except Exception:
         pass

@@ -590,26 +590,6 @@ def order_detail_view(request, pk):
     return render(request, 'custom_admin/orders/detail.html', context)
 
 
-# ====== REVIEWS ======
-
-@user_passes_test(is_manager, login_url='custom_admin:login')
-def review_list_view(request):
-    reviews_qs = Review.objects.select_related('service', 'reviewer', 'reviewee').order_by('-created_at')
-    paginator = Paginator(reviews_qs, 10)
-    page_obj = paginator.get_page(request.GET.get('page'))
-    return render(request, 'custom_admin/reviews/list.html', {'reviews': page_obj, 'page_obj': page_obj})
-
-
-@user_passes_test(is_manager, login_url='custom_admin:login')
-def review_delete_view(request, pk):
-    review = get_object_or_404(Review, pk=pk)
-    if request.method == 'POST':
-        review.delete()
-        messages.success(request, "Review deleted.")
-        return redirect('custom_admin:review_list')
-    return render(request, 'custom_admin/reviews/confirm_delete.html', {'review': review})
-
-
 # ====== INQUIRIES / CONTACT MESSAGES ======
 
 @user_passes_test(is_manager, login_url='custom_admin:login')

@@ -36,8 +36,6 @@
   },
   "offers": {
     "@type": "Offer",
-    "priceCurrency": "USD",
-    "price": "{{ service.price }}",
     "url": "{{ request.build_absolute_uri }}"
   }
   {% if service.review_count > 0 %},
@@ -116,7 +114,6 @@
       {% if service.specialist.specialist_profile.is_verified %}
         <span class="seal-badge"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Verified specialist</span>
       {% endif %}
-      <div class="price" style="font-size:1.8rem;margin-top:10px;"><span class="cur">$</span>{{ service.price }}</div>
       <div class="helptext">Delivery in {{ service.delivery_days }} day{{ service.delivery_days|pluralize }}</div>
 
       <div class="divider"></div>
@@ -131,10 +128,10 @@
           <form method="post" action="{% url 'orders:create' service.slug %}" enctype="multipart/form-data">
             {% csrf_token %}
             {{ order_form.as_p }}
-            <button type="submit" class="btn btn-primary" style="width:100%;text-align:center;">Hire for ${{ service.price }}</button>
+            <button type="submit" class="btn btn-primary" style="width:100%;text-align:center;">Request service</button>
           </form>
         {% else %}
-          <a href="{% url 'orders:create' service.slug %}" class="btn btn-primary" style="width:100%;text-align:center;">Hire for ${{ service.price }}</a>
+          <a href="{% url 'orders:create' service.slug %}" class="btn btn-primary" style="width:100%;text-align:center;">Request service</a>
         {% endif %}
       {% elif not user.is_authenticated %}
         <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="btn btn-primary" style="width:100%;text-align:center;">Log in to hire</a>

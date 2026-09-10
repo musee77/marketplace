@@ -27,7 +27,11 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         service = serializer.validated_data["service"]
-        serializer.save(client=self.request.user, specialist=service.specialist, price=service.price)
+        serializer.save(
+            client=self.request.user,
+            specialist=service.specialist,
+            price=serializer.validated_data.get("price", 0),
+        )
 
     @action(detail=True, methods=["post"])
     def transition(self, request, pk=None):

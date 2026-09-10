@@ -35,7 +35,6 @@
           <th style="padding: 12px 8px;">Service Listing</th>
           <th style="padding: 12px 8px;">Category</th>
           <th style="padding: 12px 8px;">Specialist</th>
-          <th style="padding: 12px 8px;">Price</th>
           <th style="padding: 12px 8px;">Status</th>
           <th style="padding: 12px 8px; text-align: right;">Action</th>
         </tr>
@@ -49,7 +48,6 @@
           </td>
           <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ s.category.name|default:"Uncategorized" }}</td>
           <td style="padding: 12px 8px; color: #fff;">@{{ s.specialist.username }}</td>
-          <td style="padding: 12px 8px; font-family: monospace; color: #fff;">${{ s.price }}</td>
           <td style="padding: 12px 8px;">
             {% if s.is_active %}
               <span class="status status-completed" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">Active</span>

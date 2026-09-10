@@ -50,10 +50,6 @@ urlpatterns = [
     path('orders/', views.order_list_view, name='order_list'),
     path('orders/<int:pk>/', views.order_detail_view, name='order_detail'),
     
-    # Reviews
-    path('reviews/', views.review_list_view, name='review_list'),
-    path('reviews/<int:pk>/delete/', views.review_delete_view, name='review_delete'),
-
     # Inquiries / Support
     path('inquiries/', views.contact_list_view, name='contact_list'),
     path('inquiries/<int:pk>/', views.contact_detail_view, name='contact_detail'),

@@ -13,4 +13,4 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = ["id", "service", "service_title", "client", "client_username", "specialist",
                   "specialist_username", "status", "status_display", "requirements", "price",
                   "created_at", "updated_at", "due_date"]
-        read_only_fields = ["client", "specialist", "price", "status"]
+        read_only_fields = ["client", "specialist", "status"]

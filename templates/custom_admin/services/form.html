@@ -39,17 +39,10 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-        <div>
-          <label for="{{ form.price.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Price ($ USD)</label>
-          {{ form.price }}
-          {% if form.price.errors %}<small style="color:var(--admin-danger);">{{ form.price.errors }}</small>{% endif %}
-        </div>
-        <div>
-          <label for="{{ form.delivery_days.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Delivery (Days)</label>
-          {{ form.delivery_days }}
-          {% if form.delivery_days.errors %}<small style="color:var(--admin-danger);">{{ form.delivery_days.errors }}</small>{% endif %}
-        </div>
+      <div>
+        <label for="{{ form.delivery_days.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">Delivery (Days)</label>
+        {{ form.delivery_days }}
+        {% if form.delivery_days.errors %}<small style="color:var(--admin-danger);">{{ form.delivery_days.errors }}</small>{% endif %}
       </div>
 
       <div>
