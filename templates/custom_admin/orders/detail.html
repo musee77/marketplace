@@ -37,6 +37,10 @@
   <div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
     <h3>Order Control &amp; Documents</h3>
 
+    <div style="margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--admin-card-border);">
+      <a href="{% url 'custom_admin:order_delete' order.pk %}" class="btn btn-danger" style="padding:8px 14px; background:var(--admin-danger); color:#fff; text-decoration:none; font-weight:bold;">Delete Order</a>
+    </div>
+
     <!-- Status Change Panel -->
     <div style="padding:16px; background:#0f172a; border-radius:10px; border:1px solid var(--admin-card-border); margin-bottom:20px;">
       <span style="font-size:0.85rem; color:var(--admin-text-muted);">Current Status:</span>

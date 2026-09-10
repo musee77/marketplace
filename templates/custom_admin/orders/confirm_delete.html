@@ -1,0 +1,18 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:order_list' %}">Orders</a>
+&rsaquo; <span>Delete order</span>
+{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="max-width:620px; padding:24px; background:var(--admin-card-bg); border:1px solid var(--admin-card-border); border-radius:14px;">
+  <h2 style="color:var(--admin-danger);">Delete Order #{{ order.pk }}?</h2>
+  <p style="color:var(--admin-text-muted);">This permanently deletes the order and its related documents. This action cannot be undone.</p>
+  <form method="post" style="display:flex; gap:10px; margin-top:20px;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger" style="padding:9px 16px; background:var(--admin-danger); color:#fff; font-weight:bold; border:0; border-radius:6px; cursor:pointer;">Yes, delete order</button>
+    <a href="{% url 'custom_admin:order_detail' order.pk %}" class="btn btn-outline" style="padding:9px 16px; text-decoration:none;">Cancel</a>
+  </form>
+</div>
+{% endblock %}

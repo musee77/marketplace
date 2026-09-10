@@ -590,6 +590,17 @@ def order_detail_view(request, pk):
     return render(request, 'custom_admin/orders/detail.html', context)
 
 
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def order_delete_view(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if request.method == 'POST':
+        order_id = order.pk
+        order.delete()
+        messages.success(request, f'Order #{order_id} has been deleted.')
+        return redirect('custom_admin:order_list')
+    return render(request, 'custom_admin/orders/confirm_delete.html', {'order': order})
+
+
 # ====== INQUIRIES / CONTACT MESSAGES ======
 
 @user_passes_test(is_manager, login_url='custom_admin:login')
