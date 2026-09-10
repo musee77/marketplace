@@ -24,8 +24,10 @@ class Order(models.Model):
                                     limit_choices_to={"role": "SPECIALIST"})
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     requirements = models.TextField(blank=True, help_text="What the client needs")
-    STANDARD_FEE_RATE = Decimal("0.20")  # 20% platform commission (all orders)
-    REFERRAL_BONUS_RATE = Decimal("0.05")  # 5% referral bonus paid from platform share
+    STANDARD_FEE_RATE = Decimal("0.20")
+    REFERRAL_CLIENT_RATE = Decimal("0.90")  # Referred clients pay 90% on their first order
+    REFERRAL_FEE_RATE = Decimal("0.10")  # 10% platform fee on the discounted order
+    REFERRAL_BONUS_RATE = Decimal("0.05")  # 5% of the discounted order goes to the referrer
 
     price = models.DecimalField(max_digits=9, decimal_places=2)
     platform_fee_rate = models.DecimalField(max_digits=4, decimal_places=2, default=Decimal("0.20"),
@@ -37,8 +39,9 @@ class Order(models.Model):
     referrer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
                                  related_name="referral_orders", help_text="Referrer who invited the client")
     referral_bonus = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal("0.00"),
-                                         help_text="5% of order price credited silently to referrer from platform share")
+                                         help_text="5% of the discounted first order credited to the referrer")
     referral_bonus_credited = models.BooleanField(default=False)
+    referral_discount_applied = models.BooleanField(default=False)
     revision_note = models.TextField(blank=True, help_text="Client's revision instructions")
     delivery_note = models.TextField(blank=True, help_text="Specialist's delivery note")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -99,14 +102,9 @@ class Order(models.Model):
     def compute_fees(self):
         """Populate platform_fee, platform_fee_rate, referral_bonus, and specialist_earnings.
 
-        Fee split (all orders):
-          - Client pays full price
-          - Platform always keeps 20% (STANDARD_FEE_RATE)
-          - On the client's first referred order: referrer silently earns 5% of the
-            order price, credited from the platform's 20% share.
-            Specialist earns 75% (price - 20% platform - 5% referrer bonus shown as
-            specialist_earnings = price - platform_fee, since bonus comes from platform).
-          - On non-referred orders: specialist earns 80%.
+                On the client's first referred order, the client pays 90% of the entered
+                price, the platform keeps 10%, and the referrer receives 5% of the
+                discounted price. Standard orders use the regular 20% platform fee.
         """
         # Determine if this is the client's first referred order
         is_first_referred = False
@@ -119,19 +117,22 @@ class Order(models.Model):
             if not has_other_paid:
                 is_first_referred = True
 
-        # Platform always charges 20%
-        self.platform_fee_rate = self.STANDARD_FEE_RATE
+        if is_first_referred:
+            self.referrer = self.client.referred_by
+            if not self.referral_discount_applied:
+                self.price = (self.price * self.REFERRAL_CLIENT_RATE).quantize(Decimal("0.01"))
+                self.referral_discount_applied = True
+            self.platform_fee_rate = self.REFERRAL_FEE_RATE
+        else:
+            self.platform_fee_rate = self.STANDARD_FEE_RATE
+
         self.platform_fee = (self.price * self.platform_fee_rate).quantize(Decimal("0.01"))
 
         if is_first_referred:
-            self.referrer = self.client.referred_by
-            # Referral bonus = 5% of full price, sourced from the platform's 20% share
             self.referral_bonus = (self.price * self.REFERRAL_BONUS_RATE).quantize(Decimal("0.01"))
-            # Specialist earns price minus the full platform fee (75% on referral orders)
             self.specialist_earnings = (self.price - self.platform_fee).quantize(Decimal("0.01"))
         else:
             self.referral_bonus = Decimal("0.00")
-            # Specialist earns price minus platform fee (80% on standard orders)
             self.specialist_earnings = (self.price - self.platform_fee).quantize(Decimal("0.01"))
 
     def credit_referral_reward(self):

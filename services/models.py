@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import models
 from django.conf import settings
 from django.urls import reverse
@@ -25,7 +27,7 @@ class Service(models.Model):
     title = models.CharField(max_length=150)
     slug = models.SlugField(max_length=170, unique=True)
     description = models.TextField()
-    price = models.DecimalField(max_digits=9, decimal_places=2)
+    price = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal("0.00"), null=True, blank=True)
     delivery_days = models.PositiveIntegerField(default=3)
     cover_image = models.ImageField(upload_to="services/", blank=True, null=True)
     is_active = models.BooleanField(default=True)

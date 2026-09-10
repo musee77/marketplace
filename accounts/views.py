@@ -2,6 +2,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
+from django.conf import settings
 from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import models
@@ -79,6 +80,8 @@ def referrals_view(request):
         "total_referrals": user.referral_count,
         "total_orders": user.referral_orders_count,
         "total_earnings": user.referral_earnings_total,
+        "telegram_community_url": getattr(settings, "TELEGRAM_COMMUNITY_URL", "https://t.me/synovaeanalytics"),
+        "telegram_opportunities_url": getattr(settings, "TELEGRAM_OPPORTUNITIES_URL", "https://t.me/synovaeanalytics_jobs"),
     })
 
 def specialist_list(request):

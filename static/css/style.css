@@ -381,6 +381,16 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .btn-brass:hover { background: linear-gradient(135deg, #d6b067, #b5822b); color: var(--ink); }
 .btn-outline { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.22); color: var(--paper); }
 .btn-outline:hover { background: rgba(255,255,255,0.08); color: var(--paper); }
+.order-detail-content .btn-outline,
+.order-detail-content .btn-outline:hover,
+.order-detail-content details summary.btn-outline,
+.order-detail-content details summary.btn-outline:hover,
+.panel .btn-outline,
+.panel .btn-outline:hover {
+  color: var(--ink);
+  border-color: rgba(16, 27, 45, 0.18);
+  background: rgba(16, 27, 45, 0.02);
+}
 .btn-danger { background: transparent; border-color: var(--bad); color: var(--bad); }
 .btn-danger:hover { background: var(--bad); color: #fff; }
 .btn-sm { padding: 7px 12px; font-size: .8rem; }
@@ -758,6 +768,71 @@ footer {
 
 .two-col { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; align-items: start; }
 .divider { height: 1px; background: var(--line); margin: 24px 0; }
+
+/* Order detail / order action responsiveness */
+@media (max-width: 860px) {
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .order-detail-content .order-detail-card,
+  .order-detail-content .order-customer-card {
+    padding-top: 16px;
+  }
+
+  .order-detail-content .order-customer-card table,
+  .order-detail-content .order-customer-card tbody,
+  .order-detail-content .order-customer-card tr,
+  .order-detail-content .order-customer-card td {
+    display: block;
+    width: 100%;
+  }
+
+  .order-detail-content .order-customer-card tr {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .order-detail-content .order-customer-card td {
+    text-align: left !important;
+    padding: 4px 0 !important;
+  }
+
+  .order-detail-content .delivery-container {
+    padding: 16px;
+  }
+
+  .order-detail-content .btn,
+  .order-detail-content .btn-outline,
+  .order-detail-content form .btn,
+  .order-detail-content details summary.btn {
+    width: 100%;
+    display: block;
+    text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .order-detail-content .order-customer-card h3,
+  .order-detail-content .order-detail-card h3,
+  .order-detail-content .order-detail-card h4 {
+    margin-bottom: 10px;
+  }
+
+  .order-detail-content .delivery-container a.btn,
+  .order-detail-content .btn,
+  .order-detail-content form .btn,
+  .order-detail-content details summary.btn {
+    white-space: normal;
+    line-height: 1.4;
+  }
+
+  .order-detail-content .delivery-container a.btn {
+    display: block;
+    padding: 10px 12px;
+  }
+}
 /* Orders list layout with left filter sidebar */
 .page-grid { display: grid; grid-template-columns: 260px 1fr; gap: 28px; align-items: start; }
 .page-grid > * { min-width: 0; }

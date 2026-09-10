@@ -486,7 +486,7 @@ def paystack_callback(request):
                     order.compute_fees()
                     order.is_paid = True
                     order.paid_at = timezone.now()
-                    order.save(update_fields=["is_paid", "paid_at", "platform_fee", "platform_fee_rate", "referral_bonus", "specialist_earnings", "referrer"])
+                    order.save(update_fields=["price", "is_paid", "paid_at", "platform_fee", "platform_fee_rate", "referral_bonus", "specialist_earnings", "referrer", "referral_discount_applied"])
                     order.credit_referral_reward()
                     
                     # If this order was created from an offer, now mark the offer ACCEPTED

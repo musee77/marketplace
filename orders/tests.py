@@ -47,7 +47,7 @@ class ReferralFeeTestCase(TestCase):
             price=200
         )
 
-    def test_referred_client_first_order_discount_and_referrer_bonus(self):
+    def test_referred_client_first_order_fee_and_referrer_bonus(self):
         # Create first order (not yet paid)
         order = Order(
             client=self.client_user,
@@ -60,7 +60,7 @@ class ReferralFeeTestCase(TestCase):
         order.compute_fees()
         order.save()
 
-        # Verify 10% discount: price should be 200 * 0.90 = 180
+        # The first referred order is charged at 90% of the entered price.
         self.assertEqual(order.price, Decimal("180.00"))
 
         # Verify platform fee: 10% of 180 = 18.00
@@ -71,6 +71,10 @@ class ReferralFeeTestCase(TestCase):
 
         # Verify specialist earnings: 180 - 18 = 162
         self.assertEqual(order.specialist_earnings, Decimal("162.00"))
+
+        # Recomputing during payment must not apply the discount twice.
+        order.compute_fees()
+        self.assertEqual(order.price, Decimal("180.00"))
 
         # Mark paid to simulate payment
         order.is_paid = True
