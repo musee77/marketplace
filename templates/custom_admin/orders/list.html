@@ -8,7 +8,10 @@
 <div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
   
   <div class="dh-changelist-topbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
-    <h2>Marketplace Orders</h2>
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+      <h2 style="margin:0;">Marketplace Orders</h2>
+      <a href="{% url 'custom_admin:order_create' %}" class="btn btn-brass" style="padding:8px 16px; background:var(--admin-accent); color:#0f172a; text-decoration:none; font-weight:bold; border-radius:6px;">Create Order</a>
+    </div>
     
     <!-- Search and Filter Form -->
     <form method="get" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">

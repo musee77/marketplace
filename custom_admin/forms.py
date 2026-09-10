@@ -1,5 +1,6 @@
 from django import forms
 from services.models import Category, Service
+from orders.models import Order
 from accounts.models import User
 from blog.models import BlogPost
 from decimal import Decimal
@@ -50,6 +51,39 @@ class BalanceForm(forms.Form):
     )
     action = forms.ChoiceField(choices=ACTION_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
     amount = forms.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.01'), widget=forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01'}))
+
+
+class AdminOrderForm(forms.ModelForm):
+    payment_status = forms.ChoiceField(
+        choices=(('paid', 'Paid'), ('unpaid', 'Unpaid')),
+        initial='paid',
+        label='Payment status',
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
+
+    class Meta:
+        model = Order
+        fields = ['client', 'service', 'price', 'requirements', 'due_date', 'status']
+        widgets = {
+            'client': forms.Select(attrs={'class': 'form-control'}),
+            'service': forms.Select(attrs={'class': 'form-control'}),
+            'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01', 'min': '0.01'}),
+            'requirements': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Describe the client requirements...'}),
+            'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['client'].queryset = User.objects.filter(role=User.Role.CLIENT, is_suspended=False).order_by('username')
+        self.fields['service'].queryset = Service.objects.filter(is_active=True).select_related('specialist').order_by('title')
+        self.fields['price'].min_value = Decimal('0.01')
+
+    def clean_service(self):
+        service = self.cleaned_data['service']
+        if not service.is_active:
+            raise forms.ValidationError('Select an active service.')
+        return service
 
 
 class BlogPostForm(forms.ModelForm):

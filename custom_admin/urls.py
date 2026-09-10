@@ -48,6 +48,7 @@ urlpatterns = [
     
     # Orders
     path('orders/', views.order_list_view, name='order_list'),
+    path('orders/create/', views.order_create_view, name='order_create'),
     path('orders/<int:pk>/', views.order_detail_view, name='order_detail'),
     path('orders/<int:pk>/delete/', views.order_delete_view, name='order_delete'),
     

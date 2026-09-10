@@ -17,7 +17,7 @@ from reviews.models import Review
 from blog.models import BlogCategory, BlogPost
 from core.models import ContactMessage
 
-from .forms import BlogPostForm, CategoryForm, UserForm, BalanceForm, AdminServiceForm
+from .forms import BlogPostForm, CategoryForm, UserForm, BalanceForm, AdminServiceForm, AdminOrderForm
 
 
 def is_manager(user):
@@ -517,6 +517,23 @@ def blog_delete_view(request, pk):
 
 
 # ====== ORDERS ======
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def order_create_view(request):
+    form = AdminOrderForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        order = form.save(commit=False)
+        order.specialist = order.service.specialist
+        order.payment_method = Order.PAYMENT_METHODS[0][0]
+        order.compute_fees()
+        order.is_paid = form.cleaned_data['payment_status'] == 'paid'
+        order.paid_at = timezone.now() if order.is_paid else None
+        order.save()
+        if order.is_paid:
+            order.credit_referral_reward()
+        messages.success(request, f'Order #{order.pk} created successfully.')
+        return redirect('custom_admin:order_detail', pk=order.pk)
+    return render(request, 'custom_admin/orders/form.html', {'form': form, 'title': 'Create Order'})
 
 @user_passes_test(is_manager, login_url='custom_admin:login')
 def order_list_view(request):
