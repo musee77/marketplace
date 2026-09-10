@@ -194,7 +194,7 @@
           <div class="card-body">
             <div class="seller-info"><div class="seller-avatar">{% if s.specialist.avatar %}<img src="{{ s.specialist.avatar.url }}" alt="{{ s.specialist.username }}">{% else %}<span>{{ s.specialist.username|slice:":1"|upper }}</span>{% endif %}</div><div class="seller-details"><span class="seller-name">{{ s.specialist.get_full_name|default:s.specialist.username }}</span>{% if s.specialist.specialist_profile.is_verified %}<span class="pro-badge">TOP RATED</span>{% endif %}</div></div>
             <div class="card-title">{{ s.title }}</div>
-            <div class="rating-row"><span class="star-icon">â˜…</span><span class="rating-score">{{ s.average_rating|default:"5.0" }}</span><span class="review-count">({{ s.review_count }})</span></div>
+            <div class="rating-row"><span class="star-icon"></span><span class="rating-score">{{ s.average_rating|default:"5.0" }}</span><span class="review-count">({{ s.review_count }})</span></div>
             <div class="card-foot"><span class="category-name">{{ s.category.name|default:"General" }}</span></div>
           </div>
         </a>
