@@ -1,0 +1,49 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}
+&rsaquo; <a href="{% url 'custom_admin:specialist_approval_list' %}">Specialist Approvals</a>
+&rsaquo; <span>Review Test</span>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid;gap:20px;max-width:980px;margin:0 auto;">
+  <div class="dh-card" style="padding:24px;background:var(--admin-card-bg);border:1px solid var(--admin-card-border);border-radius:14px;">
+    <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+      <div>
+        <p style="margin:0 0 6px;color:var(--admin-text-muted);font-size:.85rem;">Specialist test review</p>
+        <h1 style="margin:0 0 8px;">{{ attempt.test.title }}</h1>
+        <p style="margin:0;color:var(--admin-text-muted);">{{ attempt.specialist.get_full_name|default:attempt.specialist.username }} (@{{ attempt.specialist.username }})</p>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:1.5rem;font-weight:700;">{{ attempt.score }}/{{ attempt.total_questions }}</div>
+        <div style="color:var(--admin-text-muted);">{{ attempt.percentage }}% · {{ attempt.get_status_display }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dh-card" style="padding:24px;background:var(--admin-card-bg);border:1px solid var(--admin-card-border);border-radius:14px;">
+    <h2 style="margin:0 0 18px;">Submitted responses</h2>
+    {% for row in attempt.response_rows %}
+      <div style="padding:16px 0;border-top:1px solid var(--admin-card-border);">
+        <div style="font-weight:700;margin-bottom:8px;">{{ forloop.counter }}. {{ row.question.prompt }}</div>
+        <div style="color:{% if row.is_correct %}var(--admin-success){% else %}var(--admin-danger){% endif %};">
+          <strong>Specialist response:</strong> {{ row.response|default:"No response" }}
+        </div>
+        <div style="margin-top:4px;color:var(--admin-text-muted);"><strong>Correct answer:</strong> {{ row.question.correct_option }}</div>
+      </div>
+    {% empty %}
+      <p style="color:var(--admin-warning);">This test has no questions.</p>
+    {% endfor %}
+  </div>
+
+  <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+    <a href="{% url 'custom_admin:specialist_approval_list' %}" class="btn btn-outline" style="padding:10px 16px;text-decoration:none;border:1px solid var(--admin-card-border);border-radius:6px;color:#fff;">Back to approvals</a>
+    {% if attempt.status == 'SUBMITTED' %}
+      <div style="display:flex;gap:10px;">
+        <a href="{% url 'custom_admin:specialist_test_attempt_review' attempt.pk 'reject' %}" class="btn btn-danger" style="padding:10px 16px;text-decoration:none;border-radius:6px;background:var(--admin-danger);color:#fff;">Reject test</a>
+        <a href="{% url 'custom_admin:specialist_test_attempt_review' attempt.pk 'approve' %}" class="btn btn-success" style="padding:10px 16px;text-decoration:none;border-radius:6px;background:var(--admin-success);color:#fff;">Accept test</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

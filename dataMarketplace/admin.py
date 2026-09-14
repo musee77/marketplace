@@ -56,6 +56,9 @@ class SynovaeAnalyticsAdminSite(AdminSite):
         from django.shortcuts import get_object_or_404, redirect
         from django.contrib import messages
         profile = get_object_or_404(SpecialistProfile, pk=profile_id)
+        if profile.missing_required_tests():
+            self.message_user(request, "Approval blocked until every active test has a completed, manager-approved response.", level=messages.ERROR)
+            return redirect(request.META.get("HTTP_REFERER") or "datahire_admin:index")
         profile.is_approved = True
         profile.save(update_fields=["is_approved"])
         messages.success(request, f"Specialist '{profile.user.get_full_name() or profile.user.username}' has been approved.")

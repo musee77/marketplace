@@ -1,0 +1,5 @@
+{% extends "custom_admin/base.html" %}
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'custom_admin:specialist_test_list' %}">Specialist Tests</a> &rsaquo; <span>Delete</span>{% endblock %}
+{% block content %}
+<div class="dh-card" style="max-width:560px; margin:auto; padding:24px;"><h1>Delete test?</h1><p>Delete <strong>{{ test.title }}</strong> and its questions and attempts?</p><form method="post">{% csrf_token %}<button type="submit" class="btn btn-danger" style="padding:10px 16px; border:0; cursor:pointer;">Delete test</button> <a href="{% url 'custom_admin:specialist_test_list' %}" class="btn btn-outline" style="padding:10px 16px; text-decoration:none;">Cancel</a></form></div>
+{% endblock %}

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.hashers import make_password
-from .models import User, SpecialistProfile, ClientProfile
+from .models import User, SpecialistProfile, ClientProfile, SpecialistTest
 import uuid
 
 

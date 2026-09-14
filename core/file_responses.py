@@ -2,7 +2,10 @@ import asyncio
 import mimetypes
 from pathlib import Path
 
+from django.conf import settings
+from django.http import Http404
 from django.http import StreamingHttpResponse
+from django.utils._os import safe_join
 from django.utils.http import content_disposition_header
 
 
@@ -34,3 +37,17 @@ class AsyncFileResponse(StreamingHttpResponse):
     def _content_type(filename):
         content_type, _ = mimetypes.guess_type(filename or "")
         return content_type or "application/octet-stream"
+
+
+async def serve_media(request, path):
+    """Serve development media through an async iterator under ASGI."""
+    try:
+        file_path = safe_join(settings.MEDIA_ROOT, path)
+    except ValueError as exc:
+        raise Http404 from exc
+
+    if not Path(file_path).is_file():
+        raise Http404
+
+    file_object = await asyncio.to_thread(open, file_path, "rb")
+    return AsyncFileResponse(file_object, filename=Path(file_path).name)

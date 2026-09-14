@@ -1,0 +1,30 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}&rsaquo; <a href="{% url 'custom_admin:specialist_test_list' %}">Specialist Tests</a> &rsaquo; <span>{{ title }}</span>{% endblock %}
+
+{% block content %}
+<div class="dh-card" style="padding:24px;">
+  <h1 style="margin-top:0;">{{ title }}</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ question_formset.management_form }}
+    {% if test_form.non_field_errors %}<div style="color:var(--admin-danger);">{{ test_form.non_field_errors }}</div>{% endif %}
+    <div style="display:grid; gap:14px; max-width:760px;">
+      {% for field in test_form %}<div><label for="{{ field.id_for_label }}" style="font-weight:600; display:block; margin-bottom:4px;">{{ field.label }}</label>{{ field }}{% if field.errors %}<div style="color:var(--admin-danger);">{{ field.errors }}</div>{% endif %}</div>{% endfor %}
+    </div>
+    <h2 style="margin:28px 0 12px;">Questions</h2>
+    <p style="color:var(--admin-text-muted);">Add one or more questions. Leave unused rows blank.</p>
+    {% if question_formset.non_form_errors %}<div style="color:var(--admin-danger); margin-bottom:12px;">{{ question_formset.non_form_errors }}</div>{% endif %}
+    <div style="display:grid; gap:16px;">
+      {% for question_form in question_formset %}
+      <div style="border:1px solid var(--admin-card-border); padding:16px; border-radius:8px;">
+        {% for hidden in question_form.hidden_fields %}{{ hidden }}{% endfor %}
+        <strong>Question {{ forloop.counter }}</strong>
+        <div style="display:grid; gap:10px; margin-top:10px;">{% for field in question_form.visible_fields %}<div><label for="{{ field.id_for_label }}" style="font-weight:600; display:block; margin-bottom:3px;">{{ field.label }}</label>{{ field }}{% if field.errors %}<div style="color:var(--admin-danger);">{{ field.errors }}</div>{% endif %}</div>{% endfor %}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px;"><button type="submit" class="btn btn-brass" style="padding:10px 16px; border:0; cursor:pointer;">Save test</button><a href="{% url 'custom_admin:specialist_test_list' %}" class="btn btn-outline" style="padding:10px 16px; text-decoration:none;">Cancel</a></div>
+  </form>
+</div>
+{% endblock %}

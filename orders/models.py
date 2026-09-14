@@ -7,7 +7,7 @@ from django.urls import reverse
 
 class Order(models.Model):
     class Status(models.TextChoices):
-        PENDING = "PENDING", "Pending acceptance"
+        PENDING = "PENDING", "Pending"
         ACCEPTED = "ACCEPTED", "Accepted"
         IN_PROGRESS = "IN_PROGRESS", "In progress"
         DELIVERED = "DELIVERED", "Delivered"
@@ -44,6 +44,10 @@ class Order(models.Model):
     referral_discount_applied = models.BooleanField(default=False)
     revision_note = models.TextField(blank=True, help_text="Client's revision instructions")
     delivery_note = models.TextField(blank=True, help_text="Specialist's delivery note")
+    editor_approved = models.BooleanField(default=False, help_text="An editor must review this order before delivery")
+    edited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+                                  related_name="edited_orders")
+    edited_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     due_date = models.DateField(null=True, blank=True)

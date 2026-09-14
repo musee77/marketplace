@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
-  <h2>Specialists Pending Approval</h2>
+  <h2>Specialist Approvals</h2>
   <p style="color:var(--admin-text-muted); margin-bottom: 20px; font-size:0.9rem;">
     Review the specialist profiles below. Approve them to allow listing their services and accepting jobs on the platform.
   </p>
@@ -20,6 +20,8 @@
           <th style="padding: 12px 8px;">Skills</th>
           <th style="padding: 12px 8px;">Hourly Rate</th>
           <th style="padding: 12px 8px;">Location</th>
+          <th style="padding: 12px 8px;">Test Responses</th>
+          <th style="padding: 12px 8px;">Approval Status</th>
           <th style="padding: 12px 8px; text-align: right;">Action</th>
         </tr>
       </thead>
@@ -38,14 +40,44 @@
           </td>
           <td style="padding: 12px 8px; font-family: monospace; color: #fff;">${{ sp.hourly_rate }}</td>
           <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ sp.location|default:"—" }}</td>
+          <td style="padding: 12px 8px; min-width: 280px;">
+            {% for review in sp.active_test_reviews %}
+              {% with attempt=review.attempt test=review.test %}
+              <details style="margin-bottom:8px;">
+                <summary style="cursor:pointer; color:#fff;">
+                  {{ test.title }}:
+                  {% if attempt %}
+                    Attempt {{ attempt.attempt_number }} — {{ attempt.get_status_display }}
+                  {% else %}
+                    No response submitted
+                  {% endif %}
+                </summary>
+                {% if attempt %}
+                  <a href="{% url 'custom_admin:specialist_test_attempt_detail' attempt.pk %}" class="btn btn-outline" style="display:inline-block;margin:8px 0;padding:5px 10px;text-decoration:none;border-radius:5px;border:1px solid var(--admin-card-border);color:#fff;">Review test</a>
+                {% endif %}
+              </details>
+              {% endwith %}
+            {% empty %}
+              <span style="color:var(--admin-warning);">No active tests defined</span>
+            {% endfor %}
+          </td>
+          <td style="padding: 12px 8px;">
+            <span style="font-weight:600; color:{% if sp.approval_status == 'APPROVED' %}var(--admin-success){% elif sp.approval_status == 'REJECTED' %}var(--admin-danger){% else %}var(--admin-warning){% endif %};">
+              {{ sp.get_approval_status_display }}
+            </span>
+          </td>
           <td style="padding: 12px 8px; text-align: right;">
-            <a href="{% url 'custom_admin:specialist_approve' sp.pk %}" class="btn btn-success" style="font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; background: var(--admin-success); color: #fff; text-decoration: none; font-weight: bold; margin-right: 6px;">✓ Approve</a>
-            <a href="{% url 'custom_admin:specialist_reject' sp.pk %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; background: var(--admin-danger); color: #fff; text-decoration: none; font-weight: bold;">Reject</a>
+            {% if sp.approval_status == 'PENDING' %}
+              <a href="{% url 'custom_admin:specialist_approve' sp.pk %}" class="btn btn-success" style="font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; background: var(--admin-success); color: #fff; text-decoration: none; font-weight: bold; margin-right: 6px;">✓ Approve</a>
+              <a href="{% url 'custom_admin:specialist_reject' sp.pk %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 6px 14px; border-radius: 6px; background: var(--admin-danger); color: #fff; text-decoration: none; font-weight: bold;">Reject</a>
+            {% else %}
+              <span style="color:var(--admin-text-muted);">No action needed</span>
+            {% endif %}
           </td>
         </tr>
         {% empty %}
         <tr>
-          <td colspan="6" style="padding: 24px; text-align: center; color: var(--admin-text-muted);">No specialists currently pending approval.</td>
+          <td colspan="8" style="padding: 24px; text-align: center; color: var(--admin-text-muted);">No specialist profiles found.</td>
         </tr>
         {% endfor %}
       </tbody>

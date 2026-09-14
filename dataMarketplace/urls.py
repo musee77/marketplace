@@ -1,12 +1,12 @@
-from django.urls import path, include
+from django.urls import include, path, re_path
 from django.contrib import admin as default_admin
 from .admin import custom_admin_site
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
 from django.views.generic import TemplateView
 from core.sitemaps import StaticViewSitemap, ServiceSitemap, SpecialistSitemap
 from blog.sitemaps import BlogPostSitemap
+from core.file_responses import serve_media
 
 sitemaps = {
     'static': StaticViewSitemap,
@@ -30,7 +30,4 @@ urlpatterns = [
     path('', include('core.urls')),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-else:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += [re_path(r"^media/(?P<path>.*)$", serve_media)]

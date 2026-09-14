@@ -1,0 +1,34 @@
+{% extends "custom_admin/base.html" %}
+
+{% block breadcrumbs %}&rsaquo; <span>Specialist Tests</span>{% endblock %}
+
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:20px;">
+  <div>
+    <h1 style="margin:0;">Specialist Tests</h1>
+    <p style="color:var(--admin-text-muted); margin:6px 0 0;">Define the assessments specialists must complete before approval.</p>
+  </div>
+  <div style="display:flex; gap:10px;">
+    <a href="{% url 'custom_admin:specialist_test_attempt_list' %}" class="btn btn-outline" style="padding:9px 14px; text-decoration:none;">Review attempts</a>
+    <a href="{% url 'custom_admin:specialist_test_create' %}" class="btn btn-brass" style="padding:9px 14px; text-decoration:none;">+ New test</a>
+  </div>
+</div>
+
+<div class="dh-card" style="padding:0; overflow:auto;">
+  <table style="width:100%; border-collapse:collapse;">
+    <thead><tr style="text-align:left; border-bottom:1px solid var(--admin-card-border);">
+      <th style="padding:14px;">Test</th><th style="padding:14px;">Questions</th><th style="padding:14px;">Status</th><th style="padding:14px;">Actions</th>
+    </tr></thead>
+    <tbody>
+      {% for test in tests %}
+      <tr style="border-bottom:1px solid var(--admin-card-border);">
+        <td style="padding:14px;"><strong>{{ test.title }}</strong>{% if test.description %}<div style="color:var(--admin-text-muted); margin-top:4px;">{{ test.description|truncatewords:18 }}</div>{% endif %}</td>
+        <td style="padding:14px;">{{ test.questions.count }}</td>
+        <td style="padding:14px;">{% if test.is_active %}<span style="color:var(--admin-success);">Active</span>{% else %}<span style="color:var(--admin-text-muted);">Inactive</span>{% endif %}</td>
+        <td style="padding:14px; white-space:nowrap;"><a href="{% url 'custom_admin:specialist_test_edit' test.pk %}" class="btn btn-outline" style="padding:5px 10px; text-decoration:none;">Edit</a> <a href="{% url 'custom_admin:specialist_test_delete' test.pk %}" class="btn btn-danger" style="padding:5px 10px; text-decoration:none;">Delete</a></td>
+      </tr>
+      {% empty %}<tr><td colspan="4" style="padding:30px; text-align:center; color:var(--admin-text-muted);">No specialist tests defined yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

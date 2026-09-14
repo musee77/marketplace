@@ -10,6 +10,9 @@
       </label>
       <ul class="nav-links">
         {% if user.is_authenticated %}
+          {% if user.is_specialist and not user.specialist_profile.has_platform_access %}
+            <li><a href="{% url 'accounts:specialist_tests' %}">Complete tests</a></li>
+          {% else %}
           <li><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
           <li><a href="{% url 'accounts:referrals' %}">Referrals</a></li>
           <li class="dropdown">
@@ -29,11 +32,12 @@
             </ul>
           </li>
           {% endwith %}
-          {% if user.is_specialist %}<li><a href="{% url 'services:mine' %}">My services</a></li>{% endif %}
+          {% if user.is_specialist and user.specialist_profile.is_approved and user.specialist_profile.is_verified %}<li><a href="{% url 'services:mine' %}">My services</a></li>{% endif %}
           {% if user.is_manager %}
             <li><a href="{% url 'accounts:manager_user_list' %}">Manage users</a></li>
             <li><a href="{% url 'accounts:pending_specialists' %}">Approvals</a></li>
             <li><a href="{% url 'chat:moderate' %}">Moderate</a></li>
+          {% endif %}
           {% endif %}
           <li class="dropdown profile-dropdown">
             <button type="button" class="dropdown-toggle profile-toggle" aria-expanded="false">{{ user.username }} <span class="caret">&#9662;</span></button>

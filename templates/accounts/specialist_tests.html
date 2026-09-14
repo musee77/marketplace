@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Specialist assessments | Synovae Analytics{% endblock %}
+{% block content %}
+<section class="section"><div class="wrap" style="max-width:900px;">
+  <h2>Specialist assessments</h2>
+  <p>Complete every active assessment below. Your submissions must be accepted before specialist platform access is enabled.</p>
+  {% for test in tests %}
+    {% with attempt=test.current_attempt %}
+    <article style="border:1px solid var(--line);padding:20px;margin:18px 0;background:var(--paper);border-radius:12px;box-shadow:0 2px 8px rgba(17,24,39,0.04);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+        <div>
+          <h3 style="margin:0 0 8px;">{{ test.title }}</h3>
+          {% if test.description %}<p style="margin:0 0 10px; color:var(--muted, #475467);">{{ test.description }}</p>{% endif %}
+          <p style="margin:0; color:var(--muted, #475467);">{{ test.questions.count }} question{{ test.questions.count|pluralize }}</p>
+        </div>
+        {% if attempt %}
+          <div style="display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;font-weight:600;{% if attempt.status == 'ACCEPTED' %}background:rgba(16,185,129,0.12);color:#166534;{% elif attempt.status == 'REJECTED' %}background:rgba(180,35,24,0.08);color:var(--danger,#b42318);{% else %}background:rgba(17,24,39,0.04);color:#1f2937;{% endif %}"><span>Attempt {{ attempt.attempt_number }} · {{ attempt.get_status_display }}</span></div>
+        {% endif %}
+      </div>
+
+      {% if attempt %}
+        {% if attempt.status == 'ACCEPTED' %}
+          <div style="margin-top:14px; padding:12px 14px; border-left:4px solid #16a34a; background:rgba(22,163,74,0.06); border-radius:8px;">
+            <p style="margin:0;color:#166534;font-weight:600;">This assessment was accepted.</p>
+            <p style="margin:8px 0 0;">Your specialist profile can proceed with platform access.</p>
+          </div>
+        {% elif attempt.status == 'REJECTED' %}
+          <div style="margin-top:14px; padding:12px 14px; border-left:4px solid var(--danger, #b42318); background:rgba(180,35,24,0.04); border-radius:8px;">
+            <p style="margin:0;color:var(--danger, #b42318);font-weight:600;">This assessment was rejected (attempt {{ attempt.attempt_number }}).</p>
+            {% if attempt.retake_number < 3 %}
+              {% if attempt.next_retake_at %}
+                <p style="margin:8px 0 0;">Next retake available: {{ attempt.next_retake_at|date:"d F Y" }}</p>
+              {% endif %}
+              {% if test.can_retake %}<div style="margin-top:12px;"><a class="btn btn-brass" href="{% url 'accounts:specialist_test_take' test.pk %}">Retake assessment</a></div>{% endif %}
+            {% else %}<p style="margin:8px 0 0;">No further retakes are available for this assessment.</p>{% endif %}
+          </div>
+        {% else %}
+          <div style="margin-top:14px; padding:12px 14px; border-left:4px solid #d97706; background:rgba(217,119,6,0.06); border-radius:8px;">
+            <p style="margin:0;color:#92400e;font-weight:600;">Your submission is awaiting review.</p>
+          </div>
+        {% endif %}
+      {% else %}
+        <div style="margin-top:14px;"><a class="btn btn-brass" href="{% url 'accounts:specialist_test_take' test.pk %}">Take assessment</a></div>
+      {% endif %}
+    </article>
+    {% endwith %}
+  {% empty %}
+    <p>No assessments have been published yet. Your account will be enabled after approval.</p>
+  {% endfor %}
+  {% if page_obj.has_other_pages %}
+    <nav aria-label="Assessment pages" style="display:flex;gap:12px;align-items:center;margin-top:24px;">
+      {% if page_obj.has_previous %}<a class="btn btn-outline" href="?page={{ page_obj.previous_page_number }}">Previous test</a>{% endif %}
+      <span>Test {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a class="btn btn-brass" href="?page={{ page_obj.next_page_number }}">Next test</a>{% endif %}
+    </nav>
+  {% endif %}
+</div></section>
+{% endblock %}

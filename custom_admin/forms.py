@@ -1,7 +1,7 @@
 from django import forms
 from services.models import Category, Service
 from orders.models import Order
-from accounts.models import User
+from accounts.models import User, SpecialistTest, SpecialistTestQuestion
 from blog.models import BlogPost
 from decimal import Decimal
 
@@ -61,6 +61,18 @@ class AdminOrderForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'form-control'}),
     )
 
+    status = forms.ChoiceField(
+        choices=[
+            (Order.Status.PENDING, Order.Status.PENDING.label),
+            (Order.Status.ACCEPTED, Order.Status.ACCEPTED.label),
+            (Order.Status.IN_PROGRESS, Order.Status.IN_PROGRESS.label),
+            (Order.Status.DELIVERED, Order.Status.DELIVERED.label),
+            (Order.Status.COMPLETED, Order.Status.COMPLETED.label),
+        ],
+        label='Status',
+        widget=forms.Select(attrs={'class': 'form-control'}),
+    )
+
     class Meta:
         model = Order
         fields = ['client', 'service', 'price', 'requirements', 'due_date', 'status']
@@ -70,11 +82,12 @@ class AdminOrderForm(forms.ModelForm):
             'price': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': '0.00', 'step': '0.01', 'min': '0.01'}),
             'requirements': forms.Textarea(attrs={'class': 'form-control', 'rows': 5, 'placeholder': 'Describe the client requirements...'}),
             'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'status': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['status'].initial = self.instance.status
         self.fields['client'].queryset = User.objects.filter(role=User.Role.CLIENT, is_suspended=False).order_by('username')
         self.fields['service'].queryset = Service.objects.filter(is_active=True).select_related('specialist').order_by('title')
         self.fields['price'].min_value = Decimal('0.01')
@@ -84,6 +97,32 @@ class AdminOrderForm(forms.ModelForm):
         if not service.is_active:
             raise forms.ValidationError('Select an active service.')
         return service
+
+
+class SpecialistTestForm(forms.ModelForm):
+    class Meta:
+        model = SpecialistTest
+        fields = ['title', 'description', 'is_active']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class SpecialistTestQuestionForm(forms.ModelForm):
+    class Meta:
+        model = SpecialistTestQuestion
+        fields = ['prompt', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 'order']
+        widgets = {
+            'prompt': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'option_a': forms.TextInput(attrs={'class': 'form-control'}),
+            'option_b': forms.TextInput(attrs={'class': 'form-control'}),
+            'option_c': forms.TextInput(attrs={'class': 'form-control'}),
+            'option_d': forms.TextInput(attrs={'class': 'form-control'}),
+            'correct_option': forms.Select(attrs={'class': 'form-control'}),
+            'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+        }
 
 
 class BlogPostForm(forms.ModelForm):

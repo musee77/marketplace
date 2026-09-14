@@ -2,7 +2,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from .models import SpecialistProfile, ClientProfile, DepositTransaction
+from .models import SpecialistProfile, ClientProfile, DepositTransaction, SpecialistTest, SpecialistTestAttempt, SpecialistTestQuestion
 
 
 class AddFundsTest(TestCase):
@@ -162,6 +162,38 @@ class EditProfileSpecialistTabTest(TestCase):
 		self.sp_profile.refresh_from_db()
 		self.assertEqual(self.sp_profile.payout_method, "PAYPAL")
 		self.assertEqual(self.sp_profile.payout_details, "spec1@paypal.com")
+
+	def test_accepted_attempt_blocks_further_retakes(self):
+		User = get_user_model()
+		self.client.login(username="spec1", password="password123")
+		test = SpecialistTest.objects.create(title="Data Skills Test")
+		for order, option in enumerate(["A", "B", "C", "D"], start=1):
+			SpecialistTestQuestion.objects.create(
+				test=test,
+				prompt=f"Question {order}",
+				option_a="One",
+				option_b="Two",
+				option_c="Three",
+				option_d="Four",
+				correct_option=option,
+				order=order,
+			)
+		SpecialistTestAttempt.objects.create(
+			specialist=self.specialist,
+			test=test,
+			attempt_number=1,
+			score=4,
+			total_questions=4,
+			responses={str(q.pk): q.correct_option for q in test.questions.all()},
+			status=SpecialistTestAttempt.Status.ACCEPTED,
+		)
+
+		resp = self.client.get(reverse("accounts:specialist_test_take", kwargs={"pk": test.pk}))
+
+		self.assertEqual(resp.status_code, 302)
+		self.assertEqual(resp.url, reverse("accounts:specialist_tests"))
+		messages = list(resp.wsgi_request._messages)
+		self.assertTrue(any("No further attempts are allowed" in str(m) for m in messages))
 
 
 

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ test.title }} | Synovae Analytics{% endblock %}
+{% block content %}
+<section class="section"><div class="wrap" style="max-width:800px;">
+  <h2>{{ test.title }}</h2>
+  {% if test.description %}<p>{{ test.description }}</p>{% endif %}
+  {% if question %}
+  <p>Question {{ question_number }} of {{ total_questions }}</p>
+  <form method="post">{% csrf_token %}
+      <fieldset style="border:1px solid var(--line);padding:18px;margin:18px 0;">
+        <legend><strong>{{ question_number }}. {{ question.prompt }}</strong></legend>
+        {% for option, label in question.option_choices %}
+          <label style="display:block;margin:10px 0;"><input type="radio" name="question_{{ question.pk }}" value="{{ option }}" {% if saved_answer == option %}checked{% endif %} required> {{ option }}. {{ label }}</label>
+        {% endfor %}
+      </fieldset>
+    <button class="btn btn-brass" type="submit">{% if question_number == total_questions %}Submit assessment{% else %}Next question{% endif %}</button>
+  </form>
+  {% else %}<p>This assessment has no questions yet.</p>{% endif %}
+</div></section>
+{% endblock %}

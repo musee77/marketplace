@@ -37,12 +37,34 @@
   <div class="dh-card" style="padding: 24px; background: var(--admin-card-bg); border: 1px solid var(--admin-card-border); border-radius: 14px;">
     <h3>Order Control &amp; Documents</h3>
 
-    <div style="margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--admin-card-border);">
-      <a href="{% url 'custom_admin:order_delete' order.pk %}" class="btn btn-danger" style="padding:8px 14px; background:var(--admin-danger); color:#fff; text-decoration:none; font-weight:bold;">Delete Order</a>
+    <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:20px;">
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Pending</div>
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Accepted</div>
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">In progress</div>
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Delivered</div>
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;background:{% if order.status == 'DELIVERED' and not order.editor_approved %}rgba(193,148,63,.25){% elif order.editor_approved %}rgba(193,148,63,.14){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'DELIVERED' and not order.editor_approved %}var(--admin-accent){% elif order.editor_approved %}rgba(193,148,63,.45){% else %}var(--admin-card-border){% endif %};">Review</div>
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Under revision</div>
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Completed</div>
     </div>
 
+    <div style="margin-bottom:20px; padding:14px; border-radius:8px; background:#0f172a; border:1px solid {% if order.editor_approved %}var(--admin-success){% else %}var(--admin-warning){% endif %};">
+      <strong>Editor review:</strong>
+      {% if order.editor_approved %}
+        <span style="color:var(--admin-success);">Approved{% if order.edited_by %} by {{ order.edited_by.username }}{% endif %}</span>
+      {% else %}
+        <span style="color:var(--admin-warning);">Awaiting editor review after specialist delivery</span>
+      {% endif %}
+      {% if user.role == 'EDITOR' and order.status == 'DELIVERED' %}
+        <a href="{% url 'custom_admin:order_edit' order.pk %}" class="btn btn-brass" style="display:inline-block; margin-left:10px; padding:6px 12px; text-decoration:none;">Review and edit</a>
+      {% endif %}
+    </div>
+
+    {% if user.is_manager %}<div style="margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid var(--admin-card-border);">
+      <a href="{% url 'custom_admin:order_delete' order.pk %}" class="btn btn-danger" style="padding:8px 14px; background:var(--admin-danger); color:#fff; text-decoration:none; font-weight:bold;">Delete Order</a>
+    </div>{% endif %}
+
     <!-- Status Change Panel -->
-    <div style="padding:16px; background:#0f172a; border-radius:10px; border:1px solid var(--admin-card-border); margin-bottom:20px;">
+    {% if user.is_manager or user.role == 'EDITOR' %}<div style="padding:16px; background:#0f172a; border-radius:10px; border:1px solid var(--admin-card-border); margin-bottom:20px;">
       <span style="font-size:0.85rem; color:var(--admin-text-muted);">Current Status:</span>
       <div style="margin-top:4px;"><span class="status status-{{ order.status }}" style="font-size:0.95rem; padding: 4px 10px;">{{ order.get_status_display }}</span></div>
       
@@ -53,9 +75,9 @@
             <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ name }}</option>
           {% endfor %}
         </select>
-        <button type="submit" class="btn btn-brass" style="padding:8px 16px; background:var(--admin-accent); color:#0f172a; font-weight:bold; border-radius:6px; border:none; cursor:pointer;">Update Status</button>
+        <button type="submit" class="btn btn-brass" style="padding:8px 16px; background:var(--admin-accent); color:#0f172a; font-weight:bold; border-radius:6px; border:none; cursor:pointer;">{% if user.role == 'EDITOR' %}Update and approve{% else %}Update Status{% endif %}</button>
       </form>
-    </div>
+    </div>{% endif %}
 
     <!-- Order Documents -->
     <h4>Files Shared ({{ documents|length }})</h4>
@@ -75,7 +97,7 @@
       <p style="color: var(--admin-text-muted); font-size:0.875rem;">No files uploaded to this order yet.</p>
     {% endif %}
 
-    <div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--admin-card-border);">
+    {% if user.is_manager %}<div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--admin-card-border);">
       <h4>Deliver order as manager</h4>
       <p style="color:var(--admin-text-muted); font-size:0.875rem;">Upload the completed file and mark this order as delivered for the client.</p>
       <form method="post" enctype="multipart/form-data">
@@ -84,7 +106,7 @@
         {{ document_form.as_p }}
         <button type="submit" class="btn btn-brass" style="padding:8px 16px; border:0; cursor:pointer;">Upload and deliver</button>
       </form>
-    </div>
+    </div>{% endif %}
   </div>
 
 </div>

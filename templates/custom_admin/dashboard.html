@@ -36,7 +36,7 @@
 					<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--admin-warning, #f59e0b);"></span>
 					Specialists Pending Approval ({{ pending_specialists }})
 				</h3>
-				<a href="{% url 'custom_admin:specialist_approval_list' %}" style="font-size:0.85rem;color:var(--admin-accent, #c1943f);text-decoration:none;font-weight:600;">View all →</a>
+				<a href="{% url 'custom_admin:specialist_approval_list' %}" style="font-size:0.85rem;color:var(--admin-accent, #c1943f);text-decoration:none;font-weight:600;">Review approvals →</a>
 			</div>
 			{% if recent_specialists %}
 			<div style="overflow-x:auto;">
@@ -53,7 +53,7 @@
 						{% for sp in recent_specialists %}
 						<tr style="border-bottom:1px solid rgba(51,65,85,0.6);">
 							<td style="padding:12px 8px;font-weight:600;">
-								<a href="{% url 'custom_admin:user_detail' sp.user.pk %}" style="color:var(--admin-text, #f8fafc);text-decoration:none;">
+								<a href="{% url 'custom_admin:specialist_approval_list' %}" style="color:var(--admin-text, #f8fafc);text-decoration:none;">
 									{{ sp.user.get_full_name|default:sp.user.username }}
 								</a>
 							</td>
@@ -62,7 +62,7 @@
 							</td>
 							<td style="padding:12px 8px;font-family:monospace;color:var(--admin-text, #f8fafc);">${{ sp.hourly_rate }}</td>
 							<td style="padding:12px 8px;text-align:right;">
-								<a href="{% url 'custom_admin:specialist_approve' sp.pk %}" style="display:inline-block;padding:6px 14px;border-radius:6px;background:var(--admin-success, #10b981);color:#fff;font-weight:600;font-size:0.82rem;text-decoration:none;transition:background 0.2s;">✓ Approve</a>
+								<a href="{% url 'custom_admin:specialist_approval_list' %}" style="display:inline-block;padding:6px 14px;border-radius:6px;background:var(--admin-success, #10b981);color:#fff;font-weight:600;font-size:0.82rem;text-decoration:none;transition:background 0.2s;">Review response</a>
 							</td>
 						</tr>
 						{% endfor %}

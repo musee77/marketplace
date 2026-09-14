@@ -10,7 +10,10 @@ from django.views.generic import DetailView
 from django.urls import reverse_lazy, reverse
 
 from .forms import SignUpForm, SpecialistProfileForm, ClientProfileForm, UserBasicForm
-from .models import User, SpecialistProfile, ClientProfile, DepositTransaction
+from .models import (
+    User, SpecialistProfile, ClientProfile, DepositTransaction,
+    SpecialistTest, SpecialistTestAttempt,
+)
 from .forms import SpecialistFinancialForm, ClientFinancialForm, AddFundsForm
 from django.conf import settings as django_settings
 import time
@@ -25,6 +28,7 @@ from django.contrib.auth.decorators import login_required
 from orders.models import Order
 from reviews.models import Review
 from decimal import Decimal, InvalidOperation
+from django.utils import timezone
 
 
 @csrf_protect
@@ -113,6 +117,121 @@ def specialist_list(request):
     return render(request, "accounts/specialist_list.html", {
         "page_obj": page_obj,
         "q": query,
+    })
+
+
+@login_required
+def specialist_tests(request):
+    if not request.user.is_specialist:
+        return redirect("core:dashboard")
+    tests = SpecialistTest.objects.filter(is_active=True).prefetch_related("questions")
+    page_obj = Paginator(tests, 1).get_page(request.GET.get("page"))
+    attempts = {}
+    for attempt in SpecialistTestAttempt.objects.filter(
+        specialist=request.user,
+        test__in=page_obj.object_list,
+    ).order_by("test_id", "-attempt_number"):
+        attempts.setdefault(attempt.test_id, attempt)
+    for test in page_obj.object_list:
+        test.current_attempt = attempts.get(test.pk)
+        test.can_retake = bool(
+            test.current_attempt
+            and test.current_attempt.status == SpecialistTestAttempt.Status.REJECTED
+            and test.current_attempt.retake_number < 3
+            and (
+                not test.current_attempt.next_retake_at
+                or timezone.now() >= test.current_attempt.next_retake_at
+            )
+        )
+    return render(request, "accounts/specialist_tests.html", {
+        "tests": page_obj.object_list,
+        "attempts": attempts,
+        "page_obj": page_obj,
+    })
+
+
+@login_required
+def specialist_test_take(request, pk):
+    if not request.user.is_specialist:
+        return redirect("core:dashboard")
+    test = get_object_or_404(SpecialistTest.objects.prefetch_related("questions"), pk=pk, is_active=True)
+    existing_attempt = SpecialistTestAttempt.objects.filter(
+        specialist=request.user,
+        test=test,
+    ).order_by("-attempt_number").first()
+    if existing_attempt:
+        if existing_attempt.status == SpecialistTestAttempt.Status.ACCEPTED:
+            messages.info(request, "This assessment has already been accepted. No further attempts are allowed.")
+            return redirect("accounts:specialist_tests")
+        if existing_attempt.status != SpecialistTestAttempt.Status.REJECTED:
+            messages.info(request, "You have already submitted this test. It is awaiting manager review.")
+            return redirect("accounts:specialist_tests")
+    if existing_attempt and existing_attempt.retake_number >= 3:
+        messages.error(request, "No further retakes are available for this assessment.")
+        return redirect("accounts:specialist_tests")
+    if existing_attempt and existing_attempt.next_retake_at and timezone.now() < existing_attempt.next_retake_at:
+        messages.error(request, f"You can retake this assessment after {existing_attempt.next_retake_at:%d %B %Y}.")
+        return redirect("accounts:specialist_tests")
+    next_attempt_number = (existing_attempt.attempt_number + 1) if existing_attempt else 1
+    questions = list(test.questions.all())
+    if not questions:
+        return render(request, "accounts/specialist_test_take.html", {
+            "test": test,
+            "questions": [],
+            "question": None,
+            "question_number": 0,
+            "total_questions": 0,
+        })
+
+    session_key = f"specialist_test_{test.pk}_responses"
+    saved_responses = request.session.get(session_key, {})
+    try:
+        page_number = max(1, min(int(request.GET.get("page", 1)), len(questions)))
+    except (TypeError, ValueError):
+        page_number = 1
+    question_index = page_number - 1
+    question = questions[question_index]
+    if request.method == "POST":
+        answer = request.POST.get(f"question_{question.pk}", "")
+        if not answer:
+            messages.error(request, "Please answer this question before continuing.")
+            return redirect("accounts:specialist_test_take", pk=test.pk)
+        saved_responses[str(question.pk)] = answer
+        request.session[session_key] = saved_responses
+        request.session.modified = True
+        if question_index < len(questions) - 1:
+            return redirect(f"{reverse('accounts:specialist_test_take', kwargs={'pk': test.pk})}?page={page_number + 1}")
+
+        responses = {
+            str(item.pk): saved_responses.get(str(item.pk), "")
+            for item in questions
+        }
+        if any(not answer for answer in responses.values()):
+            messages.error(request, "Please answer every question before submitting the test.")
+            return redirect(f"{reverse('accounts:specialist_test_take', kwargs={'pk': test.pk})}?page=1")
+        score = sum(
+            responses[str(question.pk)] == question.correct_option
+            for question in questions
+        )
+        SpecialistTestAttempt.objects.create(
+            specialist=request.user,
+            test=test,
+            attempt_number=next_attempt_number,
+            score=score,
+            total_questions=len(questions),
+            responses=responses,
+        )
+        request.session.pop(session_key, None)
+        request.session.modified = True
+        messages.success(request, "Your test was submitted and is awaiting manager approval.")
+        return redirect("accounts:specialist_tests")
+    return render(request, "accounts/specialist_test_take.html", {
+        "test": test,
+        "questions": questions,
+        "question": question,
+        "question_number": page_number,
+        "total_questions": len(questions),
+        "saved_answer": saved_responses.get(str(question.pk), ""),
     })
 
 
@@ -461,7 +580,11 @@ def manager_pending_specialists(request):
 @user_passes_test(is_manager)
 def manager_toggle_approve(request, pk):
     profile = get_object_or_404(SpecialistProfile, pk=pk)
-    profile.is_approved = not profile.is_approved
+    approving = not profile.is_approved
+    if approving and profile.missing_required_tests():
+        messages.error(request, "Complete and approve every active specialist test before approving this specialist.")
+        return redirect(request.META.get("HTTP_REFERER") or "accounts:pending_specialists")
+    profile.is_approved = approving
     profile.save(update_fields=["is_approved"])
     status = "approved" if profile.is_approved else "unapproved"
     messages.success(request, f"{profile.user.get_full_name() or profile.user.username} is now {status}.")

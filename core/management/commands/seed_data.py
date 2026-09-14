@@ -377,6 +377,7 @@ class Command(BaseCommand):
                 "ella.hunt@yahoo.com", "liam.ward@gmail.com",
                 "cora.price@icloud.com", "ivan.moss@gmail.com",
                 "zoe.hart@yahoo.com", "finn.cole@gmail.com",
+                "editor.one@datahire.test", "editor.two@datahire.test",
             }
             managed_users = User.objects.filter(
                 Q(email__in=managed_emails) | Q(username="ops_manager")
@@ -409,6 +410,35 @@ class Command(BaseCommand):
             manager.set_password("managerpass123")
             manager.save()
             self.stdout.write(self.style.SUCCESS(f"Created manager: {manager.username} / managerpass123"))
+
+        # --- editors (staff accounts for testing order and test review) ---
+        editors = []
+        for username, email, first_name, last_name in [
+            ("test_editor_one", "editor.one@datahire.test", "Test", "Editor One"),
+            ("test_editor_two", "editor.two@datahire.test", "Test", "Editor Two"),
+        ]:
+            editor, created = User.objects.get_or_create(
+                username=username,
+                defaults={
+                    "email": email,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "role": User.Role.EDITOR,
+                    "is_staff": True,
+                },
+            )
+            if editor.role != User.Role.EDITOR or not editor.is_staff or editor.email != email:
+                editor.role = User.Role.EDITOR
+                editor.email = email
+                editor.first_name = first_name
+                editor.last_name = last_name
+                editor.is_staff = True
+                editor.save(update_fields=["role", "email", "first_name", "last_name", "is_staff"])
+            editor.set_password("editorpass123")
+            editor.save(update_fields=["password"])
+            editors.append(editor)
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Created editor: {email} / editorpass123"))
 
         # --- blog posts ---
         blog_categories = [
@@ -745,6 +775,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             "\nDemo logins (password: pass1234 for jcharlesmail accounts):\n"
             "  manager        -> ops@datahire.test          / managerpass123\n"
+            "  editors        -> editor.one@datahire.test, editor.two@datahire.test / editorpass123\n"
             "  specialists    -> dana@datahire.test, marco@datahire.test, priya@datahire.test,\n"
             "                    jules@datahire.test, kenji@datahire.test, ana@datahire.test / specialistpass123\n"
             "  clients        -> tomas@datahire.test, sarah@datahire.test, wei@datahire.test / clientpass123\n"

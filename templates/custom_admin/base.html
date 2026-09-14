@@ -15,7 +15,7 @@
     <button type="button" id="dh-mobile-toggle" aria-label="Toggle navigation menu">
       <span></span><span></span><span></span>
     </button>
-    <a href="{% url 'custom_admin:dashboard' %}" class="dh-mobile-brand">
+    <a href="{% if user.role == 'EDITOR' %}{% url 'custom_admin:editor_dashboard' %}{% else %}{% url 'custom_admin:dashboard' %}{% endif %}" class="dh-mobile-brand">
       <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#c1943f" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#c1943f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Synovae Analytics Admin
     </a>
@@ -30,13 +30,24 @@
     <!-- Custom Left Vertical Sidebar -->
     <aside id="dh-sidebar">
       <div class="dh-sidebar-header">
-        <a href="{% url 'custom_admin:dashboard' %}" class="dh-sidebar-brand">
+        <a href="{% if user.role == 'EDITOR' %}{% url 'custom_admin:editor_dashboard' %}{% else %}{% url 'custom_admin:dashboard' %}{% endif %}" class="dh-sidebar-brand">
           <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#c1943f" stroke-width="2"/><path d="M8 12.5l2.5 2.5L16 9.5" stroke="#c1943f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span>Synovae Analytics <small>ADMIN</small></span>
         </a>
       </div>
 
       <div class="dh-sidebar-nav-wrap">
+        {% if user.role == 'EDITOR' %}
+        <div class="dh-nav-group">
+          <div class="dh-nav-title">WORKSPACE</div>
+          <a href="{% url 'custom_admin:editor_dashboard' %}" class="dh-sidebar-link {% if request.resolver_match.url_name == 'editor_dashboard' %}active{% endif %}">
+            <span class="dh-nav-icon">📊</span> Dashboard
+          </a>
+          <a href="{% url 'custom_admin:order_list' %}" class="dh-sidebar-link {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="dh-nav-icon">🛒</span> Orders
+          </a>
+        </div>
+        {% else %}
         <!-- Main Navigation Section -->
         <div class="dh-nav-group">
           <div class="dh-nav-title">MAIN</div>
@@ -75,8 +86,11 @@
           <a href="custom_admin:contact_list" class="dh-sidebar-link {% if 'contact' in request.resolver_match.url_name %}active{% endif %}" onclick="location.href='{% url 'custom_admin:contact_list' %}'; return false;">
             <span class="dh-nav-icon">✉️</span> User Inquiries
           </a>
-          <a href="custom_admin:specialist_approval_list" class="dh-sidebar-link {% if 'specialist' in request.resolver_match.url_name %}active{% endif %}" onclick="location.href='{% url 'custom_admin:specialist_approval_list' %}'; return false;">
+          <a href="{% url 'custom_admin:specialist_approval_list' %}" class="dh-sidebar-link {% if request.resolver_match.url_name == 'specialist_approval_list' %}active{% endif %}">
             <span class="dh-nav-icon">🎓</span> Specialist Approvals
+          </a>
+          <a href="{% url 'custom_admin:specialist_test_list' %}" class="dh-sidebar-link {% if 'specialist_test' in request.resolver_match.url_name %}active{% endif %}">
+            <span class="dh-nav-icon">🧪</span> Specialist Tests
           </a>
           <a href="custom_admin:chat_moderation_list" class="dh-sidebar-link {% if 'chat' in request.resolver_match.url_name or 'moderation' in request.resolver_match.url_name %}active{% endif %}" onclick="location.href='{% url 'custom_admin:chat_moderation_list' %}'; return false;">
             <span class="dh-nav-icon">💬</span> Chat Moderation
@@ -90,6 +104,7 @@
             <span class="dh-nav-icon">🌐</span> View Public Site
           </a>
         </div>
+        {% endif %}
       </div>
 
       <!-- User Profile Badge Footer -->
@@ -115,7 +130,7 @@
       <!-- Sub-header & Breadcrumbs Bar -->
       <header class="dh-top-subbar">
         <div class="dh-breadcrumbs">
-          <a href="{% url 'custom_admin:dashboard' %}">Admin Dashboard</a>
+          <a href="{% if user.role == 'EDITOR' %}{% url 'custom_admin:editor_dashboard' %}{% else %}{% url 'custom_admin:dashboard' %}{% endif %}">{% if user.role == 'EDITOR' %}Editor Dashboard{% else %}Admin Dashboard{% endif %}</a>
           {% block breadcrumbs %}{% endblock %}
         </div>
         <div class="dh-subbar-tools">

@@ -16,6 +16,8 @@ urlpatterns = [
     path("specialist/<int:pk>/reviews/", views.specialist_reviews, name="specialist_reviews"),
     path("specialist/<int:pk>/", views.SpecialistPublicProfileView.as_view(), name="specialist_public"),
     path("specialists/", views.specialist_list, name="specialist_list"),
+    path("specialist-tests/", views.specialist_tests, name="specialist_tests"),
+    path("specialist-tests/<int:pk>/", views.specialist_test_take, name="specialist_test_take"),
 
     path("manage/users/", views.manager_user_list, name="manager_user_list"),
     path("manage/users/<int:pk>/toggle-suspend/", views.manager_toggle_suspend, name="manager_toggle_suspend"),

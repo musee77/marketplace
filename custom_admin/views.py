@@ -8,7 +8,10 @@ from django.utils import timezone
 from django.utils.text import slugify
 from decimal import Decimal
 
-from accounts.models import User, SpecialistProfile, ClientProfile
+from accounts.models import (
+    User, SpecialistProfile, ClientProfile, SpecialistTest,
+    SpecialistTestAttempt, SpecialistTestQuestion,
+)
 from services.models import Category, Service
 from orders.models import Order, OrderDocument
 from orders.forms import OrderDocumentForm
@@ -17,30 +20,65 @@ from reviews.models import Review
 from blog.models import BlogCategory, BlogPost
 from core.models import ContactMessage
 
-from .forms import BlogPostForm, CategoryForm, UserForm, BalanceForm, AdminServiceForm, AdminOrderForm
+from .forms import (
+    BlogPostForm, CategoryForm, UserForm, BalanceForm, AdminServiceForm,
+    AdminOrderForm, SpecialistTestForm, SpecialistTestQuestionForm,
+)
+from django.forms import BaseInlineFormSet, inlineformset_factory
+from django.core.exceptions import ValidationError
+
+
+class RequiredSpecialistQuestionFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        if any(self.errors):
+            return
+        question_count = sum(
+            bool(form.cleaned_data) and not form.cleaned_data.get('DELETE', False)
+            for form in self.forms
+        )
+        if question_count == 0:
+            raise ValidationError('Add at least one question to this test.')
+
+SpecialistTestQuestionFormSet = inlineformset_factory(
+    SpecialistTest,
+    SpecialistTestQuestion,
+    form=SpecialistTestQuestionForm,
+    formset=RequiredSpecialistQuestionFormSet,
+    extra=5,
+    can_delete=True,
+)
 
 
 def is_manager(user):
     return user.is_authenticated and (user.is_manager or user.is_staff or user.is_superuser)
 
 
+def is_editor(user):
+    return user.is_authenticated and (user.is_manager or user.is_staff or user.is_superuser or user.role == User.Role.EDITOR)
+
+
+def is_order_editor(user):
+    return is_editor(user)
+
+
 # ====== LOGIN & LOGOUT ======
 
 def admin_login_view(request):
-    if request.user.is_authenticated and is_manager(request.user):
-        return redirect('custom_admin:dashboard')
+    if request.user.is_authenticated and is_editor(request.user):
+        return redirect('custom_admin:dashboard' if request.user.role != User.Role.EDITOR else 'custom_admin:editor_dashboard')
 
     if request.method == 'POST':
         email = request.POST.get('email', '').strip().lower()
         password = request.POST.get('password', '')
         user = authenticate(request, username=email, password=password)
-        if user is not None and (user.is_staff or user.is_manager or user.is_superuser):
+        if user is not None and is_editor(user):
             if user.is_suspended:
                 messages.error(request, "This account is suspended.")
                 return redirect('custom_admin:login')
             login(request, user)
             messages.success(request, f"Welcome to admin panel, {user.get_full_name() or user.username}.")
-            return redirect('custom_admin:dashboard')
+            return redirect('custom_admin:dashboard' if user.role != User.Role.EDITOR else 'custom_admin:editor_dashboard')
         messages.error(request, "Invalid credentials or you are not authorized to access the admin panel.")
 
     return render(request, 'custom_admin/login.html')
@@ -90,6 +128,32 @@ def dashboard_view(request):
         'recent_users': recent_users,
     }
     return render(request, 'custom_admin/dashboard.html', context)
+
+
+@user_passes_test(is_order_editor, login_url='custom_admin:login')
+def editor_dashboard_view(request):
+    real_orders = Order.objects.filter(is_simulated=False)
+    status_counts = {
+        status: real_orders.filter(status=status).count()
+        for status, _ in Order.Status.choices
+    }
+    status_metrics = [
+        {'value': value, 'label': label, 'count': status_counts[value]}
+        for value, label in Order.Status.choices
+    ]
+    review_orders = real_orders.filter(status=Order.Status.DELIVERED, editor_approved=False).select_related(
+        'client', 'specialist', 'service'
+    )[:8]
+    recent_orders = real_orders.select_related(
+        'client', 'specialist', 'service'
+    )[:8]
+    return render(request, 'custom_admin/editor_dashboard.html', {
+        'status_counts': status_counts,
+        'status_metrics': status_metrics,
+        'review_orders': review_orders,
+        'recent_orders': recent_orders,
+        'total_orders': real_orders.count(),
+    })
 
 
 # ====== USER MANAGEMENT ======
@@ -255,17 +319,48 @@ def user_delete_view(request, pk):
 
 @user_passes_test(is_manager, login_url='custom_admin:login')
 def specialist_approval_list(request):
-    pending = SpecialistProfile.objects.filter(is_approved=False).select_related('user').order_by('-created_at')
-    paginator = Paginator(pending, 10)
+    specialists = SpecialistProfile.objects.select_related('user').order_by('-created_at')
+    paginator = Paginator(specialists, 10)
     page_obj = paginator.get_page(request.GET.get('page'))
-    return render(request, 'custom_admin/approvals/list.html', {'pending': page_obj, 'page_obj': page_obj})
+    active_tests = list(SpecialistTest.objects.filter(is_active=True).prefetch_related('questions'))
+    attempts_by_user = {}
+    attempts = SpecialistTestAttempt.objects.filter(
+        specialist__in=[profile.user_id for profile in page_obj.object_list],
+        test__in=active_tests,
+    ).select_related('test').prefetch_related('test__questions')
+    for attempt in attempts.order_by('specialist_id', 'test_id', '-attempt_number'):
+        attempt.response_rows = [
+            {
+                'question': question,
+                'response': attempt.responses.get(str(question.pk), 'No response'),
+            }
+            for question in attempt.test.questions.all()
+        ]
+        attempts_by_user.setdefault((attempt.specialist_id, attempt.test_id), attempt)
+    for profile in page_obj.object_list:
+        profile.active_test_reviews = [
+            {
+                'test': test,
+                'attempt': attempts_by_user.get((profile.user_id, test.pk)),
+            }
+            for test in active_tests
+        ]
+    return render(request, 'custom_admin/approvals/list.html', {
+        'pending': page_obj,
+        'page_obj': page_obj,
+        'active_tests': active_tests,
+    })
 
 
 @user_passes_test(is_manager, login_url='custom_admin:login')
 def specialist_approve(request, pk):
     profile = get_object_or_404(SpecialistProfile, pk=pk)
+    if profile.missing_required_tests():
+        messages.error(request, 'Complete and approve every active specialist test before approving this specialist.')
+        return redirect(request.META.get('HTTP_REFERER') or 'custom_admin:specialist_approval_list')
     profile.is_approved = True
-    profile.save(update_fields=['is_approved'])
+    profile.approval_status = SpecialistProfile.ApprovalStatus.APPROVED
+    profile.save(update_fields=['is_approved', 'approval_status'])
     messages.success(request, f"Specialist {profile.user.get_full_name() or profile.user.username} approved successfully.")
     return redirect(request.META.get('HTTP_REFERER') or 'custom_admin:specialist_approval_list')
 
@@ -274,9 +369,122 @@ def specialist_approve(request, pk):
 def specialist_reject(request, pk):
     profile = get_object_or_404(SpecialistProfile, pk=pk)
     profile.is_approved = False
-    profile.save(update_fields=['is_approved'])
+    profile.approval_status = SpecialistProfile.ApprovalStatus.REJECTED
+    profile.save(update_fields=['is_approved', 'approval_status'])
     messages.warning(request, f"Specialist {profile.user.get_full_name() or profile.user.username} approval revoked.")
     return redirect(request.META.get('HTTP_REFERER') or 'custom_admin:specialist_approval_list')
+
+
+# ====== SPECIALIST TESTS ======
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def specialist_test_list(request):
+    tests = SpecialistTest.objects.prefetch_related('questions').order_by('-created_at')
+    return render(request, 'custom_admin/specialist_tests/list.html', {'tests': tests})
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def specialist_test_create(request):
+    test_form = SpecialistTestForm(request.POST or None)
+    question_formset = SpecialistTestQuestionFormSet(request.POST or None, prefix='questions')
+    if request.method == 'POST' and test_form.is_valid() and question_formset.is_valid():
+        test = test_form.save()
+        question_formset.instance = test
+        question_formset.save()
+        messages.success(request, f'Test "{test.title}" created successfully.')
+        return redirect('custom_admin:specialist_test_list')
+    return render(request, 'custom_admin/specialist_tests/form.html', {
+        'test_form': test_form,
+        'question_formset': question_formset,
+        'title': 'Create Specialist Test',
+    })
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def specialist_test_edit(request, pk):
+    test = get_object_or_404(SpecialistTest, pk=pk)
+    test_form = SpecialistTestForm(request.POST or None, instance=test)
+    question_formset = SpecialistTestQuestionFormSet(request.POST or None, instance=test, prefix='questions')
+    if request.method == 'POST' and test_form.is_valid() and question_formset.is_valid():
+        test_form.save()
+        question_formset.save()
+        messages.success(request, f'Test "{test.title}" updated successfully.')
+        return redirect('custom_admin:specialist_test_list')
+    return render(request, 'custom_admin/specialist_tests/form.html', {
+        'test': test,
+        'test_form': test_form,
+        'question_formset': question_formset,
+        'title': f'Edit {test.title}',
+    })
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def specialist_test_delete(request, pk):
+    test = get_object_or_404(SpecialistTest, pk=pk)
+    if request.method == 'POST':
+        title = test.title
+        test.delete()
+        messages.success(request, f'Test "{title}" deleted.')
+        return redirect('custom_admin:specialist_test_list')
+    return render(request, 'custom_admin/specialist_tests/confirm_delete.html', {'test': test})
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def specialist_test_attempt_list(request):
+    attempts = SpecialistTestAttempt.objects.select_related('specialist', 'test', 'reviewed_by')
+    status = request.GET.get('status', '').strip()
+    if status in dict(SpecialistTestAttempt.Status.choices):
+        attempts = attempts.filter(status=status)
+    return render(request, 'custom_admin/specialist_tests/attempts.html', {
+        'attempts': attempts,
+        'status': status,
+        'statuses': SpecialistTestAttempt.Status.choices,
+    })
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def specialist_test_attempt_detail(request, pk):
+    attempt = get_object_or_404(
+        SpecialistTestAttempt.objects.select_related('specialist', 'test', 'reviewed_by').prefetch_related('test__questions'),
+        pk=pk,
+    )
+    attempt.response_rows = [
+        {
+            'question': question,
+            'response': attempt.responses.get(str(question.pk), 'No response'),
+            'is_correct': attempt.responses.get(str(question.pk)) == question.correct_option,
+        }
+        for question in attempt.test.questions.all()
+    ]
+    return render(request, 'custom_admin/specialist_tests/attempt_detail.html', {'attempt': attempt})
+
+
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def specialist_test_attempt_review(request, pk, action):
+    attempt = get_object_or_404(
+        SpecialistTestAttempt.objects.prefetch_related('test__questions'),
+        pk=pk,
+    )
+    if action not in ('approve', 'reject'):
+        messages.error(request, 'Invalid test review action.')
+        return redirect('custom_admin:specialist_test_attempt_list')
+    if action == 'approve':
+        questions = list(attempt.test.questions.all())
+        has_all_responses = all(
+            attempt.responses.get(str(question.pk), '')
+            for question in questions
+        )
+        if not questions or attempt.total_questions != len(questions) or not has_all_responses:
+            messages.error(request, 'This test cannot be accepted until every question has a response.')
+            return redirect(request.META.get('HTTP_REFERER') or 'custom_admin:specialist_test_attempt_list')
+    attempt.status = SpecialistTestAttempt.Status.ACCEPTED if action == 'approve' else SpecialistTestAttempt.Status.REJECTED
+    attempt.reviewed_by = request.user
+    attempt.reviewed_at = timezone.now()
+    attempt.save(update_fields=['status', 'reviewed_by', 'reviewed_at'])
+    if action == 'approve':
+        attempt.specialist.specialist_profile.approve_after_assessments()
+    messages.success(request, f'Attempt {attempt.get_status_display().lower()}.')
+    return redirect(request.META.get('HTTP_REFERER') or 'custom_admin:specialist_test_attempt_list')
 
 
 # ====== CHAT MODERATION ======
@@ -535,7 +743,7 @@ def order_create_view(request):
         return redirect('custom_admin:order_detail', pk=order.pk)
     return render(request, 'custom_admin/orders/form.html', {'form': form, 'title': 'Create Order'})
 
-@user_passes_test(is_manager, login_url='custom_admin:login')
+@user_passes_test(is_order_editor, login_url='custom_admin:login')
 def order_list_view(request):
     q = request.GET.get('q', '').strip()
     status_filter = request.GET.get('status', '')
@@ -565,12 +773,26 @@ def order_list_view(request):
     return render(request, 'custom_admin/orders/list.html', context)
 
 
-@user_passes_test(is_manager, login_url='custom_admin:login')
+@user_passes_test(is_order_editor, login_url='custom_admin:login')
 def order_detail_view(request, pk):
     order = get_object_or_404(Order.objects.select_related('client', 'specialist', 'service'), pk=pk)
     documents = order.documents.select_related('uploaded_by')
     
     if request.method == 'POST':
+        if request.user.role == User.Role.EDITOR:
+            new_status = request.POST.get('status')
+            if new_status not in dict(Order.Status.choices):
+                messages.error(request, 'Select a valid order status.')
+            elif order.status != Order.Status.DELIVERED:
+                messages.error(request, 'Editors can only review orders after the specialist has delivered them.')
+            else:
+                order.status = new_status
+                order.editor_approved = True
+                order.edited_by = request.user
+                order.edited_at = timezone.now()
+                order.save(update_fields=['status', 'editor_approved', 'edited_by', 'edited_at', 'updated_at'])
+                messages.success(request, f'Order #{order.pk} reviewed and updated after delivery.')
+            return redirect('custom_admin:order_detail', pk=pk)
         if request.POST.get('form_action') == 'deliver_order':
             document_form = OrderDocumentForm(request.POST, request.FILES)
             if document_form.is_valid():
@@ -605,6 +827,33 @@ def order_detail_view(request, pk):
         'statuses': Order.Status.choices,
     }
     return render(request, 'custom_admin/orders/detail.html', context)
+
+
+@user_passes_test(is_order_editor, login_url='custom_admin:login')
+def order_edit_view(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if request.user.role == User.Role.EDITOR and order.status != Order.Status.DELIVERED:
+        messages.error(request, 'Editors can only edit orders after the specialist has delivered them.')
+        return redirect('custom_admin:order_detail', pk=pk)
+    form = AdminOrderForm(request.POST or None, instance=order)
+    if request.user.role == User.Role.EDITOR:
+        form.fields['payment_status'].disabled = True
+        form.fields['status'].choices = [
+            (Order.Status.PENDING, Order.Status.PENDING.label),
+            (Order.Status.ACCEPTED, Order.Status.ACCEPTED.label),
+            (Order.Status.IN_PROGRESS, Order.Status.IN_PROGRESS.label),
+            (Order.Status.DELIVERED, Order.Status.DELIVERED.label),
+            (Order.Status.COMPLETED, Order.Status.COMPLETED.label),
+        ]
+    if request.method == 'POST' and form.is_valid():
+        order = form.save(commit=False)
+        order.editor_approved = True
+        order.edited_by = request.user
+        order.edited_at = timezone.now()
+        order.save(update_fields=['client', 'service', 'price', 'requirements', 'due_date', 'status', 'editor_approved', 'edited_by', 'edited_at', 'updated_at'])
+        messages.success(request, f'Order #{order.pk} was reviewed and updated after delivery.')
+        return redirect('custom_admin:order_detail', pk=order.pk)
+    return render(request, 'custom_admin/orders/form.html', {'form': form, 'title': f'Edit order #{order.pk}', 'is_edit': True})
 
 
 @user_passes_test(is_manager, login_url='custom_admin:login')

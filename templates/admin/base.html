@@ -75,7 +75,7 @@
           <a href="{% url 'datahire_admin:reviews_review_changelist' %}" class="dh-sidebar-link {% if '/reviews/review/' in request.path %}active{% endif %}">
             <span class="dh-nav-icon">⭐</span> Reviews
           </a>
-          <a href="{% url 'accounts:pending_specialists' %}" class="dh-sidebar-link">
+          <a href="{% url 'custom_admin:specialist_approval_list' %}" class="dh-sidebar-link">
             <span class="dh-nav-icon">✅</span> Specialist Approvals
           </a>
           <a href="{% url 'chat:moderate' %}" class="dh-sidebar-link">

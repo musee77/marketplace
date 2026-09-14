@@ -3,12 +3,14 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.urls import reverse
+from datetime import timedelta
 
 
 class User(AbstractUser):
     class Role(models.TextChoices):
         CLIENT = "CLIENT", "Client"
         SPECIALIST = "SPECIALIST", "Specialist"
+        EDITOR = "EDITOR", "Editor"
         MANAGER = "MANAGER", "Manager"
 
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.CLIENT)
@@ -73,6 +75,11 @@ class User(AbstractUser):
 
 
 class SpecialistProfile(models.Model):
+    class ApprovalStatus(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="specialist_profile")
     headline = models.CharField(max_length=150, blank=True, help_text="e.g. 'Senior Data Engineer'")
     bio = models.TextField(blank=True)
@@ -81,6 +88,7 @@ class SpecialistProfile(models.Model):
     years_experience = models.PositiveIntegerField(default=0)
     location = models.CharField(max_length=120, blank=True)
     is_approved = models.BooleanField(default=False, help_text="Approved by a manager to operate on the platform")
+    approval_status = models.CharField(max_length=20, choices=ApprovalStatus.choices, default=ApprovalStatus.PENDING)
     is_verified = models.BooleanField(default=False, help_text="Verified by a manager")
     is_available = models.BooleanField(default=True)
     portfolio_url = models.URLField(blank=True)
@@ -106,11 +114,123 @@ class SpecialistProfile(models.Model):
     def review_count(self):
         return self.user.reviews_received.count()
 
+    def missing_required_tests(self):
+        missing = []
+        for test in SpecialistTest.objects.filter(is_active=True):
+            questions = list(test.questions.all())
+            question_count = len(questions)
+            attempt = self.user.test_attempts.filter(
+                test=test,
+                status=SpecialistTestAttempt.Status.ACCEPTED,
+            ).first()
+            has_all_responses = attempt and all(
+                attempt.responses.get(str(question.pk), "")
+                for question in questions
+            )
+            if question_count == 0 or not attempt or attempt.total_questions != question_count or not has_all_responses:
+                missing.append(test.title)
+        return missing
+
+    @property
+    def has_platform_access(self):
+        if self.missing_required_tests():
+            return False
+        return SpecialistTest.objects.filter(is_active=True).exists() or self.is_approved
+
+    def approve_after_assessments(self):
+        if not self.missing_required_tests() and not self.is_approved:
+            self.is_approved = True
+            self.approval_status = self.ApprovalStatus.APPROVED
+            self.save(update_fields=("is_approved", "approval_status", "updated_at"))
+
     def __str__(self):
         return f"Specialist: {self.user.username}"
 
     def get_absolute_url(self):
         return reverse("accounts:specialist_public", kwargs={"pk": self.pk})
+
+
+class SpecialistTest(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return self.title
+
+
+class SpecialistTestQuestion(models.Model):
+    test = models.ForeignKey(SpecialistTest, on_delete=models.CASCADE, related_name="questions")
+    prompt = models.TextField()
+    option_a = models.CharField(max_length=500)
+    option_b = models.CharField(max_length=500)
+    option_c = models.CharField(max_length=500)
+    option_d = models.CharField(max_length=500)
+    correct_option = models.CharField(
+        max_length=1,
+        choices=(("A", "A"), ("B", "B"), ("C", "C"), ("D", "D")),
+    )
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "pk"]
+
+    @property
+    def option_choices(self):
+        return (
+            ("A", self.option_a),
+            ("B", self.option_b),
+            ("C", self.option_c),
+            ("D", self.option_d),
+        )
+
+    def __str__(self):
+        return f"{self.test}: question {self.pk}"
+
+
+class SpecialistTestAttempt(models.Model):
+    class Status(models.TextChoices):
+        SUBMITTED = "SUBMITTED", "Submitted"
+        ACCEPTED = "ACCEPTED", "Accepted"
+        REJECTED = "REJECTED", "Rejected"
+
+    specialist = models.ForeignKey(User, on_delete=models.CASCADE, related_name="test_attempts")
+    test = models.ForeignKey(SpecialistTest, on_delete=models.CASCADE, related_name="attempts")
+    score = models.PositiveIntegerField(default=0)
+    total_questions = models.PositiveIntegerField(default=0)
+    attempt_number = models.PositiveIntegerField(default=1)
+    responses = models.JSONField(default=dict, blank=True)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.SUBMITTED)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name="reviewed_test_attempts")
+
+    class Meta:
+        ordering = ["-submitted_at"]
+
+    @property
+    def percentage(self):
+        if not self.total_questions:
+            return 0
+        return round(self.score * 100 / self.total_questions)
+
+    @property
+    def retake_number(self):
+        return max(self.attempt_number - 1, 0)
+
+    @property
+    def next_retake_at(self):
+        if self.status != self.Status.REJECTED or self.retake_number >= 3:
+            return None
+        wait_days = (0, 30, 90)[self.retake_number]
+        return (self.reviewed_at or self.submitted_at) + timedelta(days=wait_days)
+
+    def __str__(self):
+        return f"{self.specialist.username} - {self.test.title} ({self.status})"
 
 
 class ClientProfile(models.Model):

@@ -178,7 +178,8 @@ def order_detail(request, pk):
             return redirect(order.get_absolute_url())
         # fall through to render with form errors
 
-    can_deliver = Order.Status.DELIVERED in order.SPECIALIST_ACTIONS.get(order.status, []) and user == order.specialist
+    can_deliver = (Order.Status.DELIVERED in order.SPECIALIST_ACTIONS.get(order.status, [])
+                   and user == order.specialist)
     can_request_revision = (
         user == order.client and order.status == Order.Status.DELIVERED and order.is_paid
     )

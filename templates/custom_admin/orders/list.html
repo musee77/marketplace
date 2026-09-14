@@ -10,7 +10,7 @@
   <div class="dh-changelist-topbar" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; margin-bottom: 20px;">
     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
       <h2 style="margin:0;">Marketplace Orders</h2>
-      <a href="{% url 'custom_admin:order_create' %}" class="btn btn-brass" style="padding:8px 16px; background:var(--admin-accent); color:#0f172a; text-decoration:none; font-weight:bold; border-radius:6px;">Create Order</a>
+      {% if user.role != 'EDITOR' %}<a href="{% url 'custom_admin:order_create' %}" class="btn btn-brass" style="padding:8px 16px; background:var(--admin-accent); color:#0f172a; text-decoration:none; font-weight:bold; border-radius:6px;">Create Order</a>{% endif %}
     </div>
     
     <!-- Search and Filter Form -->
@@ -69,7 +69,8 @@
           <td style="padding: 12px 8px; color: var(--admin-text-muted);">{{ order.created_at|date:"M j, Y" }}</td>
           <td style="padding: 12px 8px; text-align: right;">
             <a href="{% url 'custom_admin:order_detail' order.pk %}" class="btn btn-outline" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--admin-card-border); color: #fff; text-decoration: none; font-weight: bold;">View Details</a>
-            <a href="{% url 'custom_admin:order_delete' order.pk %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; background: var(--admin-danger); color: #fff; text-decoration: none; font-weight: bold;">Delete</a>
+            {% if user.role == 'EDITOR' and order.status == 'DELIVERED' %}<a href="{% url 'custom_admin:order_edit' order.pk %}" class="btn btn-brass" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; background: var(--admin-accent); color: #0f172a; text-decoration: none; font-weight: bold;">Review and edit</a>{% endif %}
+            {% if user.role != 'EDITOR' %}<a href="{% url 'custom_admin:order_delete' order.pk %}" class="btn btn-danger" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 6px; background: var(--admin-danger); color: #fff; text-decoration: none; font-weight: bold;">Delete</a>{% endif %}
           </td>
         </tr>
         {% empty %}

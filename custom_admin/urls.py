@@ -7,6 +7,7 @@ urlpatterns = [
     path('login/', views.admin_login_view, name='login'),
     path('logout/', views.admin_logout_view, name='logout'),
     path('', views.dashboard_view, name='dashboard'),
+    path('editor-dashboard/', views.editor_dashboard_view, name='editor_dashboard'),
     
     # Users
     path('users/', views.user_list_view, name='user_list'),
@@ -20,6 +21,15 @@ urlpatterns = [
     path('approvals/', views.specialist_approval_list, name='specialist_approval_list'),
     path('approvals/<int:pk>/approve/', views.specialist_approve, name='specialist_approve'),
     path('approvals/<int:pk>/reject/', views.specialist_reject, name='specialist_reject'),
+
+    # Specialist Tests
+    path('specialist-tests/', views.specialist_test_list, name='specialist_test_list'),
+    path('specialist-tests/create/', views.specialist_test_create, name='specialist_test_create'),
+    path('specialist-tests/<int:pk>/edit/', views.specialist_test_edit, name='specialist_test_edit'),
+    path('specialist-tests/<int:pk>/delete/', views.specialist_test_delete, name='specialist_test_delete'),
+    path('specialist-tests/attempts/', views.specialist_test_attempt_list, name='specialist_test_attempt_list'),
+    path('specialist-tests/attempts/<int:pk>/', views.specialist_test_attempt_detail, name='specialist_test_attempt_detail'),
+    path('specialist-tests/attempts/<int:pk>/<str:action>/', views.specialist_test_attempt_review, name='specialist_test_attempt_review'),
     
     # Chat Moderation
     path('moderation/', views.chat_moderation_list, name='chat_moderation_list'),
@@ -50,6 +60,7 @@ urlpatterns = [
     path('orders/', views.order_list_view, name='order_list'),
     path('orders/create/', views.order_create_view, name='order_create'),
     path('orders/<int:pk>/', views.order_detail_view, name='order_detail'),
+    path('orders/<int:pk>/edit/', views.order_edit_view, name='order_edit'),
     path('orders/<int:pk>/delete/', views.order_delete_view, name='order_delete'),
     
     # Inquiries / Support
