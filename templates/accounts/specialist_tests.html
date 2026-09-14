@@ -31,7 +31,7 @@
               {% if attempt.next_retake_at %}
                 <p style="margin:8px 0 0;">Next retake available: {{ attempt.next_retake_at|date:"d F Y" }}</p>
               {% endif %}
-              {% if test.can_retake %}<div style="margin-top:12px;"><a class="btn btn-brass" href="{% url 'accounts:specialist_test_take' test.pk %}">Retake assessment</a></div>{% endif %}
+              {% if test.can_retake %}<div style="margin-top:12px;"><a class="btn btn-brass" href="{% url 'accounts:specialist_test_instructions' test.pk %}">Retake assessment</a></div>{% endif %}
             {% else %}<p style="margin:8px 0 0;">No further retakes are available for this assessment.</p>{% endif %}
           </div>
         {% else %}
@@ -40,7 +40,7 @@
           </div>
         {% endif %}
       {% else %}
-        <div style="margin-top:14px;"><a class="btn btn-brass" href="{% url 'accounts:specialist_test_take' test.pk %}">Take assessment</a></div>
+        <div style="margin-top:14px;"><a class="btn btn-brass" href="{% url 'accounts:specialist_test_instructions' test.pk %}">Take assessment</a></div>
       {% endif %}
     </article>
     {% endwith %}
@@ -49,9 +49,9 @@
   {% endfor %}
   {% if page_obj.has_other_pages %}
     <nav aria-label="Assessment pages" style="display:flex;gap:12px;align-items:center;margin-top:24px;">
-      {% if page_obj.has_previous %}<a class="btn btn-outline" href="?page={{ page_obj.previous_page_number }}">Previous test</a>{% endif %}
-      <span>Test {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-      {% if page_obj.has_next %}<a class="btn btn-brass" href="?page={{ page_obj.next_page_number }}">Next test</a>{% endif %}
+      {% if page_obj.has_previous %}<a class="btn btn-outline" href="?page={{ page_obj.previous_page_number }}">Previous assessment</a>{% endif %}
+      <span>Assessment {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}<a class="btn btn-brass" href="?page={{ page_obj.next_page_number }}">Next assessment</a>{% endif %}
     </nav>
   {% endif %}
 </div></section>

@@ -17,6 +17,7 @@ urlpatterns = [
     path("specialist/<int:pk>/", views.SpecialistPublicProfileView.as_view(), name="specialist_public"),
     path("specialists/", views.specialist_list, name="specialist_list"),
     path("specialist-tests/", views.specialist_tests, name="specialist_tests"),
+    path("specialist-tests/<int:pk>/instructions/", views.specialist_test_instructions, name="specialist_test_instructions"),
     path("specialist-tests/<int:pk>/", views.specialist_test_take, name="specialist_test_take"),
 
     path("manage/users/", views.manager_user_list, name="manager_user_list"),

@@ -102,10 +102,11 @@ class AdminOrderForm(forms.ModelForm):
 class SpecialistTestForm(forms.ModelForm):
     class Meta:
         model = SpecialistTest
-        fields = ['title', 'description', 'is_active']
+        fields = ['title', 'description', 'instructions', 'is_active']
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'instructions': forms.Textarea(attrs={'class': 'form-control', 'rows': 6, 'placeholder': 'Explain the assessment rules, time limit, and submission requirements.'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -132,12 +133,8 @@ class SpecialistTestQuestionForm(forms.ModelForm):
         if question_type == SpecialistTestQuestion.QuestionType.MULTIPLE_CHOICE:
             if not all(cleaned_data.get(field) for field in ('option_a', 'option_b', 'option_c', 'option_d')):
                 raise forms.ValidationError('Multiple-choice questions require all four options.')
-            if not cleaned_data.get('correct_option'):
-                raise forms.ValidationError('Select the correct option.')
             cleaned_data['correct_answer'] = ''
         elif question_type == SpecialistTestQuestion.QuestionType.TEXT:
-            if not cleaned_data.get('correct_answer'):
-                raise forms.ValidationError('Enter the correct text answer.')
             for field in ('option_a', 'option_b', 'option_c', 'option_d', 'correct_option'):
                 cleaned_data[field] = ''
         return cleaned_data

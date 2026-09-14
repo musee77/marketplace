@@ -153,10 +153,25 @@ def specialist_tests(request):
 
 
 @login_required
+def specialist_test_instructions(request, pk):
+    if not request.user.is_specialist:
+        return redirect("core:dashboard")
+    test = get_object_or_404(SpecialistTest, pk=pk, is_active=True)
+    if request.GET.get("start") == "1":
+        request.session[f"specialist_test_{test.pk}_instructions_seen"] = True
+        request.session.modified = True
+        return redirect("accounts:specialist_test_take", pk=test.pk)
+    return render(request, "accounts/specialist_test_instructions.html", {"test": test})
+
+
+@login_required
 def specialist_test_take(request, pk):
     if not request.user.is_specialist:
         return redirect("core:dashboard")
     test = get_object_or_404(SpecialistTest.objects.prefetch_related("questions"), pk=pk, is_active=True)
+    instructions_key = f"specialist_test_{test.pk}_instructions_seen"
+    if not request.session.get(instructions_key):
+        return redirect("accounts:specialist_test_instructions", pk=test.pk)
     existing_attempt = SpecialistTestAttempt.objects.filter(
         specialist=request.user,
         test=test,
@@ -215,7 +230,7 @@ def specialist_test_take(request, pk):
         score = sum(
             (
                 responses[str(question.pk)] == question.correct_option
-                if question.question_type == question.QuestionType.MULTIPLE_CHOICE
+                if question.question_type == question.QuestionType.MULTIPLE_CHOICE and question.correct_option
                 else responses[str(question.pk)].strip().casefold() == question.correct_answer.strip().casefold()
             )
             for question in questions
@@ -229,6 +244,7 @@ def specialist_test_take(request, pk):
             responses=responses,
         )
         request.session.pop(session_key, None)
+        request.session.pop(instructions_key, None)
         request.session.modified = True
         messages.success(request, "Your test was submitted and is awaiting manager approval.")
         return redirect("accounts:specialist_tests")

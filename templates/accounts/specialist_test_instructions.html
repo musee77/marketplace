@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ test.title }} instructions | Synovae Analytics{% endblock %}
+{% block content %}
+<section class="section"><div class="wrap" style="max-width:800px;">
+  <div style="border:1px solid var(--line);padding:24px;background:var(--paper);border-radius:12px;">
+    <h2 style="margin-top:0;">{{ test.title }}</h2>
+    {% if test.description %}<p>{{ test.description }}</p>{% endif %}
+    <h3>Instructions</h3>
+    {% if test.instructions %}
+      <p style="white-space:pre-line;">{{ test.instructions }}</p>
+    {% else %}
+      <p>Answer every question and review your responses before submitting. Your submission will be sent for manager review.</p>
+    {% endif %}
+    <p><strong>{{ test.questions.count }}</strong> question{{ test.questions.count|pluralize }} in this assessment.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;">
+      <a class="btn btn-brass" href="{% url 'accounts:specialist_test_instructions' test.pk %}?start=1">Start assessment</a>
+      <a class="btn btn-outline" href="{% url 'accounts:specialist_tests' %}">Back to assessments</a>
+    </div>
+  </div>
+</div></section>
+{% endblock %}
