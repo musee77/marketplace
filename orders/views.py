@@ -156,6 +156,10 @@ def order_detail(request, pk):
     documents = order.documents.select_related("uploaded_by")
     # Separate delivery documents (uploaded by specialist) from client reference docs
     delivery_docs = documents.filter(uploaded_by=order.specialist)
+    reviewed_delivery_docs = documents.filter(
+        uploaded_by_id=order.edited_by_id,
+        order__editor_approved=True,
+    )
     client_docs = documents.filter(uploaded_by=order.client)
 
     # ── Inline delivery POST (specialist submits delivery form on this page) ──
@@ -191,6 +195,8 @@ def order_detail(request, pk):
         "can_request_revision": can_request_revision,
         "documents": documents,
         "delivery_docs": delivery_docs,
+        "reviewed_delivery_docs": reviewed_delivery_docs,
+        "visible_delivery_docs": reviewed_delivery_docs if user == order.client else delivery_docs,
         "client_docs": client_docs,
         "document_form": document_form,
         "deliver_form": deliver_form,
@@ -272,10 +278,18 @@ def order_deliver(request, pk):
 
 @login_required
 def order_document_download(request, pk):
-    """Serve an order document only to the client, specialist, or manager."""
+    """Serve an order document to the order parties and authorized reviewers."""
     document = get_object_or_404(OrderDocument.objects.select_related("order"), pk=pk)
     order = document.order
-    if request.user not in (order.client, order.specialist) and not request.user.is_manager:
+    can_review = request.user.is_staff or request.user.is_superuser or request.user.role == User.Role.EDITOR
+    is_client_reference = request.user == order.client and document.uploaded_by_id == order.client_id
+    is_approved_delivery = (
+        request.user == order.client
+        and document.uploaded_by_id == order.edited_by_id
+        and order.editor_approved
+    )
+    is_internal_delivery_access = request.user == order.specialist or request.user.is_manager or can_review
+    if not (is_client_reference or is_approved_delivery or is_internal_delivery_access):
         return HttpResponseForbidden("You don't have access to this document.")
     document.file.open("rb")
     filename = document.file.name.rsplit("/", 1)[-1]

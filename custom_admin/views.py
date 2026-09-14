@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Sum, Q
 from django.utils import timezone
 from django.utils.text import slugify
+from django.views.decorators.http import require_POST
 from decimal import Decimal
 
 from accounts.models import (
@@ -91,6 +92,24 @@ def admin_logout_view(request):
     return redirect('custom_admin:login')
 
 
+@require_POST
+@login_required
+def switch_admin_role_view(request):
+    if request.user.role not in (User.Role.MANAGER, User.Role.EDITOR) and not request.user.is_staff and not request.user.is_superuser:
+        return redirect('custom_admin:login')
+
+    target_role = request.POST.get('role')
+    if target_role not in (User.Role.MANAGER, User.Role.EDITOR):
+        messages.error(request, 'Select a valid admin workspace.')
+        return redirect('custom_admin:login')
+
+    request.user.role = target_role
+    request.user.save(update_fields=['role'])
+    update_session_auth_hash(request, request.user)
+    messages.success(request, f'Switched to {request.user.get_role_display()} workspace.')
+    return redirect('custom_admin:editor_dashboard' if target_role == User.Role.EDITOR else 'custom_admin:dashboard')
+
+
 # ====== DASHBOARD ======
 
 @user_passes_test(is_manager, login_url='custom_admin:login')
@@ -151,6 +170,7 @@ def editor_dashboard_view(request):
         'status_counts': status_counts,
         'status_metrics': status_metrics,
         'review_orders': review_orders,
+        'delivered_for_review_count': status_counts[Order.Status.DELIVERED],
         'recent_orders': recent_orders,
         'total_orders': real_orders.count(),
     })
@@ -776,57 +796,132 @@ def order_list_view(request):
 @user_passes_test(is_order_editor, login_url='custom_admin:login')
 def order_detail_view(request, pk):
     order = get_object_or_404(Order.objects.select_related('client', 'specialist', 'service'), pk=pk)
-    documents = order.documents.select_related('uploaded_by')
-    
-    if request.method == 'POST':
-        if request.user.role == User.Role.EDITOR:
-            new_status = request.POST.get('status')
-            if new_status not in dict(Order.Status.choices):
-                messages.error(request, 'Select a valid order status.')
-            elif order.status != Order.Status.DELIVERED:
-                messages.error(request, 'Editors can only review orders after the specialist has delivered them.')
-            else:
-                order.status = new_status
-                order.editor_approved = True
-                order.edited_by = request.user
-                order.edited_at = timezone.now()
-                order.save(update_fields=['status', 'editor_approved', 'edited_by', 'edited_at', 'updated_at'])
-                messages.success(request, f'Order #{order.pk} reviewed and updated after delivery.')
-            return redirect('custom_admin:order_detail', pk=pk)
-        if request.POST.get('form_action') == 'deliver_order':
-            document_form = OrderDocumentForm(request.POST, request.FILES)
-            if document_form.is_valid():
-                document = document_form.save(commit=False)
-                document.order = order
-                document.uploaded_by = request.user
-                document.save()
-                order.status = Order.Status.DELIVERED
-                order.save(update_fields=['status', 'updated_at'])
-                messages.success(request, f'Order #{order.pk} delivered with the uploaded file.')
-                return redirect('custom_admin:order_detail', pk=pk)
-        else:
-            document_form = OrderDocumentForm()
-            new_status = request.POST.get('status')
-        if request.POST.get('form_action') != 'deliver_order' and new_status in dict(Order.Status.choices):
-            order.status = new_status
-            order.save(update_fields=['status', 'updated_at'])
-            
-            # If manager marks completed, credit specialist earnings
-            if new_status == Order.Status.COMPLETED:
-                sp, _ = SpecialistProfile.objects.get_or_create(user=order.specialist)
-                sp.balance = (sp.balance or Decimal('0.00')) + order.specialist_earnings
-                sp.save(update_fields=['balance'])
-                
-            messages.success(request, f"Order #{order.pk} status updated to {order.get_status_display()}.")
-            return redirect('custom_admin:order_detail', pk=pk)
-            
+    documents = list(order.documents.select_related('uploaded_by'))
+    document_items = [
+        {
+            'document': document,
+            'is_delivery': document.uploaded_by_id != order.client_id,
+        }
+        for document in documents
+    ]
     context = {
         'order': order,
         'documents': documents,
-        'document_form': locals().get('document_form', OrderDocumentForm()),
+        'reviewed_delivery_docs': order.documents.filter(
+            uploaded_by_id=order.edited_by_id,
+            order__editor_approved=True,
+        ).select_related('uploaded_by'),
+        'document_items': document_items,
+        'document_form': OrderDocumentForm(),
         'statuses': Order.Status.choices,
+        'editor_statuses': [
+            (Order.Status.DELIVERED, Order.Status.DELIVERED.label),
+            (Order.Status.UNDER_REVISION, Order.Status.UNDER_REVISION.label),
+            (Order.Status.COMPLETED, Order.Status.COMPLETED.label),
+        ],
     }
     return render(request, 'custom_admin/orders/detail.html', context)
+
+
+@require_POST
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def order_status_update_view(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    new_status = request.POST.get('status')
+    valid_statuses = dict(Order.Status.choices)
+    if new_status not in valid_statuses:
+        messages.error(request, 'Select a valid order status.')
+        return redirect('custom_admin:order_detail', pk=pk)
+
+    order.status = new_status
+    order.save(update_fields=['status', 'updated_at'])
+    if new_status == Order.Status.COMPLETED:
+        sp, _ = SpecialistProfile.objects.get_or_create(user=order.specialist)
+        sp.balance = (sp.balance or Decimal('0.00')) + order.specialist_earnings
+        sp.save(update_fields=['balance'])
+    messages.success(request, f"Order #{order.pk} status updated to {order.get_status_display()}.")
+    return redirect('custom_admin:order_detail', pk=pk)
+
+
+@require_POST
+@user_passes_test(is_manager, login_url='custom_admin:login')
+def order_deliver_view(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    document_form = OrderDocumentForm(request.POST, request.FILES)
+    if document_form.is_valid():
+        document = document_form.save(commit=False)
+        document.order = order
+        document.uploaded_by = request.user
+        document.save()
+        order.status = Order.Status.DELIVERED
+        order.save(update_fields=['status', 'updated_at'])
+        messages.success(request, f'Order #{order.pk} delivered with the uploaded file.')
+    return redirect('custom_admin:order_detail', pk=pk)
+
+
+@require_POST
+@user_passes_test(lambda user: user.is_authenticated and user.role == User.Role.EDITOR, login_url='custom_admin:login')
+def order_editor_review_view(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    new_status = request.POST.get('status')
+    editor_statuses = {
+        Order.Status.DELIVERED,
+        Order.Status.UNDER_REVISION,
+        Order.Status.COMPLETED,
+    }
+    if order.status != Order.Status.DELIVERED:
+        messages.error(request, 'Editors can only review orders after the specialist has delivered them.')
+    elif new_status not in editor_statuses:
+        messages.error(request, 'Select a valid editor review step.')
+    else:
+        order.status = new_status
+        order.editor_approved = new_status == Order.Status.COMPLETED
+        order.edited_by = request.user
+        order.edited_at = timezone.now()
+        order.save(update_fields=['status', 'editor_approved', 'edited_by', 'edited_at', 'updated_at'])
+        messages.success(request, f'Order #{order.pk} reviewed and updated after delivery.')
+    return redirect('custom_admin:order_detail', pk=pk)
+
+
+@require_POST
+@user_passes_test(lambda user: user.is_authenticated and user.role == User.Role.EDITOR, login_url='custom_admin:login')
+def order_editor_upload_view(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if order.status not in (Order.Status.DELIVERED, Order.Status.UNDER_REVISION):
+        messages.error(request, 'Editors can only upload reviewed files for delivered orders.')
+        return redirect('custom_admin:order_detail', pk=pk)
+
+    document_form = OrderDocumentForm(request.POST, request.FILES)
+    if document_form.is_valid():
+        document = document_form.save(commit=False)
+        document.order = order
+        document.uploaded_by = request.user
+        document.save()
+        order.status = Order.Status.COMPLETED
+        order.editor_approved = True
+        order.edited_by = request.user
+        order.edited_at = timezone.now()
+        order.save(update_fields=['status', 'editor_approved', 'edited_by', 'edited_at', 'updated_at'])
+        messages.success(request, f'Reviewed file uploaded and order #{order.pk} completed.')
+    else:
+        messages.error(request, f'Upload failed: {document_form.errors.as_text()}')
+    return redirect('custom_admin:order_detail', pk=pk)
+
+
+@require_POST
+@user_passes_test(lambda user: user.is_authenticated and user.role == User.Role.EDITOR, login_url='custom_admin:login')
+def order_editor_revision_view(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if order.status != Order.Status.DELIVERED:
+        messages.error(request, 'Only delivered orders can be returned for revision.')
+    else:
+        order.status = Order.Status.UNDER_REVISION
+        order.editor_approved = False
+        order.edited_by = request.user
+        order.edited_at = timezone.now()
+        order.save(update_fields=['status', 'editor_approved', 'edited_by', 'edited_at', 'updated_at'])
+        messages.success(request, f'Order #{order.pk} was returned for revision.')
+    return redirect('custom_admin:order_detail', pk=pk)
 
 
 @user_passes_test(is_order_editor, login_url='custom_admin:login')
@@ -839,15 +934,13 @@ def order_edit_view(request, pk):
     if request.user.role == User.Role.EDITOR:
         form.fields['payment_status'].disabled = True
         form.fields['status'].choices = [
-            (Order.Status.PENDING, Order.Status.PENDING.label),
-            (Order.Status.ACCEPTED, Order.Status.ACCEPTED.label),
-            (Order.Status.IN_PROGRESS, Order.Status.IN_PROGRESS.label),
             (Order.Status.DELIVERED, Order.Status.DELIVERED.label),
+            (Order.Status.UNDER_REVISION, Order.Status.UNDER_REVISION.label),
             (Order.Status.COMPLETED, Order.Status.COMPLETED.label),
         ]
     if request.method == 'POST' and form.is_valid():
         order = form.save(commit=False)
-        order.editor_approved = True
+        order.editor_approved = order.status == Order.Status.COMPLETED
         order.edited_by = request.user
         order.edited_at = timezone.now()
         order.save(update_fields=['client', 'service', 'price', 'requirements', 'due_date', 'status', 'editor_approved', 'edited_by', 'edited_at', 'updated_at'])

@@ -25,8 +25,8 @@
 
   <section class="dh-card" style="padding:22px;">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;">
-      <h2 style="margin:0;">Orders awaiting review</h2>
-      <a href="{% url 'custom_admin:order_list' %}?status=IN_PROGRESS" style="color:var(--admin-accent);">Open orders</a>
+      <h2 style="margin:0;">Delivered orders awaiting review</h2>
+      <a href="{% url 'custom_admin:order_list' %}?status=DELIVERED" style="color:var(--admin-accent);">{{ delivered_for_review_count }} delivered</a>
     </div>
     {% if review_orders %}
     <div style="display:grid;gap:10px;">

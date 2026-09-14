@@ -70,8 +70,8 @@
 
       <!-- ====== SPECIALIST DELIVERY PACKAGE ====== -->
       <div class="order-detail-card">
-      <h3>📦 Specialist Delivery</h3>
-      {% if order.delivery_note or delivery_docs %}
+      <h3>📦 Delivery</h3>
+      {% if order.delivery_note or visible_delivery_docs %}
         <div class="delivery-container" style="background: rgba(193,148,63,.05); border: 1px solid rgba(193,148,63,.2); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
           {% if order.delivery_note %}
             <div style="margin-bottom: 18px;">
@@ -79,11 +79,11 @@
               <p style="margin: 0; color: var(--ink); white-space: pre-line; font-size: 0.95rem; line-height: 1.5;">{{ order.delivery_note }}</p>
             </div>
           {% endif %}
-          {% if delivery_docs %}
+          {% if visible_delivery_docs %}
             <div>
-              <strong style="font-size: 0.9rem; color: var(--brass); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em;">Delivered Files</strong>
+              <strong style="font-size: 0.9rem; color: var(--brass); display: block; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em;">Delivery Files</strong>
               <div style="display:grid;gap:8px;">
-                {% for doc in delivery_docs %}
+                {% for doc in visible_delivery_docs %}
                   {% if doc.title != "Delivery note" %}
                     <a href="{% url 'orders:document_download' doc.pk %}" class="btn btn-outline" style="display:flex;justify-content:space-between;align-items:center;text-align:left;background:var(--paper);" download>
                       <span>📄 {{ doc.title }}</span>
@@ -93,6 +93,8 @@
                 {% endfor %}
               </div>
             </div>
+          {% else %}
+            <p class="helptext">No approved delivery file is available yet.</p>
           {% endif %}
         </div>
       {% else %}

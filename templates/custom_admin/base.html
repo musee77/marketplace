@@ -113,9 +113,19 @@
           <div class="dh-user-avatar">{{ user.username|slice:":1"|upper }}</div>
           <div class="dh-user-info">
             <span class="dh-user-title">{{ user.username }}</span>
-            <span class="dh-user-role">{% if user.is_superuser %}Superuser{% else %}Staff Manager{% endif %}</span>
+            <span class="dh-user-role">{% if user.is_superuser %}Superuser{% else %}{{ user.get_role_display }}{% endif %}</span>
           </div>
         </div>
+        <form action="{% url 'custom_admin:switch_role' %}" method="post" style="margin: 8px 0; padding: 0; width: 100%;">
+          {% csrf_token %}
+          {% if user.role == 'EDITOR' %}
+          <input type="hidden" name="role" value="MANAGER">
+          <button type="submit" class="dh-sidebar-switch">Switch to Admin</button>
+          {% else %}
+          <input type="hidden" name="role" value="EDITOR">
+          <button type="submit" class="dh-sidebar-switch">Switch to Editor</button>
+          {% endif %}
+        </form>
         <form action="{% url 'custom_admin:logout' %}" method="post" style="margin: 0; padding: 0; width: 100%;">
           {% csrf_token %}
           <button type="submit" class="dh-sidebar-logout" title="Log Out" style="width: 100%; border: none; background: none; text-align: left; cursor: pointer;">🚪 Logout</button>

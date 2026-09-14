@@ -6,6 +6,7 @@ app_name = 'custom_admin'
 urlpatterns = [
     path('login/', views.admin_login_view, name='login'),
     path('logout/', views.admin_logout_view, name='logout'),
+    path('switch-role/', views.switch_admin_role_view, name='switch_role'),
     path('', views.dashboard_view, name='dashboard'),
     path('editor-dashboard/', views.editor_dashboard_view, name='editor_dashboard'),
     
@@ -60,6 +61,11 @@ urlpatterns = [
     path('orders/', views.order_list_view, name='order_list'),
     path('orders/create/', views.order_create_view, name='order_create'),
     path('orders/<int:pk>/', views.order_detail_view, name='order_detail'),
+    path('orders/<int:pk>/status/', views.order_status_update_view, name='order_status_update'),
+    path('orders/<int:pk>/deliver/', views.order_deliver_view, name='order_deliver'),
+    path('orders/<int:pk>/editor-review/', views.order_editor_review_view, name='order_editor_review'),
+    path('orders/<int:pk>/editor-upload/', views.order_editor_upload_view, name='order_editor_upload'),
+    path('orders/<int:pk>/editor-revision/', views.order_editor_revision_view, name='order_editor_revision'),
     path('orders/<int:pk>/edit/', views.order_edit_view, name='order_edit'),
     path('orders/<int:pk>/delete/', views.order_delete_view, name='order_delete'),
     

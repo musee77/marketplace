@@ -212,15 +212,17 @@ body {
   border-top: 1px solid var(--admin-card-border);
   background: #0b1120;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
 .dh-sidebar-user {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  width: 100%;
   min-width: 0;
 }
 
@@ -273,6 +275,25 @@ body {
 .dh-sidebar-logout:hover {
   background: var(--admin-danger);
   color: #ffffff;
+}
+
+.dh-sidebar-switch {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--admin-card-border);
+  border-radius: var(--radius-sm);
+  background: rgba(193, 148, 63, 0.12);
+  color: var(--admin-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+
+.dh-sidebar-switch:hover {
+  background: var(--admin-accent);
+  color: #0f172a;
 }
 
 /* Right Main Content Area */

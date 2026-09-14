@@ -41,21 +41,18 @@
       <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Pending</div>
       <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Accepted</div>
       <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">In progress</div>
-      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Delivered</div>
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;background:{% if order.status == 'DELIVERED' %}rgba(193,148,63,.25){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'DELIVERED' %}var(--admin-accent){% else %}var(--admin-card-border){% endif %};">Delivered</div>
       <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;background:{% if order.status == 'DELIVERED' and not order.editor_approved %}rgba(193,148,63,.25){% elif order.editor_approved %}rgba(193,148,63,.14){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'DELIVERED' and not order.editor_approved %}var(--admin-accent){% elif order.editor_approved %}rgba(193,148,63,.45){% else %}var(--admin-card-border){% endif %};">Review</div>
-      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Under revision</div>
-      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;">Completed</div>
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;background:{% if order.status == 'UNDER_REVISION' %}rgba(193,148,63,.25){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'UNDER_REVISION' %}var(--admin-accent){% else %}var(--admin-card-border){% endif %};">Under revision</div>
+      <div style="padding:8px 4px;border-radius:6px;text-align:center;font-size:.72rem;background:{% if order.status == 'COMPLETED' %}rgba(52,211,153,.22){% else %}rgba(255,255,255,.06){% endif %};border:1px solid {% if order.status == 'COMPLETED' %}var(--admin-success){% else %}var(--admin-card-border){% endif %};">Completed</div>
     </div>
 
     <div style="margin-bottom:20px; padding:14px; border-radius:8px; background:#0f172a; border:1px solid {% if order.editor_approved %}var(--admin-success){% else %}var(--admin-warning){% endif %};">
       <strong>Editor review:</strong>
       {% if order.editor_approved %}
-        <span style="color:var(--admin-success);">Approved{% if order.edited_by %} by {{ order.edited_by.username }}{% endif %}</span>
+        <span style="color:var(--admin-success);">Approved{% if order.edited_by %} by {{ order.edited_by.username }}{% endif %}{% if order.status == 'COMPLETED' %} and completed{% endif %}</span>
       {% else %}
-        <span style="color:var(--admin-warning);">Awaiting editor review after specialist delivery</span>
-      {% endif %}
-      {% if user.role == 'EDITOR' and order.status == 'DELIVERED' %}
-        <a href="{% url 'custom_admin:order_edit' order.pk %}" class="btn btn-brass" style="display:inline-block; margin-left:10px; padding:6px 12px; text-decoration:none;">Review and edit</a>
+        <span style="color:var(--admin-warning);">Delivery ready for editor review</span>
       {% endif %}
     </div>
 
@@ -64,43 +61,87 @@
     </div>{% endif %}
 
     <!-- Status Change Panel -->
-    {% if user.is_manager or user.role == 'EDITOR' %}<div style="padding:16px; background:#0f172a; border-radius:10px; border:1px solid var(--admin-card-border); margin-bottom:20px;">
+    {% if user.is_manager %}<div style="padding:16px; background:#0f172a; border-radius:10px; border:1px solid var(--admin-card-border); margin-bottom:20px;">
       <span style="font-size:0.85rem; color:var(--admin-text-muted);">Current Status:</span>
       <div style="margin-top:4px;"><span class="status status-{{ order.status }}" style="font-size:0.95rem; padding: 4px 10px;">{{ order.get_status_display }}</span></div>
       
-      <form method="post" style="margin-top:15px; display:flex; gap:10px;">
+      <form method="post" action="{% url 'custom_admin:order_status_update' order.pk %}" style="margin-top:15px; display:flex; gap:10px;">
         {% csrf_token %}
         <select name="status" class="form-control" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--admin-card-border); background:#1e293b; color:#fff;">
           {% for val, name in statuses %}
             <option value="{{ val }}" {% if order.status == val %}selected{% endif %}>{{ name }}</option>
           {% endfor %}
         </select>
-        <button type="submit" class="btn btn-brass" style="padding:8px 16px; background:var(--admin-accent); color:#0f172a; font-weight:bold; border-radius:6px; border:none; cursor:pointer;">{% if user.role == 'EDITOR' %}Update and approve{% else %}Update Status{% endif %}</button>
+        <button type="submit" class="btn btn-brass" style="padding:8px 16px; background:var(--admin-accent); color:#0f172a; font-weight:bold; border-radius:6px; border:none; cursor:pointer;">Update Status</button>
       </form>
+    </div>{% endif %}
+
+    {% if user.role == 'EDITOR' and order.status == 'DELIVERED' %}<div style="padding:16px; background:#0f172a; border-radius:10px; border:1px solid var(--admin-card-border); margin-bottom:20px;">
+      <span style="font-size:0.85rem; color:var(--admin-text-muted);">Editor review step:</span>
+      <form method="post" action="{% url 'custom_admin:order_editor_review' order.pk %}" style="margin-top:15px; display:flex; gap:10px;">
+        {% csrf_token %}
+        <select name="status" class="form-control" style="flex:1; padding:8px; border-radius:6px; border:1px solid var(--admin-card-border); background:#1e293b; color:#fff;">
+          {% for val, name in editor_statuses %}<option value="{{ val }}">{{ name }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="btn btn-brass" style="padding:8px 16px; background:var(--admin-accent); color:#0f172a; font-weight:bold; border-radius:6px; border:none; cursor:pointer;">Save review</button>
+      </form>
+    </div>{% endif %}
+
+    {% if user.role == 'EDITOR' %}<div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--admin-card-border);">
+      <h4>Reviewed delivery files</h4>
+      {% if reviewed_delivery_docs %}
+        <div style="display:grid;gap:8px;">
+          {% for doc in reviewed_delivery_docs %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:#0f172a;border:1px solid var(--admin-success);">
+              <span style="font-weight:600;color:#fff;">{{ doc.title }}</span>
+              <a href="{% url 'orders:document_download' doc.pk %}" class="btn btn-outline" style="font-size:.8rem;padding:4px 10px;border:1px solid var(--admin-card-border);border-radius:4px;text-decoration:none;color:#fff;" download>Download</a>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p style="color:var(--admin-text-muted);font-size:.875rem;">No reviewed delivery file uploaded yet.</p>
+      {% endif %}
     </div>{% endif %}
 
     <!-- Order Documents -->
     <h4>Files Shared ({{ documents|length }})</h4>
     {% if documents %}
       <div style="display:grid; gap:8px;">
-        {% for doc in documents %}
+        {% for item in document_items %}
+          {% with doc=item.document %}
           <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; border-radius:8px; background:#0f172a; border:1px solid var(--admin-card-border);">
             <div>
-              <div style="font-size:0.9rem; font-weight:600; color:#fff;">📄 {{ doc.title }}</div>
+              <div style="font-size:0.9rem; font-weight:600; color:#fff;">📄 {{ doc.title }}
+                {% if item.is_delivery %}<span style="margin-left:8px;color:var(--admin-success);font-size:.72rem;font-weight:700;">DELIVERY FILE</span>{% else %}<span style="margin-left:8px;color:var(--admin-text-muted);font-size:.72rem;font-weight:700;">CLIENT REFERENCE</span>{% endif %}
+              </div>
               <small style="color:var(--admin-text-muted);">Uploaded by @{{ doc.uploaded_by.username }}</small>
             </div>
             <a href="{% url 'orders:document_download' doc.pk %}" class="btn btn-outline" style="font-size:0.8rem; padding:4px 10px; border:1px solid var(--admin-card-border); border-radius:4px; text-decoration:none; color:#fff;" download>Download</a>
           </div>
+          {% endwith %}
         {% endfor %}
       </div>
     {% else %}
       <p style="color: var(--admin-text-muted); font-size:0.875rem;">No files uploaded to this order yet.</p>
     {% endif %}
 
+    {% if user.role == 'EDITOR' and order.status == 'DELIVERED' %}<div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--admin-card-border);">
+      <h4>Upload reviewed file</h4>
+      <p style="color:var(--admin-text-muted);font-size:.875rem;">Upload the approved file to complete this order for the client.</p>
+      <form method="post" action="{% url 'custom_admin:order_editor_upload' order.pk %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ document_form.as_p }}
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="submit" class="btn btn-brass" style="padding:8px 16px; border:0; cursor:pointer;">Upload and complete order</button>
+          <button type="submit" formaction="{% url 'custom_admin:order_editor_revision' order.pk %}" formnovalidate class="btn btn-outline" style="padding:8px 16px;cursor:pointer;border:1px solid var(--admin-warning);color:var(--admin-warning);background:transparent;">Return for revision</button>
+        </div>
+      </form>
+    </div>{% endif %}
+
     {% if user.is_manager %}<div style="margin-top:22px; padding-top:18px; border-top:1px solid var(--admin-card-border);">
       <h4>Deliver order as manager</h4>
       <p style="color:var(--admin-text-muted); font-size:0.875rem;">Upload the completed file and mark this order as delivered for the client.</p>
-      <form method="post" enctype="multipart/form-data">
+      <form method="post" action="{% url 'custom_admin:order_deliver' order.pk %}" enctype="multipart/form-data">
         {% csrf_token %}
         <input type="hidden" name="form_action" value="deliver_order">
         {{ document_form.as_p }}
