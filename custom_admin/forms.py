@@ -113,16 +113,34 @@ class SpecialistTestForm(forms.ModelForm):
 class SpecialistTestQuestionForm(forms.ModelForm):
     class Meta:
         model = SpecialistTestQuestion
-        fields = ['prompt', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 'order']
+        fields = ['question_type', 'prompt', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 'correct_answer', 'order']
         widgets = {
+            'question_type': forms.Select(attrs={'class': 'form-control'}),
             'prompt': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'option_a': forms.TextInput(attrs={'class': 'form-control'}),
             'option_b': forms.TextInput(attrs={'class': 'form-control'}),
             'option_c': forms.TextInput(attrs={'class': 'form-control'}),
             'option_d': forms.TextInput(attrs={'class': 'form-control'}),
             'correct_option': forms.Select(attrs={'class': 'form-control'}),
+            'correct_answer': forms.TextInput(attrs={'class': 'form-control'}),
             'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        question_type = cleaned_data.get('question_type')
+        if question_type == SpecialistTestQuestion.QuestionType.MULTIPLE_CHOICE:
+            if not all(cleaned_data.get(field) for field in ('option_a', 'option_b', 'option_c', 'option_d')):
+                raise forms.ValidationError('Multiple-choice questions require all four options.')
+            if not cleaned_data.get('correct_option'):
+                raise forms.ValidationError('Select the correct option.')
+            cleaned_data['correct_answer'] = ''
+        elif question_type == SpecialistTestQuestion.QuestionType.TEXT:
+            if not cleaned_data.get('correct_answer'):
+                raise forms.ValidationError('Enter the correct text answer.')
+            for field in ('option_a', 'option_b', 'option_c', 'option_d', 'correct_option'):
+                cleaned_data[field] = ''
+        return cleaned_data
 
 
 class BlogPostForm(forms.ModelForm):

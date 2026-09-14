@@ -17,7 +17,7 @@
     {% if question_formset.non_form_errors %}<div style="color:var(--admin-danger); margin-bottom:12px;">{{ question_formset.non_form_errors }}</div>{% endif %}
     <div style="display:grid; gap:16px;">
       {% for question_form in question_formset %}
-      <div style="border:1px solid var(--admin-card-border); padding:16px; border-radius:8px;">
+      <div data-question-card style="border:1px solid var(--admin-card-border); padding:16px; border-radius:8px;">
         {% for hidden in question_form.hidden_fields %}{{ hidden }}{% endfor %}
         <strong>Question {{ forloop.counter }}</strong>
         <div style="display:grid; gap:10px; margin-top:10px;">{% for field in question_form.visible_fields %}<div><label for="{{ field.id_for_label }}" style="font-weight:600; display:block; margin-bottom:3px;">{{ field.label }}</label>{{ field }}{% if field.errors %}<div style="color:var(--admin-danger);">{{ field.errors }}</div>{% endif %}</div>{% endfor %}</div>
@@ -27,4 +27,22 @@
     <div style="display:flex; gap:10px; margin-top:20px;"><button type="submit" class="btn btn-brass" style="padding:10px 16px; border:0; cursor:pointer;">Save test</button><a href="{% url 'custom_admin:specialist_test_list' %}" class="btn btn-outline" style="padding:10px 16px; text-decoration:none;">Cancel</a></div>
   </form>
 </div>
+<script>
+  function updateQuestionType(questionCard) {
+    const typeField = questionCard.querySelector('select[name$="-question_type"]');
+    if (!typeField) return;
+    const textAnswer = typeField.value === 'TEXT';
+    questionCard.querySelectorAll('select[name$="-correct_option"], input[name$="-option_a"], input[name$="-option_b"], input[name$="-option_c"], input[name$="-option_d"]').forEach(function (field) {
+      field.closest('div').style.display = textAnswer ? 'none' : '';
+    });
+    const correctAnswer = questionCard.querySelector('input[name$="-correct_answer"]');
+    if (correctAnswer) correctAnswer.closest('div').style.display = textAnswer ? '' : 'none';
+  }
+
+  document.querySelectorAll('[data-question-card]').forEach(function (card) {
+    const typeField = card.querySelector('select[name$="-question_type"]');
+    if (typeField) typeField.addEventListener('change', function () { updateQuestionType(card); });
+    updateQuestionType(card);
+  });
+</script>
 {% endblock %}

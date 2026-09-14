@@ -164,16 +164,23 @@ class SpecialistTest(models.Model):
 
 
 class SpecialistTestQuestion(models.Model):
+    class QuestionType(models.TextChoices):
+        MULTIPLE_CHOICE = "MULTIPLE_CHOICE", "Multiple choice"
+        TEXT = "TEXT", "Text answer"
+
     test = models.ForeignKey(SpecialistTest, on_delete=models.CASCADE, related_name="questions")
+    question_type = models.CharField(max_length=20, choices=QuestionType.choices, default=QuestionType.MULTIPLE_CHOICE)
     prompt = models.TextField()
-    option_a = models.CharField(max_length=500)
-    option_b = models.CharField(max_length=500)
-    option_c = models.CharField(max_length=500)
-    option_d = models.CharField(max_length=500)
+    option_a = models.CharField(max_length=500, blank=True)
+    option_b = models.CharField(max_length=500, blank=True)
+    option_c = models.CharField(max_length=500, blank=True)
+    option_d = models.CharField(max_length=500, blank=True)
     correct_option = models.CharField(
         max_length=1,
+        blank=True,
         choices=(("A", "A"), ("B", "B"), ("C", "C"), ("D", "D")),
     )
+    correct_answer = models.CharField(max_length=500, blank=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:

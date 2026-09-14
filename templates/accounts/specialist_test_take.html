@@ -9,9 +9,13 @@
   <form method="post">{% csrf_token %}
       <fieldset style="border:1px solid var(--line);padding:18px;margin:18px 0;">
         <legend><strong>{{ question_number }}. {{ question.prompt }}</strong></legend>
-        {% for option, label in question.option_choices %}
-          <label style="display:block;margin:10px 0;"><input type="radio" name="question_{{ question.pk }}" value="{{ option }}" {% if saved_answer == option %}checked{% endif %} required> {{ option }}. {{ label }}</label>
-        {% endfor %}
+        {% if question.question_type == 'MULTIPLE_CHOICE' %}
+          {% for option, label in question.option_choices %}
+            <label style="display:block;margin:10px 0;"><input type="radio" name="question_{{ question.pk }}" value="{{ option }}" {% if saved_answer == option %}checked{% endif %} required> {{ option }}. {{ label }}</label>
+          {% endfor %}
+        {% else %}
+          <input type="text" name="question_{{ question.pk }}" value="{{ saved_answer }}" required style="width:100%;padding:10px;box-sizing:border-box;">
+        {% endif %}
       </fieldset>
     <button class="btn btn-brass" type="submit">{% if question_number == total_questions %}Submit assessment{% else %}Next question{% endif %}</button>
   </form>

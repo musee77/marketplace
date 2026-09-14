@@ -193,6 +193,7 @@ def specialist_test_take(request, pk):
         page_number = 1
     question_index = page_number - 1
     question = questions[question_index]
+    saved_answer = saved_responses.get(str(question.pk), "")
     if request.method == "POST":
         answer = request.POST.get(f"question_{question.pk}", "")
         if not answer:
@@ -212,7 +213,11 @@ def specialist_test_take(request, pk):
             messages.error(request, "Please answer every question before submitting the test.")
             return redirect(f"{reverse('accounts:specialist_test_take', kwargs={'pk': test.pk})}?page=1")
         score = sum(
-            responses[str(question.pk)] == question.correct_option
+            (
+                responses[str(question.pk)] == question.correct_option
+                if question.question_type == question.QuestionType.MULTIPLE_CHOICE
+                else responses[str(question.pk)].strip().casefold() == question.correct_answer.strip().casefold()
+            )
             for question in questions
         )
         SpecialistTestAttempt.objects.create(
