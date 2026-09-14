@@ -49,6 +49,8 @@ def signup_view(request):
                 messages.success(request, f"Welcome to Synovae! You were invited by {user.referred_by.get_full_name() or user.referred_by.username} and qualify for reduced platform fees.")
             else:
                 messages.success(request, f"Welcome to Synovae, {user.username}!")
+            if user.is_specialist:
+                return redirect("accounts:specialist_tests")
             return redirect("core:dashboard")
     else:
         initial = {"referral_code": ref} if ref else {}
