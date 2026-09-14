@@ -17,7 +17,14 @@
           <input type="text" name="question_{{ question.pk }}" value="{{ saved_answer }}" required style="width:100%;padding:10px;box-sizing:border-box;">
         {% endif %}
       </fieldset>
-    <button class="btn btn-brass" type="submit">{% if question_number == total_questions %}Submit assessment{% else %}Next question{% endif %}</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;">
+      {% if question_number > 1 %}
+        <a href="?page={{ question_number|add:'-1' }}" style="display:inline-block;padding:10px 16px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--paper);text-decoration:none;font-weight:600;">Previous question</a>
+      {% else %}
+        <span></span>
+      {% endif %}
+      <button class="btn btn-brass" type="submit" style="display:inline-block;padding:10px 16px;min-width:150px;visibility:visible;opacity:1;">{% if question_number == total_questions %}Submit assessment{% else %}Next question{% endif %}</button>
+    </div>
   </form>
   {% else %}<p>This assessment has no questions yet.</p>{% endif %}
 </div></section>
