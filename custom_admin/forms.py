@@ -123,7 +123,7 @@ class SpecialistTestQuestionForm(forms.ModelForm):
             'option_c': forms.TextInput(attrs={'class': 'form-control'}),
             'option_d': forms.TextInput(attrs={'class': 'form-control'}),
             'correct_option': forms.Select(attrs={'class': 'form-control'}),
-            'correct_answer': forms.TextInput(attrs={'class': 'form-control'}),
+            'correct_answer': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
         }
 
@@ -134,7 +134,11 @@ class SpecialistTestQuestionForm(forms.ModelForm):
             if not all(cleaned_data.get(field) for field in ('option_a', 'option_b', 'option_c', 'option_d')):
                 raise forms.ValidationError('Multiple-choice questions require all four options.')
             cleaned_data['correct_answer'] = ''
-        elif question_type == SpecialistTestQuestion.QuestionType.TEXT:
+        elif question_type in (
+            SpecialistTestQuestion.QuestionType.TEXT,
+            SpecialistTestQuestion.QuestionType.CODE,
+            SpecialistTestQuestion.QuestionType.TEXT_OR_CODE,
+        ):
             for field in ('option_a', 'option_b', 'option_c', 'option_d', 'correct_option'):
                 cleaned_data[field] = ''
         return cleaned_data

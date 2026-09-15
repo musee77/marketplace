@@ -168,6 +168,8 @@ class SpecialistTestQuestion(models.Model):
     class QuestionType(models.TextChoices):
         MULTIPLE_CHOICE = "MULTIPLE_CHOICE", "Multiple choice"
         TEXT = "TEXT", "Text answer"
+        CODE = "CODE", "Code answer"
+        TEXT_OR_CODE = "TEXT_OR_CODE", "Text or code"
 
     test = models.ForeignKey(SpecialistTest, on_delete=models.CASCADE, related_name="questions")
     question_type = models.CharField(max_length=20, choices=QuestionType.choices, default=QuestionType.MULTIPLE_CHOICE)
@@ -181,7 +183,7 @@ class SpecialistTestQuestion(models.Model):
         blank=True,
         choices=(("A", "A"), ("B", "B"), ("C", "C"), ("D", "D")),
     )
-    correct_answer = models.CharField(max_length=500, blank=True)
+    correct_answer = models.TextField(blank=True)
     order = models.PositiveIntegerField(default=0)
 
     class Meta:

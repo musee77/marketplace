@@ -31,12 +31,12 @@
   function updateQuestionType(questionCard) {
     const typeField = questionCard.querySelector('select[name$="-question_type"]');
     if (!typeField) return;
-    const textAnswer = typeField.value === 'TEXT';
+    const freeAnswer = ['TEXT', 'CODE', 'TEXT_OR_CODE'].includes(typeField.value);
     questionCard.querySelectorAll('select[name$="-correct_option"], input[name$="-option_a"], input[name$="-option_b"], input[name$="-option_c"], input[name$="-option_d"]').forEach(function (field) {
-      field.closest('div').style.display = textAnswer ? 'none' : '';
+      field.closest('div').style.display = freeAnswer ? 'none' : '';
     });
-    const correctAnswer = questionCard.querySelector('input[name$="-correct_answer"]');
-    if (correctAnswer) correctAnswer.closest('div').style.display = textAnswer ? '' : 'none';
+    const correctAnswer = questionCard.querySelector('textarea[name$="-correct_answer"], input[name$="-correct_answer"]');
+    if (correctAnswer) correctAnswer.closest('div').style.display = freeAnswer ? '' : 'none';
   }
 
   document.querySelectorAll('[data-question-card]').forEach(function (card) {

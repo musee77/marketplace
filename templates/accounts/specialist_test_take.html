@@ -13,6 +13,16 @@
           {% for option, label in question.option_choices %}
             <label style="display:block;margin:10px 0;"><input type="radio" name="question_{{ question.pk }}" value="{{ option }}" {% if saved_answer == option %}checked{% endif %} required> {{ option }}. {{ label }}</label>
           {% endfor %}
+        {% elif question.question_type == 'CODE' %}
+          <textarea name="question_{{ question.pk }}" required style="width:100%;min-height:180px;padding:10px;box-sizing:border-box;font-family:monospace;">{{ saved_answer }}</textarea>
+        {% elif question.question_type == 'TEXT_OR_CODE' %}
+          <label for="answer-mode-{{ question.pk }}" style="display:block;margin-bottom:6px;font-weight:600;">Answer format</label>
+          <select id="answer-mode-{{ question.pk }}" data-answer-selector style="width:100%;padding:10px;margin-bottom:10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);">
+            <option value="text">Text answer</option>
+            <option value="code">Code answer</option>
+          </select>
+          <input type="text" name="question_{{ question.pk }}" data-text-answer required placeholder="Type your answer here..." style="width:100%;padding:10px;box-sizing:border-box;">
+          <textarea name="question_{{ question.pk }}" data-code-answer disabled placeholder="Write or paste your code here..." style="display:none;width:100%;min-height:180px;padding:10px;box-sizing:border-box;font-family:monospace;"></textarea>
         {% else %}
           <input type="text" name="question_{{ question.pk }}" value="{{ saved_answer }}" required style="width:100%;padding:10px;box-sizing:border-box;">
         {% endif %}
@@ -28,4 +38,22 @@
   </form>
   {% else %}<p>This assessment has no questions yet.</p>{% endif %}
 </div></section>
+{% endblock %}
+{% block extrajs %}
+<script>
+  document.querySelectorAll('[data-answer-selector]').forEach(function (selector) {
+    function updateAnswerForm() {
+      const container = selector.closest('fieldset');
+      const textAnswer = container.querySelector('[data-text-answer]');
+      const codeAnswer = container.querySelector('[data-code-answer]');
+      const isCode = selector.value === 'code';
+      textAnswer.style.display = isCode ? 'none' : 'block';
+      textAnswer.disabled = isCode;
+      codeAnswer.style.display = isCode ? 'block' : 'none';
+      codeAnswer.disabled = !isCode;
+    }
+    selector.addEventListener('change', updateAnswerForm);
+    updateAnswerForm();
+  });
+</script>
 {% endblock %}

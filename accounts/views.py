@@ -231,7 +231,7 @@ def specialist_test_take(request, pk):
             (
                 responses[str(question.pk)] == question.correct_option
                 if question.question_type == question.QuestionType.MULTIPLE_CHOICE and question.correct_option
-                else responses[str(question.pk)].strip().casefold() == question.correct_answer.strip().casefold()
+                else bool(question.correct_answer) and responses[str(question.pk)].strip() == question.correct_answer.strip()
             )
             for question in questions
         )
